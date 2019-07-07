@@ -1,10 +1,17 @@
 for %%t in (PipelineInitTask) do (
     pushd .
     cd Tasks/%%t
-    cmd /C tsc || goto :error
+    cmd /C tsc || goto :loop_error
     popd
 )
-tfx extension create --manifests vss-extension.json
+cmd /C tfx extension create --manifests vss-extension.json || goto :error
 goto :eof
-:error
+
+:loop_error
+echo Error occurred
 popd
+goto :eof
+
+:error
+echo Error occurred
+goto :eof
