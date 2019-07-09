@@ -1,10 +1,23 @@
-for %%t in (PipelineInitTask) do (
+@echo off
+
+for /F %%t in ('dir /B Tasks') do (
     pushd .
+    echo.
+    echo ======================================
+    echo Building task %%t
     cd Tasks/%%t
-    cmd /C tsc || goto :loop_error
+    cmd /C "npm install && tsc || goto :loop_error"
+    echo Task %%t is ready
+    echo ======================================
     popd
 )
+
+echo.
+echo ======================================
+echo Packaging the extension
 cmd /C tfx extension create --manifests vss-extension.json || goto :error
+echo The extension is ready
+echo ======================================
 goto :eof
 
 :loop_error
