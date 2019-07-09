@@ -28,13 +28,6 @@
           "displayName": "Server Url",
           "helpText": "Target ALM Octane server to connect to."
         },
-        "dataSources": [
-          {
-            "name": "Octane Projects",
-            "endpointUrl": "{{endpoint.url}}api/projects/index",
-            "resultSelector": "jsonpath:$[*].nm"
-          }
-        ],
         "authenticationSchemes": [
           {
             "type": "ms.vss-endpoint.endpoint-auth-scheme-basic",
@@ -44,8 +37,9 @@
                 "name": "Client ID",
                 "description": "API client ID",
                 "inputMode": "textbox",
+                "isConfidential": false,
                 "validation": {
-                  "isRequired": false,
+                  "isRequired": true,
                   "dataType": "string"
                 }
               },
@@ -56,7 +50,7 @@
                 "inputMode": "passwordbox",
                 "isConfidential": true,
                 "validation": {
-                  "isRequired": false,
+                  "isRequired": true,
                   "dataType": "string"
                 }
               }
@@ -74,7 +68,7 @@
               "dataType": "string"
             }
           }],
-          "helpMarkDown": "<a href=\"url-to-documentation\" target=\"_blank\"><b>Learn More</b></a>"
+        "helpMarkDown": "<a href=\"url-to-documentation\" target=\"_blank\"><b>Learn More</b></a>"
       }
     },
     {
