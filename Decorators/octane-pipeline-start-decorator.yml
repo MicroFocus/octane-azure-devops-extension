@@ -1,0 +1,5 @@
+steps:
+  - task: MicroFocus1.alm-octane-integration.octane-start-task.octane-start-task@1
+    displayName: 'ALM Octane Pipeline Start'
+    inputs:
+      OctaneService: Octane

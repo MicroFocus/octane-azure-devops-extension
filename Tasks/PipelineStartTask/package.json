@@ -1,5 +1,5 @@
 {
-  "name": "alm-octane-pipeline-init",
+  "name": "alm-octane-pipeline-start",
   "version": "1.0.0",
   "description": "Azure DevOps integration with ALM Octane",
   "main": "index.js",
