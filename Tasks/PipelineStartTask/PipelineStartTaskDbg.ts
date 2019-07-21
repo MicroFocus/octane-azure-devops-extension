@@ -1,6 +1,6 @@
 import tl = require('azure-pipelines-task-lib/task');
 import tlr = require('azure-pipelines-task-lib/toolrunner');
-import pp = require('./PipeLineCommon');
+import pp = require('./PipelineCommon');
 
 let testTask = {};
 let input = new Map();
