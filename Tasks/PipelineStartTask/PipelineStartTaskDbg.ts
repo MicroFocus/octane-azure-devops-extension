@@ -29,12 +29,26 @@ function initTl(testTask: any) {
     };
 
     testTask.getEndpointDataParameter = (id: string, key: string, optional: boolean) => {
+        let name = 'ENDPOINT_DATA_' + id + '_' + key.toUpperCase();
+        if(sysVar.has(name)){
+            return sysVar.get(name);
+        }
         return undefined;
     };
 
     testTask.getVariable = (name: string) => {
         return sysVar.get(name);
     };
+
+    testTask.TaskResult = tl.TaskResult;
+
+    testTask.setResult = (result: any, message: string, done?: boolean) => {
+            tl.setResult(result,message,done);
+    }
+
+    testTask.setVariable = (name: string, val: string, secret?: boolean) => {
+        sysVar.set(name, val);
+    }
 
     return testTask;
 }
@@ -52,5 +66,11 @@ process.env.HTTPS_PROXY = "";
 process.env.https_proxy = "";
 process.env.HTTP_PROXY = "";
 process.env.http_proxy = "";
-pp.run(task);
+
+async function runTasks() {
+    await pp.run(task);
+    await pp.run(task);
+}
+
+runTasks().catch(err=>console.error(err));
 
