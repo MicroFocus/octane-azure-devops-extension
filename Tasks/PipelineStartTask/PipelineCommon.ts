@@ -43,9 +43,11 @@ export async function run(tl: any) {
             let collectionUri = tl.getVariable("System.TeamFoundationCollectionUri");
             let projectId = tl.getVariable("System.TeamProjectId");
             let projectName = tl.getVariable("System.TeamProject");
+            let buildName = tl.getVariable('Build.DefinitionName');
             console.log('collectionUri = ' + collectionUri);
             console.log('projectId = ' + projectId);
             console.log('projectName = ' + projectName);
+            console.log('buildName = ' + buildName);
             if (!octane) {
                 octane = new Octane({
                     protocol: url.protocol.endsWith(':') ? url.protocol.slice(0, -1) : url.protocol,
@@ -65,8 +67,8 @@ export async function run(tl: any) {
             console.log('Connected');
             instanceId = instanceId && instanceId.trim() || generateUUID();
             console.log("instanceId=" + instanceId);
-            let query = Query.field('instance_id').equal(instanceId).and(Query.field('name').equal(projectName));
-            let ciServer = await utils.createAsyncApi(octane.ciServers.getAll.bind(octane.ciServers.getAll))({ query: query });
+            let queryCiServer = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(projectName));
+            let ciServer = await utils.createAsyncApi(octane.ciServers.getAll.bind(octane.ciServers))({ query: queryCiServer });
 
             if (!ciServer || ciServer.length == 0) {
                 await utils.createAsyncApi(octane.ciServers.create.bind(octane.ciServers))({
@@ -76,15 +78,27 @@ export async function run(tl: any) {
                     'url': collectionUri + projectId,
                     'plugin_version': '1.0.0'
                 });
+                console.log('CI server was created');
                 tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
             }
-
+            let queryPipeline = Query.field('name').equal(buildName);
+            let pipeline = await utils.createAsyncApi(octane.pipelines.getAll.bind(octane.pipelines))({ query: queryPipeline });
+            if (!pipeline || pipeline.length == 0) {
+                await utils.createAsyncApi(octane.pipelines.create.bind(octane.pipelines))({
+                    'name': buildName,
+                    'ci_server': { 'type': 'ci_server', 'id': ciServer[0].id },
+                    'root_job_name': buildName,
+                    'notification_track': false,
+                    'notification_track_tester': false
+                });
+            }
+            console.log('Pipeline [' + buildName + '] was created');
             resolve();
         } catch (ex) {
             reject(ex);
         }
     }).catch(ex => {
         console.log(ex);
-        tl.setResult(tl.TaskResult.Failed, 'PipelinInitTask should have passed but failed.');
+        tl.setResult(tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
     });
 }
