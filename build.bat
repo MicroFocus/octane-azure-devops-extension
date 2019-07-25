@@ -1,6 +1,6 @@
 @echo off
 
-for /F %%t in ('dir /B Tasks') do (
+for %%t in (dto PipelineStartTask) do (
     pushd .
     echo.
     echo ======================================
