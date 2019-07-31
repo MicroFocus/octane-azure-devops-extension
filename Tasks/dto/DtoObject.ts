@@ -10,8 +10,8 @@ export class DtoObject {
         if (typeof json === 'string') {
             return JSON.parse(json, DtoObject.reviver);
         } else {
-            let user = Object.create(DtoObject.prototype);
-            return Object.assign(user, json);
+            let obj = Object.create(DtoObject.prototype);
+            return Object.assign(obj, json);
         }
     }
 

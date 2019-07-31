@@ -85,6 +85,8 @@ const jsonObject: object = {
     ]
 };
 
-let ciEventsList = JSON.parse(JSON.stringify(jsonObject), CiEventsList.reviver);
+let ciEventsList:CiEventsList = JSON.parse(JSON.stringify(jsonObject), CiEventsList.reviver);
 console.log(ciEventsList);
 console.log(JSON.stringify(ciEventsList));
+let jsonObjectConverted = ciEventsList.toJSON();
+console.log(JSON.stringify(jsonObjectConverted));
