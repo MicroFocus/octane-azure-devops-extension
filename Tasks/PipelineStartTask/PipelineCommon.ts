@@ -4,6 +4,7 @@ const { URL } = require('whatwg-url');
 const crypto = require('crypto');
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 const utils = require('./utils');
+const querystring = require("querystring");
 
 export function generateUUID() {
     return crypto.randomBytes(15).toString("hex").replace(/(.{5})/g, '-$1').substring(1);
@@ -67,27 +68,32 @@ export async function run(tl: any) {
             console.log('Connected');
             instanceId = instanceId && instanceId.trim() || generateUUID();
             console.log("instanceId=" + instanceId);
-            let queryCiServer = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(projectName));
-            let ciServer = await utils.createAsyncApi(octane.ciServers.getAll.bind(octane.ciServers))({ query: queryCiServer });
+            let name = 'Azure DevOps CI Server - ' + projectName;
+            let queryCiServer = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(querystring.escape(name)));
 
+            let ciServer = await utils.createAsyncApi(octane.ciServers.getAll.bind(octane.ciServers))({ query: queryCiServer });
+            let serverId;
             if (!ciServer || ciServer.length == 0) {
-                await utils.createAsyncApi(octane.ciServers.create.bind(octane.ciServers))({
+               let s =  await utils.createAsyncApi(octane.ciServers.create.bind(octane.ciServers))({
                     'instance_id': instanceId && instanceId.trim() || generateUUID(),
-                    'name': projectName,
-                    'server_type': 'Azure DevOps',
+                    'name': name,
+                    'server_type': 'azure',
                     'url': collectionUri + projectId,
                     'plugin_version': '1.0.0'
                 });
+                serverId = s.id;
                 console.log('CI server was created');
                 tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
+            } else {
+                serverId = ciServer[0].id;
             }
-            let queryPipeline = Query.field('name').equal(buildName);
+            let queryPipeline = Query.field('name').equal(querystring.escape(buildName));
             let pipeline = await utils.createAsyncApi(octane.pipelines.getAll.bind(octane.pipelines))({ query: queryPipeline });
             if (!pipeline || pipeline.length == 0) {
                 await utils.createAsyncApi(octane.pipelines.create.bind(octane.pipelines))({
                     'name': buildName,
-                    'ci_server': { 'type': 'ci_server', 'id': ciServer[0].id },
-                    'root_job_name': buildName,
+                    'ci_server': { 'type': 'ci_server', 'id': serverId },
+                    'root_job_name': projectName + '_' + buildName,
                     'notification_track': false,
                     'notification_track_tester': false
                 });
