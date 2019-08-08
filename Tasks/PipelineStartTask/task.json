@@ -20,19 +20,11 @@
   "instanceNameFormat": "ALM Octane Pipeline Start",
   "inputs": [
     {
-      "name": "OctaneService",
-      "type": "connectedService:Octane",
+      "name": "OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnection",
       "label": "Octane service/server end point",
-      "defaultValue": "",
       "required": false,
       "helpMarkDown": "Select the Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'Octane server connection'"
-    }
-  ],
-  "dataSourceBindings": [
-    {
-      "target": "project",
-      "endpointId": "$(OctaneService)",
-      "dataSourceName": "Octane Projects"
     }
   ],
   "execution": {

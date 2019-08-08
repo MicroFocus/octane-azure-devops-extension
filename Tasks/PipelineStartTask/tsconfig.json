@@ -3,5 +3,11 @@
       "target": "ES6",
       "module": "commonjs",
       "sourceMap":true
-  }
+  },
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

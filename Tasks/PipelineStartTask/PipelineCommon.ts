@@ -1,9 +1,15 @@
+import {CiEventsList} from "./dto/events/CiEventsList";
+import {CiServerInfo} from "./dto/general/CiServerInfo";
+import {CiEvent} from "./dto/events/CiEvent";
+import {CiEventType, PhaseType} from "./dto/events/CiTypes";
+
 const Octane = require('@microfocus/alm-octane-js-rest-sdk');
 const octaneRoutes = require('./octane_routes.js');
-const { URL } = require('whatwg-url');
+const {URL} = require('whatwg-url');
 const crypto = require('crypto');
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
-const utils = require('./utils');
+const util = require('util');
+require('util.promisify').shim();
 const querystring = require("querystring");
 
 export function generateUUID() {
@@ -11,12 +17,61 @@ export function generateUUID() {
 }
 
 let octane;
+
+async function createCIServerOnDemand(instanceId, serverName, collectionUri, projectId, tl: any, octaneService) {
+    let ciServerQuery = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(serverName));
+    let ciServers = await util.promisify(octane.ciServers.getAll.bind(octane.ciServers))({query: ciServerQuery});
+    console.log(ciServers);
+    if (!ciServers || ciServers.length == 0) {
+        ciServers = [
+            await util.promisify(octane.ciServers.create.bind(octane.ciServers))({
+                'instance_id': instanceId && instanceId.trim() || generateUUID(),
+                'name': serverName,
+                'server_type': 'azure',
+                'url': collectionUri + projectId,
+                'plugin_version': '2.0.1'
+            })
+        ];
+        console.log(ciServers.length === 1 ? 'CI server ' + ciServers[0].id + ' created' : 'CI server creation failed');
+        tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
+    }
+    return ciServers[0];
+}
+
+async function createPipelineOnDemand(pipelineName, rootJobName, ciServer) {
+    let pipelineQuery = Query.field('name').equal(pipelineName);
+    let pipelines = await util.promisify(octane.pipelines.getAll.bind(octane.pipelines))({query: pipelineQuery});
+    if (!pipelines || pipelines.length == 0) {
+        pipelines = [
+            await util.promisify(octane.pipelines.create.bind(octane.pipelines))({
+                'name': pipelineName,
+                'ci_server': {'type': 'ci_server', 'id': ciServer.id},
+                'root_job_name': rootJobName,
+                'notification_track': false,
+                'notification_track_tester': false
+            })
+        ];
+        console.log(pipelines.length === 1 ? 'Pipeline ' + pipelines[0].id + ' created' : 'Pipeline creation failed');
+    }
+    return pipelines[0];
+}
+
+async function sendEvent(event, serverInfo) {
+    let events = new CiEventsList(serverInfo, [event]);
+    const REST_API_SHAREDSPACE_BASE_URL = octane.config.protocol + '://' + octane.config.host + ':' + octane.config.port + '/internal-api/shared_spaces/' + octane.config.shared_space_id;
+    let ret = await util.promisify(octane.requestor.put.bind(octane.requestor))({
+        url: '/analytics/ci/events',
+        baseUrl: REST_API_SHAREDSPACE_BASE_URL,
+        json: events.toJSON()
+    });
+}
+
 export async function run(tl: any) {
     await new Promise(async (resolve, reject) => {
         try {
             let result = tl.execSync(`node`, `--version`);
             console.log('node version = ' + result.stdout);
-            let octaneService = tl.getInput('OctaneService', true);
+            let octaneService = tl.getInput('OctaneServiceConnection', true);
             console.log('OctaneService = ' + octaneService);
             let endpointUrl = tl.getEndpointUrl(octaneService, false);
             console.log('rawUrl = ' + endpointUrl);
@@ -45,6 +100,8 @@ export async function run(tl: any) {
             let projectId = tl.getVariable("System.TeamProjectId");
             let projectName = tl.getVariable("System.TeamProject");
             let buildName = tl.getVariable('Build.DefinitionName');
+            let buildId = tl.getVariable('Build.BuildId')
+            let buildNumber = tl.getVariable('Build.BuildNumber')
             console.log('collectionUri = ' + collectionUri);
             console.log('projectId = ' + projectId);
             console.log('projectName = ' + projectName);
@@ -60,45 +117,23 @@ export async function run(tl: any) {
                 });
             }
 
-            await utils.createAsyncApi(octane.authenticate.bind(octane))({
+            await util.promisify(octane.authenticate.bind(octane))({
                 client_id: clientId,
                 client_secret: clientSecret
             });
 
             console.log('Connected');
+
             instanceId = instanceId && instanceId.trim() || generateUUID();
             console.log("instanceId=" + instanceId);
-            let name = 'Azure DevOps CI Server - ' + projectName;
-            let queryCiServer = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(querystring.escape(name)));
 
-            let ciServer = await utils.createAsyncApi(octane.ciServers.getAll.bind(octane.ciServers))({ query: queryCiServer });
-            let serverId;
-            if (!ciServer || ciServer.length == 0) {
-               let s =  await utils.createAsyncApi(octane.ciServers.create.bind(octane.ciServers))({
-                    'instance_id': instanceId && instanceId.trim() || generateUUID(),
-                    'name': name,
-                    'server_type': 'azure',
-                    'url': collectionUri + projectId,
-                    'plugin_version': '1.0.0'
-                });
-                serverId = s.id;
-                console.log('CI server was created');
-                tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
-            } else {
-                serverId = ciServer[0].id;
-            }
-            let queryPipeline = Query.field('name').equal(querystring.escape(buildName));
-            let pipeline = await utils.createAsyncApi(octane.pipelines.getAll.bind(octane.pipelines))({ query: queryPipeline });
-            if (!pipeline || pipeline.length == 0) {
-                await utils.createAsyncApi(octane.pipelines.create.bind(octane.pipelines))({
-                    'name': buildName,
-                    'ci_server': { 'type': 'ci_server', 'id': serverId },
-                    'root_job_name': projectName + '_' + buildName,
-                    'notification_track': false,
-                    'notification_track_tester': false
-                });
-            }
-            console.log('Pipeline [' + buildName + '] was created');
+            let ciServer = await createCIServerOnDemand(instanceId, projectName, collectionUri, projectId, tl, octaneService);
+            let pipelineName = projectName + '_' + buildName;
+            let pipeline = await createPipelineOnDemand(pipelineName, pipelineName, ciServer);
+
+            let serverInfo = new CiServerInfo('azure', '2.0.1', collectionUri + projectId, instanceId, null, new Date().getTime());
+            let event = new CiEvent(buildName, CiEventType.STARTED, buildName, buildNumber, projectName, null, new Date().getTime(), 10000000, 10, null, PhaseType.POST);
+            await sendEvent(event, serverInfo);
             resolve();
         } catch (ex) {
             reject(ex);

@@ -1,0 +1,5 @@
+steps:
+  - task: ALMOctane.alm-octane-integration.octane-end-task.octane-end-task@1
+    displayName: 'ALM Octane Pipeline End'
+    inputs:
+      OctaneServiceConnection: 'Octane'

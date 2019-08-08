@@ -1,10 +1,10 @@
 {
   "manifestVersion": 1,
   "id": "alm-octane-integration",
-  "version": "1.8.0",
+  "version": "1.0.0",
   "name": "ALM Octane Integration Extension",
   "description": "An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
-  "publisher": "MicroFocus1",
+  "publisher": "ALMOctane",
   "categories": [
     "Azure Pipelines"
   ],
@@ -22,7 +22,7 @@
         "ms.vss-endpoint.endpoint-types"
       ],
       "properties": {
-        "name": "Octane",
+        "name": "OctaneServiceConnection",
         "displayName": "ALM Octane server connection",
         "url": {
           "displayName": "Server Url",
@@ -86,8 +86,7 @@
       "id": "octane-pipeline-start-decorator",
       "type": "ms.azure-pipelines.pipeline-decorator",
       "targets": [
-        "ms.azure-pipelines-agent-job.pre-job-tasks",
-        "ms.azure-pipelines-agent-job.post-job-tasks"
+        "ms.azure-pipelines-agent-job.pre-job-tasks"
       ],
       "properties": {
         "template": "Decorators/octane-pipeline-start-decorator.yml"
@@ -100,6 +99,11 @@
     },
     {
       "path": "Decorators/octane-pipeline-start-decorator.yml",
+      "addressable": true,
+      "contentType": "text/plain"
+    },
+    {
+      "path": "Decorators/octane-pipeline-end-decorator.yml",
       "addressable": true,
       "contentType": "text/plain"
     }

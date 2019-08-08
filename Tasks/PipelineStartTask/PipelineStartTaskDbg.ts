@@ -11,6 +11,9 @@ sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/octaneus
 sysVar.set('System.TeamProjectId', '86819eb3-d6b0-4490-ba8d-fe4d8e808656');
 sysVar.set('System.TeamProject', 'myproject');
 sysVar.set('Build.DefinitionName', 'BuildName');
+sysVar.set('Build.BuildId', 'BuildId')
+sysVar.set('Build.BuildNumber', '1')
+
 
 let auth = { parameters: { 'username': "sa@nga", 'password': "Welcome1" }, scheme: 'username' };
 
@@ -69,7 +72,6 @@ process.env.HTTP_PROXY = "";
 process.env.http_proxy = "";
 
 async function runTasks() {
-    await pp.run(task);
     await pp.run(task);
 }
 

@@ -1,6 +1,6 @@
 @echo off
 
-for %%t in (dto PipelineStartTask) do (
+for %%t in (PipelineStartTask) do (
     pushd .
     echo.
     echo ======================================

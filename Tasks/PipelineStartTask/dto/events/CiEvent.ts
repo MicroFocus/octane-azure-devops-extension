@@ -19,7 +19,7 @@ export class CiEvent extends DtoObject {
     parameters: any[] = [];
 
     constructor(project_display_name: string, ci_event_type: CiEventType, build_ci_id: string, number: string, project: string, result: Result,
-        start_time: number, estimated_duration: number, duration: number, scm_data: ScmData, phase_type: PhaseType, causes?: CiEventCause, parameters?: any[]) {
+        start_time: number, estimated_duration?: number, duration?: number, scm_data?: ScmData, phase_type?: PhaseType, causes?: CiEventCause, parameters?: any[]) {
         super();
         this.projectDisplayName = project_display_name;
         this.eventType = ci_event_type;
