@@ -73,13 +73,13 @@
     },
     {
       "id": "octane-start-task",
-      "description": "ALM Octane Pipeline Start Task",
+      "description": "ALM Octane Start Task",
       "type": "ms.vss-distributed-task.task",
       "targets": [
         "ms.vss-distributed-task.tasks"
       ],
       "properties": {
-        "name": "Tasks/PipelineStartTask"
+        "name": "Tasks/StartTask"
       }
     },
     {
