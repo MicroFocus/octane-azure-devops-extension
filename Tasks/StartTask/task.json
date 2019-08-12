@@ -1,10 +1,10 @@
 {
   "id": "6557a6d2-4caf-4247-99ea-5131286a8755",
   "name": "octane-start-task",
-  "friendlyName": "ALM Octane Pipeline Start Task",
-  "description": "ALM Octane Pipeline Start Task",
+  "friendlyName": "ALM Octane Start Task",
+  "description": "ALM Octane Start Task",
   "author": "Micro Focus",
-  "helpMarkDown": "Put this activity at the as early as reasonable point in your pipeline structure",
+  "helpMarkDown": "Put this activity at the as early as reasonable point in your job",
   "category": "Build",
   "visibility": [
     "Build",
