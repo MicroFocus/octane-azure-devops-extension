@@ -7,33 +7,48 @@ import {TestResult} from "./TestResult";
 import {TestResultTestField} from "./TestResultTestField";
 import {TestResultTestRunElement} from "./TestResultTestRunElement";
 import {TestResultError} from "./TestResultError";
+import {WebApi} from "azure-devops-node-api";
+import * as ba from "azure-devops-node-api/BuildApi";
+import * as ta from "azure-devops-node-api/TestApi";
+
 let convert = require('xml-js');
 
 export class TestResultsBuilder {
 
     public static buildTestResult(testResults: any, server_id: string, job_id: string): TestResult {
-        if (!testResults.count || testResults.count == 0) {
+        if (!testResults || !testResults.length) {
             console.log("No tests' results were retrieved/found");
             return null;
         }
         let testResultTestRuns = this.buildTestResultTestRun(testResults);
-        let testResultTestFields = this.buildTestResultTestFields(testResults.value[0].automatedTestType);
-        let testResultBuild = this.buildTestResultBuild(server_id, job_id, testResults.value[0].build.id);
+        let testResultTestFields = this.buildTestResultTestFields(testResults[0].automatedTestType);
+        let testResultBuild = this.buildTestResultBuild(server_id, job_id, testResults[0].build.id);
         return new TestResult(testResultBuild, testResultTestFields, testResultTestRuns);
     }
 
     public static getTestResultXml(testResults: any, server_id: string, job_id: string): any {
-        let result : TestResult = TestResultsBuilder.buildTestResult(testResults, "my_server_is", "my_job_id");
-        let  options = {compact: true, ignoreComment: true, spaces: 4};
-        let convertedXml =  '<?xml version="1.0" encoding="utf-8" standalone="yes"?>' + convert.json2xml(result.toJSON(),options);
+        let result: TestResult = TestResultsBuilder.buildTestResult(testResults, server_id, job_id);
+        let options = {compact: true, ignoreComment: true, spaces: 4};
+        let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>' + convert.json2xml(result.toJSON(), options);
         console.log("Tests' Results converted for Octane");
         console.log(convertedXml);
         return convertedXml;
     }
 
+    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string) : Promise<TestResult> {
+        let buildApi: ba.IBuildApi = await connection.getBuildApi();
+        let build = await buildApi.getBuild(projectName, buildId);
+        let buildURI = build.uri;
+        let testApi: ta.ITestApi = await connection.getTestApi();
+        let testRuns = await testApi.getTestRuns(projectName, buildURI);
+        let testRunId = testRuns[0].id;
+        let results = await testApi.getTestResults(projectName, testRunId);
+        return TestResultsBuilder.getTestResultXml(results, serverId, jobId);
+    }
+
     private static buildTestResultTestRun(testResults: any): TestResultTestRunElement[] {
         let testResultTestRunList: Array<TestResultTestRunElement> = [];
-        testResults.value.forEach(element => {
+        testResults.forEach(element => {
             let packagename = element.automatedTestStorage;
             let name = element.automatedTestName;
             let classname = packagename + "." + name;
