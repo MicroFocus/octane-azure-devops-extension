@@ -1,7 +1,7 @@
 import {CiEventsList} from "./dto/events/CiEventsList";
 import {CiServerInfo} from "./dto/general/CiServerInfo";
 import {CiEvent} from "./dto/events/CiEvent";
-import {CiEventType, PhaseType} from "./dto/events/CiTypes";
+import {CiEventType, PhaseType, Result} from "./dto/events/CiTypes";
 
 const Octane = require('@microfocus/alm-octane-js-rest-sdk');
 const octaneRoutes = require('./octane_routes.js');
@@ -12,14 +12,18 @@ const util = require('util');
 require('util.promisify').shim();
 const querystring = require("querystring");
 
-export function generateUUID() {
+function generateUUID() {
     return crypto.randomBytes(15).toString("hex").replace(/(.{5})/g, '-$1').substring(1);
+}
+
+function escapeOctaneQueryValue(q) {
+    return q && q.replace(/\\/g, "\\\\");
 }
 
 let octane;
 
 async function createCIServerOnDemand(instanceId, serverName, collectionUri, projectId, tl: any, octaneService) {
-    let ciServerQuery = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(serverName));
+    let ciServerQuery = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(escapeOctaneQueryValue(serverName)));
     let ciServers = await util.promisify(octane.ciServers.getAll.bind(octane.ciServers))({query: ciServerQuery});
     console.log(ciServers);
     if (!ciServers || ciServers.length == 0) {
@@ -39,7 +43,7 @@ async function createCIServerOnDemand(instanceId, serverName, collectionUri, pro
 }
 
 async function createPipelineOnDemand(pipelineName, rootJobName, ciServer) {
-    let pipelineQuery = Query.field('name').equal(pipelineName);
+    let pipelineQuery = Query.field('name').equal(escapeOctaneQueryValue(pipelineName));
     let pipelines = await util.promisify(octane.pipelines.getAll.bind(octane.pipelines))({query: pipelineQuery});
     if (!pipelines || pipelines.length == 0) {
         pipelines = [
@@ -132,8 +136,11 @@ export async function run(tl: any) {
             let pipeline = await createPipelineOnDemand(pipelineName, pipelineName, ciServer);
 
             let serverInfo = new CiServerInfo('azure', '2.0.1', collectionUri + projectId, instanceId, null, new Date().getTime());
-            let event = new CiEvent(buildName, CiEventType.STARTED, buildName, buildNumber, projectName, null, new Date().getTime(), 10000000, 10, null, PhaseType.POST);
-            await sendEvent(event, serverInfo);
+            let startEvent = new CiEvent(buildName, CiEventType.STARTED, buildName, buildNumber, projectName, null, new Date().getTime(), 10000000, 10, null, PhaseType.POST);
+            await sendEvent(startEvent, serverInfo);
+            await util.promisify((a, f) => setTimeout(f, a))(10000);
+            let endEvent = new CiEvent(buildName, CiEventType.FINISHED, buildName, buildNumber, projectName, Result.SUCCESS, new Date().getTime(), 10000000, 10, null, PhaseType.POST);
+            await sendEvent(endEvent, serverInfo);
             resolve();
         } catch (ex) {
             reject(ex);

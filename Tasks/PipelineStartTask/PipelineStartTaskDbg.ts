@@ -6,14 +6,14 @@ let testTask = {};
 let input = new Map();
 let sysVar = new Map();
 
-input.set('OctaneService', 'Octane');
+input.set('OctaneServiceConnection', 'Octane');
 sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/octaneuser/');
 sysVar.set('System.TeamProjectId', '86819eb3-d6b0-4490-ba8d-fe4d8e808656');
 sysVar.set('System.TeamProject', 'myproject');
 sysVar.set('Build.DefinitionName', 'BuildName');
 sysVar.set('Build.BuildId', 'BuildId')
 sysVar.set('Build.BuildNumber', '1')
-
+sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
 
 let auth = { parameters: { 'username': "sa@nga", 'password': "Welcome1" }, scheme: 'username' };
 
