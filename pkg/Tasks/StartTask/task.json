@@ -1,0 +1,36 @@
+{
+  "id": "6557a6d2-4caf-4247-99ea-5131286a8755",
+  "name": "octane-start-task",
+  "friendlyName": "ALM Octane Start Task",
+  "description": "ALM Octane Start Task",
+  "author": "Micro Focus",
+  "helpMarkDown": "Put this activity at the as early as reasonable point in your job",
+  "category": "Build",
+  "visibility": [
+    "Build",
+    "Release"
+  ],
+  "demands": [],
+  "version": {
+    "Major": "1",
+    "Minor": "0",
+    "Patch": "0"
+  },
+  "minimumAgentVersion": "1.95.0",
+  "instanceNameFormat": "ALM Octane Pipeline Start",
+  "inputs": [
+    {
+      "name": "OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnection",
+      "label": "Octane service/server end point",
+      "required": false,
+      "helpMarkDown": "Select the Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'Octane server connection'"
+    }
+  ],
+  "execution": {
+    "Node": {
+      "target": "StartTask.js",
+      "argumentFormat": ""
+    }
+  }
+}
