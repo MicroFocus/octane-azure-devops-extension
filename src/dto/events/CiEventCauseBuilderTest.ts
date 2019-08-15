@@ -1,6 +1,6 @@
-import {ConnectionUtils} from '../../ConnectionUtils';
-import {ScmBuilder} from './ScmBuilder';
-import {WebApi} from 'azure-devops-node-api';
+import {ConnectionUtils} from "../../ConnectionUtils";
+import {WebApi} from "azure-devops-node-api";
+import {CiEventCauseBuilder} from "./CiEventCauseBuilder";
 
 let projectName = 'demo-app';
 
@@ -11,8 +11,7 @@ let toBuild: number = 39;
 
 let api: WebApi = ConnectionUtils.getWebApiWithProxy(orgUrl, token);
 
-ScmBuilder.buildScmData(api, projectName, toBuild).then(scm => {
+CiEventCauseBuilder.buildCiEvenCause(api, projectName, toBuild).then(cause => {
     console.log('########################## finished ###############################');
-    console.log(scm);
+    console.log(cause);
 });
-

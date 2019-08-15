@@ -10,7 +10,9 @@ export const enum CiEventType {
 export const enum CiCausesType {
     TIMER = 'timer',
     USER = 'user',
-    SCM = 'scm'
+    SCM = 'scm',
+    UPSTREAM = 'upstream',
+    UNDEFINED = 'undefined'
 }
 
 export const enum PhaseType {
