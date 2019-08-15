@@ -1,19 +1,20 @@
 import tl = require('azure-pipelines-task-lib/task');
 import tlr = require('azure-pipelines-task-lib/toolrunner');
-import pp = require('./TaskCommon');
+import { StartTask } from './StartTask';
+import {EndTask} from "./EndTask";
 
 let testTask = {};
 let input = new Map();
 let sysVar = new Map();
 
 input.set('OctaneServiceConnection', 'Octane');
-sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/octaneuser/');
+sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelokshin');
 sysVar.set('System.TeamProjectId', '86819eb3-d6b0-4490-ba8d-fe4d8e808656');
-sysVar.set('System.TeamProject', 'myproject');
-sysVar.set('Build.DefinitionName', 'BuildName');
-sysVar.set('Build.BuildId', 'BuildId');
-sysVar.set('Build.BuildNumber', '1');
+sysVar.set('System.TeamProject', 'demo-app');
+sysVar.set('Build.DefinitionName', 'demo-app');
+sysVar.set('Build.BuildId', '40');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
+sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq');
 
 let auth = {parameters: {'username': "sa@nga", 'password': "Welcome1"}, scheme: 'username'};
 
@@ -61,8 +62,8 @@ let task = initTl(testTask);
 let result = task.execSync(`node`, `--version`);
 console.log('node version = ' + result.stdout);
 
-console.log(task.getInput('OctaneService'));
-let endpointAuth = task.getEndpointAuthorization(task.getInput('OctaneService'), false);
+console.log(task.getInput('OctaneServiceConnection'));
+let endpointAuth = task.getEndpointAuthorization(task.getInput('OctaneServiceConnection'), false);
 let clientId = endpointAuth.parameters['username'];
 let clientSecret = endpointAuth.parameters['password'];
 console.log('clientId=' + clientId + " clientSecret=" + clientSecret);
@@ -72,7 +73,10 @@ process.env.HTTP_PROXY = "";
 process.env.http_proxy = "";
 
 async function runTasks() {
-    await pp.run(task);
+    let startTask: StartTask = await StartTask.instance(task);
+    await startTask.run();
+    let endTask: EndTask = await EndTask.instance(task);
+    await endTask.run();
 }
 
 runTasks().catch(err => console.error(err));
