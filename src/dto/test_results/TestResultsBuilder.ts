@@ -12,6 +12,7 @@ import * as ba from 'azure-devops-node-api/BuildApi';
 import * as ta from 'azure-devops-node-api/TestApi';
 
 let convert = require('xml-js');
+let xmlescape = require('xml-escape');
 
 export class TestResultsBuilder {
 
@@ -29,13 +30,13 @@ export class TestResultsBuilder {
     public static getTestResultXml(testResults: any, server_id: string, job_id: string): any {
         let result: TestResult = TestResultsBuilder.buildTestResult(testResults, server_id, job_id);
         let options = {compact: true, ignoreComment: true, spaces: 4};
-        let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>' + convert.json2xml(result.toJSON(), options);
+        let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><test_result>' + convert.js2xml(result, options) + '</test_result>';
         console.log('Test results converted for Octane');
         console.log(convertedXml);
         return convertedXml;
     }
 
-    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string): Promise<TestResult> {
+    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string): Promise<string> {
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
         let build = await buildApi.getBuild(projectName, buildId);
         let buildURI = build.uri;
@@ -52,7 +53,7 @@ export class TestResultsBuilder {
             let packagename = element.automatedTestStorage;
             let name = element.automatedTestName;
             let classname = packagename + '.' + name;
-            let duration = element.durationInMs;
+            let duration = element.durationInMs || 0;
             let status = this.getStatus(element.outcome);
             let started = Date.parse(element.startedDate);
             let external_report_url = element.url;
@@ -63,8 +64,8 @@ export class TestResultsBuilder {
                 if (!message || 0 === message.length) {
                     message = stackTrace;
                 }
-                let error_attrib = new TestResultErrorAttributes(message);
-                error = new TestResultError(error_attrib, stackTrace);
+                let error_attrib = new TestResultErrorAttributes(xmlescape(message));
+                error = new TestResultError(error_attrib, xmlescape(stackTrace));
             } else {
                 error = undefined;
             }

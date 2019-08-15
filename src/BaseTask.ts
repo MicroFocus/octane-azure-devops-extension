@@ -1,5 +1,7 @@
 import {CiEventsList} from './dto/events/CiEventsList';
 import {CiServerInfo} from './dto/general/CiServerInfo';
+import {CiEvent} from "./dto/events/CiEvent";
+const querystring = require('querystring');
 
 const Octane = require('@microfocus/alm-octane-js-rest-sdk');
 const getOctaneRoutes = require('./octane_routes.js');
@@ -73,7 +75,7 @@ export class BaseTask {
         return pipelines[0];
     }
 
-    public async sendEvent(event) {
+    public async sendEvent(event: CiEvent) {
         // process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
         // process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
         // process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
@@ -86,6 +88,18 @@ export class BaseTask {
             url: '/analytics/ci/events',
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             json: events.toJSON()
+        });
+    }
+
+    public async sendTestResult(testResult: string) {
+        let serverInfo = new CiServerInfo('azure', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
+        let ret = await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
+            url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.projectName + '&build-ci-id=' + this.buildName,
+            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
+            headers: {'Content-Type': 'application/xml'},
+            json: false,
+            body: testResult
         });
     }
 

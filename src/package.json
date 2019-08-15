@@ -14,6 +14,7 @@
     "azure-pipelines-task-lib": "^2.8.0",
     "util.promisify": "^1.0.0",
     "whatwg-url": "^7.0.0",
+    "xml-escape": "^1.1.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {

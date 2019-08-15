@@ -22,7 +22,6 @@ export class StartTask extends BaseTask {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
 
         let scmData = await ScmBuilder.buildScmData(api, this.projectName, parseInt(this.buildId));
-        console.log('########################## finished ###############################');
         console.log(scmData);
         let scmEvent = new CiEvent(this.buildName, CiEventType.SCM, this.buildName, this.buildId, this.projectName, null, new Date().getTime(), 10000000, 10, scmData, PhaseType.POST);
         await this.sendEvent(scmEvent);

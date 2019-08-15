@@ -11,7 +11,7 @@ let buildId: number = 34;
 
 let api: WebApi = ConnectionUtils.getWebApiWithProxy(orgUrl, token);
 
-TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'sreverId', 'jobId').then(res => {
+TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'serverId', 'jobId').then(res => {
     console.log('######################### finished ###############################');
     console.log(res);
 });
