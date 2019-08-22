@@ -46,7 +46,7 @@ export class BaseTask {
                 await util.promisify(this.octane.ciServers.create.bind(this.octane.ciServers))({
                     'instance_id': instanceId && instanceId.trim() || BaseTask.generateUUID(),
                     'name': serverName,
-                    'server_type': 'azure',
+                    'server_type': 'azure_devops',
                     'url': collectionUri + projectId,
                     'plugin_version': '2.0.1'
                 })
@@ -81,7 +81,7 @@ export class BaseTask {
         // process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
         // process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
 
-        let serverInfo = new CiServerInfo('azure', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
         let ret = await util.promisify(this.octane.requestor.put.bind(this.octane.requestor))({
@@ -92,7 +92,7 @@ export class BaseTask {
     }
 
     public async sendTestResult(testResult: string) {
-        let serverInfo = new CiServerInfo('azure', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
         let ret = await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
             url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.projectName + '&build-ci-id=' + this.buildName,
@@ -151,7 +151,8 @@ export class BaseTask {
                         port: url.port,
                         shared_space_id: spaces[0],
                         workspace_id: spaces[1],
-                        routesConfig: getOctaneRoutes()
+                        routesConfig: getOctaneRoutes(),
+                        tech_preview_API: true
                     });
                 }
 

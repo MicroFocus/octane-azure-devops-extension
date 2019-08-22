@@ -12,18 +12,18 @@ sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelo
 sysVar.set('System.TeamProjectId', '86819eb3-d6b0-4490-ba8d-fe4d8e808656');
 sysVar.set('System.TeamProject', 'demo-app');
 sysVar.set('Build.DefinitionName', 'demo-app');
-sysVar.set('Build.BuildId', '40');
+sysVar.set('Build.BuildId', '34');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
 sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq');
 
-let auth = {parameters: {'username': "sa@nga", 'password': "Welcome1"}, scheme: 'username'};
+let auth = {parameters: {'username': "stekel_mwj8lvz689qexf94nd5rz3oz2", 'password': "+8416853ae3ca19E"}, scheme: 'username'};
 
 function initTl(testTask: any) {
     testTask.execSync = (tool: string, args: string | string[], options?: tlr.IExecSyncOptions) => {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
-        return 'http://localhost:8080/ui/?p=1001/1002';
+        return 'https://qa53.almoctane.com/ui/?p=1002/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
         return input.get(name);
@@ -67,10 +67,10 @@ let endpointAuth = task.getEndpointAuthorization(task.getInput('OctaneServiceCon
 let clientId = endpointAuth.parameters['username'];
 let clientSecret = endpointAuth.parameters['password'];
 console.log('clientId=' + clientId + " clientSecret=" + clientSecret);
-process.env.HTTPS_PROXY = "";
-process.env.https_proxy = "";
-process.env.HTTP_PROXY = "";
-process.env.http_proxy = "";
+// process.env.HTTPS_PROXY = "";
+// process.env.https_proxy = "";
+// process.env.HTTP_PROXY = "";
+// process.env.http_proxy = "";
 
 async function runTasks() {
     let startTask: StartTask = await StartTask.instance(task);
