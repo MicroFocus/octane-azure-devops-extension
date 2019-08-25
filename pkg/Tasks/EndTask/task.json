@@ -1,0 +1,36 @@
+{
+  "id": "444a4f87-70b6-4f07-aa4a-6a892ca38c8e",
+  "name": "octane-end-task",
+  "friendlyName": "ALM Octane End Task",
+  "description": "ALM Octane End Task",
+  "author": "Micro Focus",
+  "helpMarkDown": "Put this activity at the as early as reasonable point in your job",
+  "category": "Build",
+  "visibility": [
+    "Build",
+    "Release"
+  ],
+  "demands": [],
+  "version": {
+    "Major": "1",
+    "Minor": "0",
+    "Patch": "0"
+  },
+  "minimumAgentVersion": "1.95.0",
+  "instanceNameFormat": "ALM Octane Pipeline End",
+  "inputs": [
+    {
+      "name": "OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnection",
+      "label": "Octane service/server end point",
+      "required": false,
+      "helpMarkDown": "Select the Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'Octane server connection'"
+    }
+  ],
+  "execution": {
+    "Node": {
+      "target": "EndTask.js",
+      "argumentFormat": ""
+    }
+  }
+}

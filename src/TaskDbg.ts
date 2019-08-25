@@ -16,14 +16,14 @@ sysVar.set('Build.BuildId', '34');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
 sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq');
 
-let auth = {parameters: {'username': "stekel_mwj8lvz689qexf94nd5rz3oz2", 'password': "+8416853ae3ca19E"}, scheme: 'username'};
+let auth = {parameters: {'username': "stekel_541pzomg2jn33fk085q2wrvg8", 'password': "(7732be4a9f7991dB"}, scheme: 'username'};
 
 function initTl(testTask: any) {
     testTask.execSync = (tool: string, args: string | string[], options?: tlr.IExecSyncOptions) => {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
-        return 'https://qa53.almoctane.com/ui/?p=1002/1002';
+        return 'https://qa53.almoctane.com/ui/?p=2001/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
         return input.get(name);

@@ -10,6 +10,9 @@ echo src is ready
 echo ======================================
 popd
 
+copy /y src\* pkg\StartTask
+copy /y src\* pkg\EndTask
+
 echo.
 echo ======================================
 echo Packaging the extension

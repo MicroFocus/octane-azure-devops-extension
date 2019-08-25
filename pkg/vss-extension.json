@@ -91,6 +91,16 @@
       "properties": {
         "template": "Decorators/octane-pipeline-start-decorator.yml"
       }
+    },
+    {
+      "id": "octane-pipeline-end-decorator",
+      "type": "ms.azure-pipelines.pipeline-decorator",
+      "targets": [
+        "ms.azure-pipelines-agent-job.post-job-tasks"
+      ],
+      "properties": {
+        "template": "Decorators/octane-pipeline-end-decorator.yml"
+      }
     }
   ],
   "files": [
