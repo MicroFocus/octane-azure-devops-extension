@@ -10,15 +10,18 @@ echo src is ready
 echo ======================================
 popd
 
-copy /y src\* pkg\StartTask
-copy /y src\* pkg\EndTask
+xcopy /S /Y src\* pkg\Tasks\StartTask\
+xcopy /S /Y src\* pkg\Tasks\EndTask\
 
+pushd .
 echo.
 echo ======================================
 echo Packaging the extension
-cmd /C tfx extension create --manifests pkg/vss-extension.json || goto :error
+cd pkg
+cmd /C tfx extension create --manifests vss-extension.json || goto :error
 echo The extension is ready
 echo ======================================
+popd
 goto :eof
 
 :build_error

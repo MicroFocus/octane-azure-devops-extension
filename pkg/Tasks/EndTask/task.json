@@ -29,7 +29,7 @@
   ],
   "execution": {
     "Node": {
-      "target": "EndTask.js",
+      "target": "task.js",
       "argumentFormat": ""
     }
   }

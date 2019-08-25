@@ -1,5 +1,6 @@
 steps:
   - task: ALMOctane.alm-octane-integration.octane-start-task.octane-start-task@1
+    condition: always()
     displayName: 'ALM Octane Pipeline Start'
     inputs:
       OctaneServiceConnection: 'Octane'
