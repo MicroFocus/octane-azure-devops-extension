@@ -21,9 +21,16 @@ export class ScmBuilder {
         let gitApi: git.IGitApi = await connection.getGitApi();
         let repos = await gitApi.getRepositories(projectName);
         let repo = repos[0];
-        let changes_between_builds = await buildApi.getChangesBetweenBuilds(projectName, fromBuild, toBuild);
+        let prev_build = await buildApi.getBuild(projectName, fromBuild);
+        let changes_between_builds;
+        if (prev_build == null) {
+            changes_between_builds =await buildApi.getBuildChanges(projectName, toBuild);
+        } else {
+            changes_between_builds = await buildApi.getChangesBetweenBuilds(projectName, fromBuild, toBuild);
+        }
+
         if (!changes_between_builds || !changes_between_builds.length) {
-            console.log('No changes were found for build ' + toBuild);
+            console.log('No changes were found between builds [' + fromBuild + '] and [' + toBuild + ']');
             return null;
         }
         let scmData: ScmData;
