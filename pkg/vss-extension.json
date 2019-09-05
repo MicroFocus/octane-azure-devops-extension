@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "alm-octane-integration",
-  "version": "9.0.0",
+  "version": "7.0.0",
   "name": "ALM Octane Integration Extension",
   "description": "An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "ALMOctane",

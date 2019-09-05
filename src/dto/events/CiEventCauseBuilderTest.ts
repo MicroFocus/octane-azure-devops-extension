@@ -11,7 +11,7 @@ let toBuild: number = 39;
 
 let api: WebApi = ConnectionUtils.getWebApiWithProxy(orgUrl, token);
 
-CiEventCauseBuilder.buildCiEvenCause(api, projectName, toBuild).then(cause => {
+CiEventCauseBuilder.buildCiEventCauses(true, api, projectName, toBuild).then(causes => {
     console.log('########################## finished ###############################');
-    console.log(cause);
+    console.log(causes);
 });

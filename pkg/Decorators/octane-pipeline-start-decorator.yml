@@ -1,4 +1,5 @@
 steps:
+- ${{ if eq(variables['InjectAlmOctaneTasks'], 'true') }}:
   - task: ALMOctane.alm-octane-integration.octane-start-task.octane-start-task@1
     condition: always()
     displayName: 'ALM Octane Pipeline Start'

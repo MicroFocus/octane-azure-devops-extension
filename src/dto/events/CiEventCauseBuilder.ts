@@ -5,7 +5,17 @@ import {CiCausesType} from "./CiTypes";
 import {BuildReason} from "azure-devops-node-api/interfaces/BuildInterfaces";
 
 export class CiEventCauseBuilder {
-    public static async buildCiEvenCause(connection: WebApi, projectName: string, buildId: number): Promise<CiEventCause> {
+    public static async buildCiEventCauses(isRoot, connection: WebApi, projectName: string, buildId: number): Promise<CiEventCause[]> {
+        let rootCause: CiEventCause = await CiEventCauseBuilder.buildCiEventRootCause(connection, projectName, buildId);
+        if(isRoot) {
+            return [rootCause];
+        } else {
+            let cause = new CiEventCause(CiCausesType.UPSTREAM, rootCause.userName, rootCause.userId, projectName, buildId, [rootCause]);
+            return [cause];
+        }
+    }
+
+    private static async buildCiEventRootCause(connection: WebApi, projectName: string, buildId: number): Promise<CiEventCause> {
         function convert_root_ci_causes_type(buildReason: number): CiCausesType {
             switch (buildReason) {
                 case BuildReason.All:
@@ -36,10 +46,7 @@ export class CiEventCauseBuilder {
         let ciType: CiCausesType = convert_root_ci_causes_type(reason);
         let userName = build_info.requestedBy.displayName;
         let userId = build_info.requestedBy.uniqueName;
-        let root_cause : CiEventCause = new CiEventCause(ciType, userName, userId, projectName);
-        console.log('############# Root cause: ##############');
-        console.log(root_cause);
-
+        let root_cause : CiEventCause = new CiEventCause(ciType, userName, userId);
         return root_cause;
     }
 }

@@ -16,14 +16,14 @@ sysVar.set('Build.BuildId', '34');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
 sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq');
 
-let auth = {parameters: {'username': "stekel_541pzomg2jn33fk085q2wrvg8", 'password': "(7732be4a9f7991dB"}, scheme: 'username'};
+let auth = {parameters: {'username': 'sa@nga', 'password': 'Welcome1'}, scheme: 'username'};
 
 function initTl(testTask: any) {
     testTask.execSync = (tool: string, args: string | string[], options?: tlr.IExecSyncOptions) => {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
-        return 'https://qa53.almoctane.com/ui/?p=2001/1002';
+        return 'http://ilstekel02.microfocus.com:8080/ui/?p=1001/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
         return input.get(name);
@@ -73,8 +73,19 @@ console.log('clientId=' + clientId + " clientSecret=" + clientSecret);
 // process.env.http_proxy = "";
 
 async function runTasks() {
+    sysVar.set('Agent.JobName', 'AlmOctanePipelineStart');
     let startTask: StartTask = await StartTask.instance(task);
     await startTask.run();
+
+    sysVar.set('Agent.JobName', 'inner');
+    let startInnerTask: StartTask = await StartTask.instance(task);
+    await startInnerTask.run();
+
+    sysVar.set('Agent.JobName', 'inner');
+    let endInnerTask: EndTask = await EndTask.instance(task);
+    await endInnerTask.run();
+
+    sysVar.set('Agent.JobName', 'AlmOctanePipelineEnd');
     let endTask: EndTask = await EndTask.instance(task);
     await endTask.run();
 }

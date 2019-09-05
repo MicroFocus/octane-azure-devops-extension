@@ -11,7 +11,10 @@ const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 const util = require('util');
 require('util.promisify').shim();
 
+
 export class BaseTask {
+    public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
+    public static ALM_OCTANE_PIPELINE_END = 'AlmOctanePipelineEnd';
 
     protected octane: any;
     protected tl: any;
@@ -37,11 +40,12 @@ export class BaseTask {
     }
 
 
-    protected async createCIServerOnDemand(instanceId, serverName, collectionUri, projectId, octaneService) {
+    protected async getCiServer(instanceId, serverName, collectionUri, projectId, octaneService, createOnAbsence) {
         let ciServerQuery = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(BaseTask.escapeOctaneQueryValue(serverName)));
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
         console.log(ciServers);
         if (!ciServers || ciServers.length == 0) {
+            if(!createOnAbsence) throw new Error('CI Server \'' + serverName +'(instanceId=\'' + instanceId + '\')\' not found.');
             ciServers = [
                 await util.promisify(this.octane.ciServers.create.bind(this.octane.ciServers))({
                     'instance_id': instanceId && instanceId.trim() || BaseTask.generateUUID(),
@@ -57,10 +61,11 @@ export class BaseTask {
         return ciServers[0];
     }
 
-    protected async createPipelineOnDemand(pipelineName, rootJobName, ciServer) {
+    protected async getPipeline(pipelineName, rootJobName, ciServer, createOnAbsence) {
         let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName));
         let pipelines = await util.promisify(this.octane.pipelines.getAll.bind(this.octane.pipelines))({query: pipelineQuery});
         if (!pipelines || pipelines.length == 0) {
+            if(!createOnAbsence) throw new Error('Pipeline \'' + pipelineName +'\' not found.');
             pipelines = [
                 await util.promisify(this.octane.pipelines.create.bind(this.octane.pipelines))({
                     'name': pipelineName,
@@ -76,15 +81,10 @@ export class BaseTask {
     }
 
     public async sendEvent(event: CiEvent) {
-        // process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
-        // process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
-        // process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
-        // process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
-
         let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
-        let ret = await util.promisify(this.octane.requestor.put.bind(this.octane.requestor))({
+        await util.promisify(this.octane.requestor.put.bind(this.octane.requestor))({
             url: '/analytics/ci/events',
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             json: events.toJSON()
@@ -94,7 +94,7 @@ export class BaseTask {
     public async sendTestResult(testResult: string) {
         let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
-        let ret = await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
+        await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
             url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.projectName + '&build-ci-id=' + this.buildName,
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             headers: {'Content-Type': 'application/xml'},
@@ -166,9 +166,11 @@ export class BaseTask {
                 this.instanceId = this.instanceId && this.instanceId.trim() || BaseTask.generateUUID();
                 console.log('instanceId=' + this.instanceId);
 
-                let ciServer = await this.createCIServerOnDemand(this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService);
+                let jobName = this.tl.getVariable('Agent.JobName');
+
+                let ciServer = await this.getCiServer(this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
                 let pipelineName = this.projectName + '_' + this.buildName;
-                let pipeline = await this.createPipelineOnDemand(pipelineName, pipelineName, ciServer);
+                let pipeline = await this.getPipeline(this.buildName, pipelineName, ciServer, jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
                 resolve();
             } catch (ex) {
                 reject(ex);
