@@ -1,6 +1,8 @@
 import {CiEventsList} from './dto/events/CiEventsList';
 import {CiServerInfo} from './dto/general/CiServerInfo';
 import {CiEvent} from "./dto/events/CiEvent";
+import {Result} from "./dto/events/CiTypes";
+
 const querystring = require('querystring');
 
 const Octane = require('@microfocus/alm-octane-js-rest-sdk');
@@ -26,6 +28,12 @@ export class BaseTask {
     protected buildName: string;
     protected buildId: string;
     protected token: string;
+    protected jobName: string;
+    protected isPipelineStartJob: boolean;
+    protected isPipelineEndJob: boolean;
+    protected isPipelineJob: boolean;
+    protected fullProjectName: string;
+    protected jobStatus: Result;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -84,18 +92,19 @@ export class BaseTask {
         let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
-        await util.promisify(this.octane.requestor.put.bind(this.octane.requestor))({
+        let ret = await util.promisify(this.octane.requestor.put.bind(this.octane.requestor))({
             url: '/analytics/ci/events',
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             json: events.toJSON()
         });
+        console.log(ret);
     }
 
     public async sendTestResult(testResult: string) {
         let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
         await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
-            url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.projectName + '&build-ci-id=' + this.buildName,
+            url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.fullProjectName + '&build-ci-id=' + this.buildId,
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             headers: {'Content-Type': 'application/xml'},
             json: false,
@@ -155,6 +164,12 @@ export class BaseTask {
                         tech_preview_API: true
                     });
                 }
+                this.jobName = this.tl.getVariable('Agent.JobName');
+                this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
+                this.isPipelineStartJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
+                this.isPipelineEndJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
+                this.isPipelineJob = this.isPipelineStartJob || this.isPipelineEndJob;
+                this.fullProjectName = this.projectName + (this.isPipelineJob ? '' : '.' + this.jobName);
 
                 await util.promisify(this.octane.authenticate.bind(this.octane))({
                     client_id: clientId,
@@ -169,8 +184,8 @@ export class BaseTask {
                 let jobName = this.tl.getVariable('Agent.JobName');
 
                 let ciServer = await this.getCiServer(this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-                let pipelineName = this.projectName + '_' + this.buildName;
-                let pipeline = await this.getPipeline(this.buildName, pipelineName, ciServer, jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                let rootJobName = this.projectName + '_' + this.buildName;
+                let pipeline = await this.getPipeline(this.buildName, rootJobName, ciServer, jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
                 resolve();
             } catch (ex) {
                 reject(ex);
@@ -179,5 +194,20 @@ export class BaseTask {
             console.log(ex);
             this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
         });
+    }
+
+    protected convertJobStatus(nativeStatus: string) : Result {
+        switch (nativeStatus) {
+            case 'Canceled':
+                return Result.ABORTED;
+            case 'Failed':
+                return Result.FAILURE;
+            case 'Succeeded':
+                return Result.SUCCESS;
+            case 'SucceededWithIssues':
+                return Result.UNSTABLE;
+            default:
+                return Result.UNAVAILABLE;
+        }
     }
 }

@@ -22,6 +22,7 @@ export const enum PhaseType {
 
 export const enum Result {
     SUCCESS = 'success',
+    FAILURE = 'failure',
     ABORTED = 'aborted',
     UNSTABLE = 'unstable',
     UNAVAILABLE = 'unavailable'

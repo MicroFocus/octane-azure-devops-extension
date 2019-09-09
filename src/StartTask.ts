@@ -5,6 +5,7 @@ import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
 import {ScmBuilder} from "./dto/scm/ScmBuilder";
 import {CiEventCauseBuilder} from "./dto/events/CiEventCauseBuilder";
+import tl = require('azure-pipelines-task-lib/task');
 
 export class StartTask extends BaseTask {
     private constructor(tl: any) {
@@ -18,19 +19,18 @@ export class StartTask extends BaseTask {
     }
 
     public async run() {
-        let jobName = this.tl.getVariable('Agent.JobName');
-        let isPipelineJob = jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase() || jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
-        console.log('My name is ' + jobName + '. I\'m a pipeline job: ' + isPipelineJob);
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
-        let causes = await CiEventCauseBuilder.buildCiEventCauses(isPipelineJob, api, this.projectName, parseInt(this.buildId));
-        let fullProjectName = this.projectName + (isPipelineJob ? '' : '.' + jobName);
-        let startEvent = new CiEvent(jobName, CiEventType.STARTED, this.buildId, this.buildId, fullProjectName, null, new Date().getTime(), 10000000, 10, null, isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
-        await this.sendEvent(startEvent);
 
-        if(isPipelineJob) {
-            let scmData = await ScmBuilder.buildScmData(api, this.projectName, parseInt(this.buildId));
+        if(!this.isPipelineEndJob) {
+            let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
+            let startEvent = new CiEvent(this.jobName, CiEventType.STARTED, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), 10000000, 10, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+            await this.sendEvent(startEvent);
+        }
+
+        if(this.isPipelineStartJob) {
+            let scmData = await ScmBuilder.buildScmData(api, this.fullProjectName, parseInt(this.buildId));
             console.log(scmData);
-            let scmEvent = new CiEvent(jobName, CiEventType.SCM, this.buildId, this.buildId, fullProjectName, null, new Date().getTime(), 10000000, 10, scmData, isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
+            let scmEvent = new CiEvent(this.jobName, CiEventType.SCM, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), 10000000, 10, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
             await this.sendEvent(scmEvent);
         }
     }

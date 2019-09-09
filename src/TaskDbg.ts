@@ -8,11 +8,11 @@ let input = new Map();
 let sysVar = new Map();
 
 input.set('OctaneServiceConnection', 'Octane');
-sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelokshin');
+sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelokshin/');
 sysVar.set('System.TeamProjectId', '86819eb3-d6b0-4490-ba8d-fe4d8e808656');
 sysVar.set('System.TeamProject', 'demo-app');
 sysVar.set('Build.DefinitionName', 'demo-app');
-sysVar.set('Build.BuildId', '34');
+sysVar.set('Build.BuildId', '110');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
 sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq');
 
@@ -77,15 +77,17 @@ async function runTasks() {
     let startTask: StartTask = await StartTask.instance(task);
     await startTask.run();
 
-    sysVar.set('Agent.JobName', 'inner');
+    sysVar.set('Agent.JobName', 'A');
     let startInnerTask: StartTask = await StartTask.instance(task);
     await startInnerTask.run();
 
-    sysVar.set('Agent.JobName', 'inner');
+    sysVar.set('Agent.JobName', 'A');
+    sysVar.set('AGENT_JOBSTATUS', 'Failed');
     let endInnerTask: EndTask = await EndTask.instance(task);
     await endInnerTask.run();
 
     sysVar.set('Agent.JobName', 'AlmOctanePipelineEnd');
+    sysVar.set('AGENT_JOBSTATUS', 'Succeeded');
     let endTask: EndTask = await EndTask.instance(task);
     await endTask.run();
 }
