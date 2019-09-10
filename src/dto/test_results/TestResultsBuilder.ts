@@ -42,9 +42,14 @@ export class TestResultsBuilder {
         let buildURI = build.uri;
         let testApi: ta.ITestApi = await connection.getTestApi();
         let testRuns = await testApi.getTestRuns(projectName, buildURI);
-        let testRunId = testRuns[0].id;
-        let results = await testApi.getTestResults(projectName, testRunId);
-        return TestResultsBuilder.getTestResultXml(results, serverId, jobId);
+        if(testRuns.length > 0) {
+            let testRunId = testRuns[0].id;
+            let results = await testApi.getTestResults(projectName, testRunId);
+            return TestResultsBuilder.getTestResultXml(results, serverId, jobId);
+        } else {
+            console.log('No test results found');
+            return null;
+        }
     }
 
     private static buildTestResultTestRun(testResults: any): TestResultTestRunElement[] {
