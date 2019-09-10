@@ -1,18 +1,28 @@
 @echo off
 
-pushd .
-echo.
-echo ======================================
-echo Building src
-cd src
-cmd /C "npm install && tsc || goto :build_error"
-echo src is ready
-echo ======================================
-popd
-
 xcopy /S /Y templates\* pkg\
 xcopy /S /Y src\* pkg\Tasks\StartTask\
 xcopy /S /Y src\* pkg\Tasks\EndTask\
+
+pushd .
+echo.
+echo ======================================
+echo Building StartTask
+cd pkg\Tasks\StartTask
+cmd /C "npm install && tsc || goto :build_error"
+echo StartTask is ready
+echo ======================================
+popd
+
+pushd .
+echo.
+echo ======================================
+echo Building EndTask
+cd pkg\Tasks\EndTask
+cmd /C "npm install && tsc || goto :build_error"
+echo EndTask is ready
+echo ======================================
+popd
 
 pushd .
 echo.
