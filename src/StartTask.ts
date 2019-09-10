@@ -23,14 +23,14 @@ export class StartTask extends BaseTask {
 
         if(!this.isPipelineEndJob) {
             let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
-            let startEvent = new CiEvent(this.jobName, CiEventType.STARTED, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), 10000000, 10, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+            let startEvent = new CiEvent(this.jobName, CiEventType.STARTED, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
             await this.sendEvent(startEvent);
         }
 
         if(this.isPipelineStartJob) {
             let scmData = await ScmBuilder.buildScmData(api, this.fullProjectName, parseInt(this.buildId));
             console.log(scmData);
-            let scmEvent = new CiEvent(this.jobName, CiEventType.SCM, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), 10000000, 10, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
+            let scmEvent = new CiEvent(this.jobName, CiEventType.SCM, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
             await this.sendEvent(scmEvent);
         }
     }

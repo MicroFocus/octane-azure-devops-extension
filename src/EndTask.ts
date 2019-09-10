@@ -24,12 +24,14 @@ export class EndTask extends BaseTask {
         let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
         if (!this.isPipelineJob) {
             let buildResult = await this.getStatus(api);
-            let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), 10000000, 10, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+            let duration = await this.getDuration(api);
+            let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
             await this.sendEvent(endEvent);
         }
         if (this.isPipelineEndJob) {
             let buildResult = await this.getStatus(api);
-            let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), 10000000, 10, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+            let duration = await this.getDuration(api);
+            let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
             await this.sendEvent(endEvent);
             let testResult: string = await TestResultsBuilder.getTestsResultsByBuildId(api, this.fullProjectName, parseInt(this.buildId), this.instanceId, this.fullProjectName);
             await this.sendTestResult(testResult);
@@ -48,5 +50,13 @@ export class EndTask extends BaseTask {
         } else {
             return this.jobStatus;
         }
+    }
+
+    private async getDuration(api: WebApi) {
+        let buildApi: ba.IBuildApi = await api.getBuildApi();
+        let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
+        let jobName = this.isPipelineEndJob ? 'ALMOctanePipelineStart' : this.jobName;
+        let job = timeline.records.filter(r => r.type == 'Job' && r.name.includes(jobName))[0];
+        return new Date().getTime() - job.startTime.getTime();
     }
 }
