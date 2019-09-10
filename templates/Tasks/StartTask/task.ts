@@ -1,5 +1,5 @@
 import { StartTask } from './StartTask';
-import tl = require('azure-pipelines-task-lib/task');
+import tl = require('azure-pipelines-task-lib');
 
 
 async function runTask() {

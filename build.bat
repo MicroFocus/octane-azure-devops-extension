@@ -10,6 +10,7 @@ echo src is ready
 echo ======================================
 popd
 
+xcopy /S /Y templates\* pkg\
 xcopy /S /Y src\* pkg\Tasks\StartTask\
 xcopy /S /Y src\* pkg\Tasks\EndTask\
 
