@@ -1,5 +1,5 @@
 import {TestResultsBuilder} from './TestResultsBuilder';
-import {ConnectionUtils} from '../../ConnectionUtils';
+import {ConnectionUtils} from '../ConnectionUtils';
 import {WebApi} from 'azure-devops-node-api';
 
 let projectName = 'demo-app';

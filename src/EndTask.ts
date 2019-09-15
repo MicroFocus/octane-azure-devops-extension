@@ -3,7 +3,7 @@ import {CiEvent} from "./dto/events/CiEvent";
 import {CiEventType, PhaseType, Result} from "./dto/events/CiTypes";
 import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
-import {TestResultsBuilder} from "./dto/test_results/TestResultsBuilder";
+import {TestResultsBuilder} from "./services/TestResultsBuilder";
 import {CiEventCauseBuilder} from "./dto/events/CiEventCauseBuilder";
 import * as ba from "azure-devops-node-api/BuildApi";
 import {TaskResult} from "azure-devops-node-api/interfaces/BuildInterfaces";
@@ -40,14 +40,14 @@ export class EndTask extends BaseTask {
         }
     }
 
-
     private async getStatus(api: WebApi) {
         if (this.isPipelineEndJob) {
             let buildApi: ba.IBuildApi = await api.getBuildApi();
             let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
-            let failed_jobs = timeline.records.filter(r => r.type == 'Job' && !r.name.includes('ALMOctanePipeline') && r.result == TaskResult.Failed);
-            // let job_count = timeline.records.filter(r => r.type == 'Job').length - 2;
-            // let canceled_jobs = timeline.records.filter(r => r.type == 'Job' && !r.name.includes('ALMOctanePipeline') && r.result == TaskResult.Canceled);
+            let failed_jobs = timeline.records.filter(r => r.type == 'Job'
+                && r.name.toLowerCase() !== BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase()
+                && r.name.toLowerCase() !== BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase()
+                && r.result == TaskResult.Failed);
             return failed_jobs.length > 0 ? Result.FAILURE : Result.SUCCESS;
         } else {
             return this.jobStatus;
@@ -57,8 +57,8 @@ export class EndTask extends BaseTask {
     private async getDuration(api: WebApi) {
         let buildApi: ba.IBuildApi = await api.getBuildApi();
         let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
-        let jobName = this.isPipelineEndJob ? 'ALMOctanePipelineStart' : this.jobName;
-        let job = timeline.records.filter(r => r.type == 'Job' && r.name.includes(jobName))[0];
+        let jobName = this.isPipelineEndJob ? BaseTask.ALM_OCTANE_PIPELINE_START : this.jobName;
+        let job = timeline.records.filter(r => r.type == 'Job' && r.name.toLowerCase() === jobName.toLowerCase())[0];
         return new Date().getTime() - job.startTime.getTime();
     }
 }

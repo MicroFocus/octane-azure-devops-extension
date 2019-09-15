@@ -1,15 +1,16 @@
-import {TestResultTestRunAttributes} from './TestResultTestRunAttributes';
-import {Framework, TestFieldNames, TestRunResults} from './TestResultEnums';
-import {TestResultErrorAttributes} from './TestResultErrorAttributes';
-import {TestResultBuildAttributes} from './TestResultBuildAttributes';
-import {TestResultTestFieldAttributes} from './TestResultTestFieldAttributes';
-import {TestResult} from './TestResult';
-import {TestResultTestField} from './TestResultTestField';
-import {TestResultTestRunElement} from './TestResultTestRunElement';
-import {TestResultError} from './TestResultError';
+import {TestResultTestRunAttributes} from '../dto/test_results/TestResultTestRunAttributes';
+import {Framework, TestFieldNames, TestRunResults} from '../dto/test_results/TestResultEnums';
+import {TestResultErrorAttributes} from '../dto/test_results/TestResultErrorAttributes';
+import {TestResultBuildAttributes} from '../dto/test_results/TestResultBuildAttributes';
+import {TestResultTestFieldAttributes} from '../dto/test_results/TestResultTestFieldAttributes';
+import {TestResult} from '../dto/test_results/TestResult';
+import {TestResultTestField} from '../dto/test_results/TestResultTestField';
+import {TestResultTestRunElement} from '../dto/test_results/TestResultTestRunElement';
+import {TestResultError} from '../dto/test_results/TestResultError';
 import {WebApi} from 'azure-devops-node-api';
 import * as ba from 'azure-devops-node-api/BuildApi';
 import * as ta from 'azure-devops-node-api/TestApi';
+import {TestCaseResult} from "azure-devops-node-api/interfaces/TestInterfaces";
 
 let convert = require('xml-js');
 let xmlescape = require('xml-escape');
@@ -42,9 +43,12 @@ export class TestResultsBuilder {
         let buildURI = build.uri;
         let testApi: ta.ITestApi = await connection.getTestApi();
         let testRuns = await testApi.getTestRuns(projectName, buildURI);
-        if(testRuns.length > 0) {
-            let testRunId = testRuns[0].id;
-            let results = await testApi.getTestResults(projectName, testRunId);
+        if (testRuns.length > 0) {
+            let results: TestCaseResult[] = [];
+            for (let i = 0; i < 1; i++) {
+                let testRunId = testRuns[i].id;
+                results = results.concat(await testApi.getTestResults(projectName, testRunId));
+            }
             return TestResultsBuilder.getTestResultXml(results, serverId, jobId);
         } else {
             console.log('No test results found');

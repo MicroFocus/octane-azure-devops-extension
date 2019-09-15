@@ -1,10 +1,9 @@
 {
   "id": "444a4f87-70b6-4f07-aa4a-6a892ca38c8e",
   "name": "octane-end-task",
-  "friendlyName": "ALM Octane End Task",
+  "friendlyName": "ALM Octane Job End",
   "description": "ALM Octane End Task",
   "author": "Micro Focus",
-  "helpMarkDown": "Put this activity at the as early as reasonable point in your job",
   "category": "Build",
   "visibility": [
     "Build",
@@ -17,7 +16,7 @@
     "Patch": "0"
   },
   "minimumAgentVersion": "1.95.0",
-  "instanceNameFormat": "ALM Octane Pipeline End",
+  "instanceNameFormat": "ALM Octane Job End",
   "inputs": [
     {
       "name": "OctaneServiceConnection",
