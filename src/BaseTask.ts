@@ -49,9 +49,11 @@ export class BaseTask {
 
 
     protected async getCiServer(instanceId, serverName, collectionUri, projectId, octaneService, createOnAbsence) {
-        let ciServerQuery = Query.field('instance_id').equal(instanceId).or(Query.field('name').equal(BaseTask.escapeOctaneQueryValue(serverName)));
+        let ciServerQuery = Query.field('instance_id').equal(instanceId);
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
         console.log(ciServers);
+        let serverUrl = collectionUri + projectId;
+        let pluginVersion = '0.1.1';
         if (!ciServers || ciServers.length == 0) {
             if(!createOnAbsence) throw new Error('CI Server \'' + serverName +'(instanceId=\'' + instanceId + '\')\' not found.');
             ciServers = [
@@ -59,12 +61,17 @@ export class BaseTask {
                     'instance_id': instanceId && instanceId.trim() || BaseTask.generateUUID(),
                     'name': serverName,
                     'server_type': 'azure_devops',
-                    'url': collectionUri + projectId,
-                    'plugin_version': '2.0.1'
+                    'url': serverUrl,
+                    'plugin_version': pluginVersion
                 })
             ];
             console.log(ciServers.length === 1 ? 'CI server ' + ciServers[0].id + ' created' : 'CI server creation failed');
             this.tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
+        } else {
+            ciServers[0].name = serverName;
+            ciServers[0].url = serverUrl;
+            ciServers[0].plugin_version = pluginVersion;
+            await util.promisify(this.octane.ciServers.update.bind(this.octane.ciServers))(ciServers[0]);
         }
         return ciServers[0];
     }
