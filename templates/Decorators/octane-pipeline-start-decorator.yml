@@ -4,4 +4,4 @@ steps:
     condition: always()
     displayName: 'ALM Octane Job Start'
     inputs:
-      OctaneServiceConnection: 'Octane'
+      OctaneServiceConnection: $(OctaneConnectionName)
