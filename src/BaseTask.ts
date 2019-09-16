@@ -52,7 +52,7 @@ export class BaseTask {
         let ciServerQuery = Query.field('instance_id').equal(instanceId);
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
         console.log(ciServers);
-        let serverUrl = collectionUri + projectId;
+        let serverUrl = collectionUri + this.projectName;
         let pluginVersion = '0.1.1';
         if (!ciServers || ciServers.length == 0) {
             if(!createOnAbsence) throw new Error('CI Server \'' + serverName +'(instanceId=\'' + instanceId + '\')\' not found.');
