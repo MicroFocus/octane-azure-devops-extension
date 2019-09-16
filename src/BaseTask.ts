@@ -59,7 +59,7 @@ export class BaseTask {
                     'instance_id': instanceId && instanceId.trim() || BaseTask.generateUUID(),
                     'name': serverName,
                     'server_type': 'azure_devops',
-                    'url': collectionUri + projectId,
+                    'url': collectionUri + this.projectName,
                     'plugin_version': '2.0.1'
                 })
             ];
