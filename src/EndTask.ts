@@ -59,6 +59,9 @@ export class EndTask extends BaseTask {
         let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
         let jobName = this.isPipelineEndJob ? BaseTask.ALM_OCTANE_PIPELINE_START : this.jobName;
         let job = timeline.records.filter(r => r.type == 'Job' && r.name.toLowerCase() === jobName.toLowerCase())[0];
+        if(!job){
+            return 0;
+        }
         return new Date().getTime() - job.startTime.getTime();
     }
 }
