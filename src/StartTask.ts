@@ -5,7 +5,6 @@ import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
 import {ScmBuilder} from "./dto/scm/ScmBuilder";
 import {CiEventCauseBuilder} from "./dto/events/CiEventCauseBuilder";
-import tl = require('azure-pipelines-task-lib/task');
 
 export class StartTask extends BaseTask {
     private constructor(tl: any) {

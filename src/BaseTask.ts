@@ -2,6 +2,7 @@ import {CiEventsList} from './dto/events/CiEventsList';
 import {CiServerInfo} from './dto/general/CiServerInfo';
 import {CiEvent} from "./dto/events/CiEvent";
 import {Result} from "./dto/events/CiTypes";
+import {CI_SERVER_INFO} from "./ConstantsEnum";
 
 const querystring = require('querystring');
 
@@ -53,16 +54,16 @@ export class BaseTask {
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
         console.log(ciServers);
         let serverUrl = collectionUri + this.projectName;
-        let pluginVersion = '0.1.1';
+        let ret = await this.sendTaskConnectCiServer();
+
         if (!ciServers || ciServers.length == 0) {
-            if(!createOnAbsence) throw new Error('CI Server \'' + serverName +'(instanceId=\'' + instanceId + '\')\' not found.');
+            if (!createOnAbsence) throw new Error('CI Server \'' + serverName + '(instanceId=\'' + instanceId + '\')\' not found.');
             ciServers = [
                 await util.promisify(this.octane.ciServers.create.bind(this.octane.ciServers))({
                     'instance_id': instanceId && instanceId.trim() || BaseTask.generateUUID(),
                     'name': serverName,
-                    'server_type': 'azure_devops',
-                    'url': serverUrl,
-                    'plugin_version': pluginVersion
+                    'server_type': CI_SERVER_INFO.CI_SERVER_TYPE,
+                    'url': serverUrl
                 })
             ];
             console.log(ciServers.length === 1 ? 'CI server ' + ciServers[0].id + ' created' : 'CI server creation failed');
@@ -70,7 +71,6 @@ export class BaseTask {
         } else {
             ciServers[0].name = serverName;
             ciServers[0].url = serverUrl;
-            ciServers[0].plugin_version = pluginVersion;
             await util.promisify(this.octane.ciServers.update.bind(this.octane.ciServers))(ciServers[0]);
         }
         return ciServers[0];
@@ -80,7 +80,7 @@ export class BaseTask {
         let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName));
         let pipelines = await util.promisify(this.octane.pipelines.getAll.bind(this.octane.pipelines))({query: pipelineQuery});
         if (!pipelines || pipelines.length == 0) {
-            if(!createOnAbsence) throw new Error('Pipeline \'' + pipelineName +'\' not found.');
+            if (!createOnAbsence) throw new Error('Pipeline \'' + pipelineName + '\' not found.');
             pipelines = [
                 await util.promisify(this.octane.pipelines.create.bind(this.octane.pipelines))({
                     'name': pipelineName,
@@ -96,7 +96,7 @@ export class BaseTask {
     }
 
     public async sendEvent(event: CiEvent) {
-        let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
         let ret = await util.promisify(this.octane.requestor.put.bind(this.octane.requestor))({
@@ -108,7 +108,7 @@ export class BaseTask {
     }
 
     public async sendTestResult(testResult: string) {
-        let serverInfo = new CiServerInfo('azure_devops', '2.0.1', this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
         await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
             url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.fullProjectName + '&build-ci-id=' + this.buildId,
@@ -203,7 +203,20 @@ export class BaseTask {
         });
     }
 
-    protected convertJobStatus(nativeStatus: string) : Result {
+    public async sendTaskConnectCiServer() {
+        const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
+        let url = '/analytics/ci/servers/' + this.instanceId + '/tasks?self-type=' + CI_SERVER_INFO.CI_SERVER_TYPE + '&self-url=' + escape(this.collectionUri + this.projectId) +
+            '&plugin-version=' + CI_SERVER_INFO.PLUGIN_VERSION;
+        let ret = await util.promisify(this.octane.requestor.get.bind(this.octane.requestor))({
+            url: url,
+            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
+            headers: {'Content-Type': 'application/json'},
+            json: false
+        });
+        return ret;
+    }
+
+    protected convertJobStatus(nativeStatus: string): Result {
         switch (nativeStatus) {
             case 'Canceled':
                 return Result.ABORTED;

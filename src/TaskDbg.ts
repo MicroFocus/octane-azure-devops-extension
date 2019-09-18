@@ -1,6 +1,6 @@
 import tl = require('azure-pipelines-task-lib/task');
 import tlr = require('azure-pipelines-task-lib/toolrunner');
-import { StartTask } from './StartTask';
+import {StartTask} from './StartTask';
 import {EndTask} from "./EndTask";
 import {BaseTask} from "./BaseTask";
 
@@ -13,18 +13,22 @@ sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelo
 sysVar.set('System.TeamProjectId', '86819eb3-d6b0-4490-ba8d-fe4d8e808656');
 sysVar.set('System.TeamProject', 'demo-app');
 sysVar.set('Build.DefinitionName', 'demo-app');
-sysVar.set('Build.BuildId', '111');
+sysVar.set('Build.BuildId', '138');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
 sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq');
 
-let auth = {parameters: {'username': 'stekel_y2kewqkppjp3rbv8o750gw435', 'password': '+c45b9ddf8689facD'}, scheme: 'username'};
+let auth = {
+    parameters: {'username': 'azure_8go72rjl4mnp5i0yodz76x1lq', 'password': ')d91a7ffff9c929eK'},
+    scheme: 'username'
+};
 
 function initTl(testTask: any) {
     testTask.execSync = (tool: string, args: string | string[], options?: tlr.IExecSyncOptions) => {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
-        return 'http://ILstekel02.microfocus.com:8080/ui/?p=1001/1002';
+        // return 'http://10.14.83.153:8080/ui/?p=1001/1002';
+        return 'http://ILlokshin01.microfocus.com:8080/ui/?p=1001/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
         return input.get(name);
@@ -68,10 +72,10 @@ let endpointAuth = task.getEndpointAuthorization(task.getInput('OctaneServiceCon
 let clientId = endpointAuth.parameters['username'];
 let clientSecret = endpointAuth.parameters['password'];
 console.log('clientId=' + clientId + " clientSecret=" + clientSecret);
-process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
-process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
-process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
-process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
+// process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
+// process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
+// process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
+// process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
 
 async function runTasks() {
     sysVar.set('Agent.JobName', BaseTask.ALM_OCTANE_PIPELINE_START);
