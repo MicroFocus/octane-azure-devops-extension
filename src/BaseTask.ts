@@ -54,7 +54,7 @@ export class BaseTask {
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
         console.log(ciServers);
         let serverUrl = collectionUri + this.projectName;
-        let ret = await this.sendTaskConnectCiServer();
+        // this.sendTaskConnectCiServer();
 
         if (!ciServers || ciServers.length == 0) {
             if (!createOnAbsence) throw new Error('CI Server \'' + serverName + '(instanceId=\'' + instanceId + '\')\' not found.');
@@ -207,13 +207,12 @@ export class BaseTask {
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
         let url = '/analytics/ci/servers/' + this.instanceId + '/tasks?self-type=' + CI_SERVER_INFO.CI_SERVER_TYPE + '&self-url=' + escape(this.collectionUri + this.projectId) +
             '&plugin-version=' + CI_SERVER_INFO.PLUGIN_VERSION;
-        let ret = await util.promisify(this.octane.requestor.get.bind(this.octane.requestor))({
+       util.promisify(this.octane.requestor.get.bind(this.octane.requestor))({
             url: url,
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             headers: {'Content-Type': 'application/json'},
             json: false
         });
-        return ret;
     }
 
     protected convertJobStatus(nativeStatus: string): Result {
