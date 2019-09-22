@@ -6,6 +6,7 @@ import {ScmRepository} from './ScmRepository';
 import {ScmCommitFileChange} from './ScmCommitFileChange';
 import {ScmCommit} from './ScmCommit';
 import {VersionControlChangeType} from 'azure-devops-node-api/interfaces/GitInterfaces';
+import {LogUtils} from "../../LogUtils";
 
 
 export class ScmBuilder {
@@ -30,14 +31,14 @@ export class ScmBuilder {
         }
 
         if (!changes_between_builds || !changes_between_builds.length) {
-            console.log('No changes were found between builds [' + fromBuild + '] and [' + toBuild + ']');
+            LogUtils.info('No changes were found between builds [' + fromBuild + '] and [' + toBuild + ']');
             return null;
         }
         let scmData: ScmData;
         let type = changes_between_builds[0].type;
         let scmRepo = new ScmRepository(type, repo.webUrl, repo.defaultBranch);
-        console.log('Changes between builds [' + fromBuild + '] and [' + toBuild + ']');
-        console.log(changes_between_builds);
+        LogUtils.debug('Changes between builds [' + fromBuild + '] and [' + toBuild + ']');
+        LogUtils.debug(changes_between_builds);
         for (let change of changes_between_builds) {
             let time = new Date(change.timestamp).getTime();
             let comment = change.message;
@@ -58,8 +59,8 @@ export class ScmBuilder {
         }
         let build = await buildApi.getBuild(projectName, toBuild);
         scmData = new ScmData(scmRepo, build.buildNumberRevision, scmCommit);
-        console.log('Created scmData:');
-        console.log(scmData);
+        LogUtils.info("ScmData was created");
+        LogUtils.debug(scmData);
         return scmData;
     }
 }

@@ -5,6 +5,7 @@ import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
 import {ScmBuilder} from "./dto/scm/ScmBuilder";
 import {CiEventCauseBuilder} from "./dto/events/CiEventCauseBuilder";
+import {LogUtils} from "./LogUtils";
 
 export class StartTask extends BaseTask {
     private constructor(tl: any) {
@@ -28,7 +29,7 @@ export class StartTask extends BaseTask {
 
         if(this.isPipelineStartJob) {
             let scmData = await ScmBuilder.buildScmData(api, this.fullProjectName, parseInt(this.buildId));
-            console.log(scmData);
+            LogUtils.debug(scmData);
             let scmEvent = new CiEvent(this.jobName, CiEventType.SCM, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
             await this.sendEvent(scmEvent);
         }

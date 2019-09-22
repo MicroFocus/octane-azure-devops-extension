@@ -3,6 +3,7 @@ import {CiServerInfo} from './dto/general/CiServerInfo';
 import {CiEvent} from "./dto/events/CiEvent";
 import {Result} from "./dto/events/CiTypes";
 import {CI_SERVER_INFO} from "./ConstantsEnum";
+import {LogUtils} from "./LogUtils";
 
 const querystring = require('querystring');
 
@@ -21,7 +22,6 @@ export class BaseTask {
 
     protected octane: any;
     protected tl: any;
-    protected serverInfo: CiServerInfo;
     protected instanceId: string;
     protected collectionUri: string;
     protected projectId: string;
@@ -52,7 +52,8 @@ export class BaseTask {
     protected async getCiServer(instanceId, serverName, collectionUri, projectId, octaneService, createOnAbsence) {
         let ciServerQuery = Query.field('instance_id').equal(instanceId);
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
-        console.log(ciServers);
+        LogUtils.debug('ciServers: ');
+        LogUtils.debug(ciServers);
         let serverUrl = collectionUri + this.projectName;
         // this.sendTaskConnectCiServer();
 
@@ -66,7 +67,11 @@ export class BaseTask {
                     'url': serverUrl
                 })
             ];
-            console.log(ciServers.length === 1 ? 'CI server ' + ciServers[0].id + ' created' : 'CI server creation failed');
+            if (ciServers.length === 1) {
+                LogUtils.info('CI server ' + ciServers[0].id + ' created');
+            } else {
+                LogUtils.error('CI server creation failed', LogUtils.getCaller());
+            }
             this.tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
         } else {
             ciServers[0].name = serverName;
@@ -90,7 +95,11 @@ export class BaseTask {
                     'notification_track_tester': false
                 })
             ];
-            console.log(pipelines.length === 1 ? 'Pipeline ' + pipelines[0].id + ' created' : 'Pipeline creation failed');
+            if (pipelines.length === 1){
+                LogUtils.info('Pipeline ' + pipelines[0].id + ' created');
+            } else {
+                LogUtils.error('Pipeline creation failed', LogUtils.getCaller());
+            }
         }
         return pipelines[0];
     }
@@ -104,7 +113,8 @@ export class BaseTask {
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             json: events.toJSON()
         });
-        console.log(ret);
+        LogUtils.debug('sendEvent response:');
+        LogUtils.debug(ret);
     }
 
     public async sendTestResult(testResult: string) {
@@ -123,22 +133,22 @@ export class BaseTask {
         await new Promise(async (resolve, reject) => {
             try {
                 let result = this.tl.execSync(`node`, `--version`);
-                console.log('node version = ' + result.stdout);
+                LogUtils.info('node version = ' + result.stdout);
                 let octaneService = this.tl.getInput('OctaneServiceConnection', true);
-                console.log('OctaneService = ' + octaneService);
+                LogUtils.info('OctaneService = ' + octaneService);
                 let endpointUrl = this.tl.getEndpointUrl(octaneService, false);
-                console.log('rawUrl = ' + endpointUrl);
+                LogUtils.debug('rawUrl = ' + endpointUrl);
                 let url = new URL(endpointUrl);
-                console.log('url.href = ' + url.href);
+                LogUtils.info('url.href = ' + url.href);
                 this.instanceId = this.tl.getEndpointDataParameter(octaneService, 'instance_id', true);
                 this.token = this.tl.getEndpointDataParameter(octaneService, 'AZURE_PERSONAL_ACCESS_TOKEN', true);
-                console.log('token = ' + this.token);
-                console.log('instanceId = ' + this.instanceId);
+                LogUtils.debug('token = ' + this.token);
+                LogUtils.info('instanceId = ' + this.instanceId);
                 let endpointAuth = this.tl.getEndpointAuthorization(octaneService, false);
                 let clientId = endpointAuth.parameters['username'];
                 let clientSecret = endpointAuth.parameters['password'];
-                console.log('clientId = ' + clientId);
-                console.log('clientSecret = ' + clientSecret);
+                LogUtils.debug('clientId = ' + clientId);
+                LogUtils.debug('clientSecret = ' + clientSecret);
                 let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';
                 let pparam = url.searchParams.get('p');
                 if (pparam === null) {
@@ -156,10 +166,10 @@ export class BaseTask {
                 this.projectName = this.tl.getVariable('System.TeamProject');
                 this.buildName = this.tl.getVariable('Build.DefinitionName');
                 this.buildId = this.tl.getVariable('Build.BuildId');
-                console.log('collectionUri = ' + this.collectionUri);
-                console.log('projectId = ' + this.projectId);
-                console.log('projectName = ' + this.projectName);
-                console.log('buildName = ' + this.buildName);
+                LogUtils.info('collectionUri = ' + this.collectionUri);
+                LogUtils.info('projectId = ' + this.projectId);
+                LogUtils.info('projectName = ' + this.projectName);
+                LogUtils.info('buildName = ' + this.buildName);
                 if (!this.octane) {
                     this.octane = new Octane({
                         protocol: url.protocol.endsWith(':') ? url.protocol.slice(0, -1) : url.protocol,
@@ -183,10 +193,9 @@ export class BaseTask {
                     client_secret: clientSecret
                 });
 
-                console.log('Connected');
+                LogUtils.info('Authentication passed');
 
                 this.instanceId = this.instanceId && this.instanceId.trim() || BaseTask.generateUUID();
-                console.log('instanceId=' + this.instanceId);
 
                 let jobName = this.tl.getVariable('Agent.JobName');
 
@@ -198,7 +207,7 @@ export class BaseTask {
                 reject(ex);
             }
         }).catch(ex => {
-            console.log(ex);
+            LogUtils.error(ex);
             this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
         });
     }
@@ -207,7 +216,7 @@ export class BaseTask {
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
         let url = '/analytics/ci/servers/' + this.instanceId + '/tasks?self-type=' + CI_SERVER_INFO.CI_SERVER_TYPE + '&self-url=' + escape(this.collectionUri + this.projectId) +
             '&plugin-version=' + CI_SERVER_INFO.PLUGIN_VERSION;
-       util.promisify(this.octane.requestor.get.bind(this.octane.requestor))({
+        util.promisify(this.octane.requestor.get.bind(this.octane.requestor))({
             url: url,
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             headers: {'Content-Type': 'application/json'},

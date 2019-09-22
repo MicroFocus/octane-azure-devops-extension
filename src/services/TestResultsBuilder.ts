@@ -11,6 +11,7 @@ import {WebApi} from 'azure-devops-node-api';
 import * as ba from 'azure-devops-node-api/BuildApi';
 import * as ta from 'azure-devops-node-api/TestApi';
 import {TestCaseResult} from "azure-devops-node-api/interfaces/TestInterfaces";
+import {LogUtils} from "../LogUtils";
 
 let convert = require('xml-js');
 let xmlescape = require('xml-escape');
@@ -32,8 +33,8 @@ export class TestResultsBuilder {
         let result: TestResult = TestResultsBuilder.buildTestResult(testResults, server_id, job_id);
         let options = {compact: true, ignoreComment: true, spaces: 4};
         let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><test_result>' + convert.js2xml(result, options) + '</test_result>';
-        console.log('Test results converted for Octane');
-        console.log(convertedXml);
+        LogUtils.info('Test results converted for Octane');
+        LogUtils.debug(convertedXml);
         return convertedXml;
     }
 
@@ -51,7 +52,7 @@ export class TestResultsBuilder {
             }
             return TestResultsBuilder.getTestResultXml(results, serverId, jobId);
         } else {
-            console.log('No test results found');
+            LogUtils.info('No test results found');
             return null;
         }
     }
