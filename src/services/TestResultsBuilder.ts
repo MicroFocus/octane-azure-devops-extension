@@ -20,7 +20,7 @@ export class TestResultsBuilder {
 
     public static buildTestResult(testResults: any, server_id: string, job_id: string): TestResult {
         if (!testResults || !testResults.length) {
-            console.log('No test results were retrieved/found');
+            LogUtils.info('No test results were retrieved/found');
             return null;
         }
         let testResultTestRuns = this.buildTestResultTestRun(testResults);
