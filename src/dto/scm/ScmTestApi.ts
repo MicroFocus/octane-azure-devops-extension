@@ -1,6 +1,7 @@
 import {ConnectionUtils} from '../../ConnectionUtils';
 import {ScmBuilder} from './ScmBuilder';
 import {WebApi} from 'azure-devops-node-api';
+import {LogUtils} from "../../LogUtils";
 
 let projectName = 'demo-app';
 
@@ -11,7 +12,7 @@ let toBuild: number = 39;
 
 let api: WebApi = ConnectionUtils.getWebApiWithProxy(orgUrl, token);
 
-ScmBuilder.buildScmData(api, projectName, toBuild).then(scm => {
+ScmBuilder.buildScmData(api, projectName, toBuild, new LogUtils('debug')).then(scm => {
     console.log('########################## finished ###############################');
     console.log(scm);
 });

@@ -1,4 +1,5 @@
 import {TestResultsBuilder} from './TestResultsBuilder';
+import {LogUtils} from "../LogUtils";
 
 let convert = require('xml-js');
 const fs = require('fs');
@@ -14,7 +15,7 @@ let jsonObjectResults = JSON.parse(results);
 // let convertedXml =  '<?xml version="1.0" encoding="utf-8" standalone="yes"?>' + convert.json2xml(result.toJSON(),options);
 // console.log(convertedXml);
 
-let result = TestResultsBuilder.getTestResultXml(jsonObjectResults, 'my_server_is', 'my_job_id');
+let result = TestResultsBuilder.getTestResultXml(jsonObjectResults, 'my_server_is', 'my_job_id', new LogUtils('debug'));
 
 
 

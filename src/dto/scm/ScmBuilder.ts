@@ -11,7 +11,7 @@ import {LogUtils} from "../../LogUtils";
 
 export class ScmBuilder {
 
-    public static async buildScmData(connection: WebApi, projectName: string, toBuild: number): Promise<ScmData> {
+    public static async buildScmData(connection: WebApi, projectName: string, toBuild: number, logger: LogUtils): Promise<ScmData> {
         function convertType(changeType: number): string {
             return VersionControlChangeType[changeType].toLowerCase();
         }
@@ -31,14 +31,14 @@ export class ScmBuilder {
         }
 
         if (!changes_between_builds || !changes_between_builds.length) {
-            LogUtils.info('No changes were found between builds [' + fromBuild + '] and [' + toBuild + ']');
+            logger.info('No changes were found between builds [' + fromBuild + '] and [' + toBuild + ']');
             return null;
         }
         let scmData: ScmData;
         let type = changes_between_builds[0].type;
         let scmRepo = new ScmRepository(type, repo.webUrl, repo.defaultBranch);
-        LogUtils.debug('Changes between builds [' + fromBuild + '] and [' + toBuild + ']');
-        LogUtils.debug(changes_between_builds);
+        logger.debug('Changes between builds [' + fromBuild + '] and [' + toBuild + ']');
+        logger.debug(changes_between_builds);
         for (let change of changes_between_builds) {
             let time = new Date(change.timestamp).getTime();
             let comment = change.message;
@@ -59,8 +59,8 @@ export class ScmBuilder {
         }
         let build = await buildApi.getBuild(projectName, toBuild);
         scmData = new ScmData(scmRepo, build.buildNumberRevision, scmCommit);
-        LogUtils.info("ScmData was created");
-        LogUtils.debug(scmData);
+        logger.info("ScmData was created");
+        logger.debug(scmData);
         return scmData;
     }
 }

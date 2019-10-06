@@ -33,7 +33,7 @@ export class EndTask extends BaseTask {
             let duration = await this.getDuration(api);
             let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
             await this.sendEvent(endEvent);
-            let testResult: string = await TestResultsBuilder.getTestsResultsByBuildId(api, this.fullProjectName, parseInt(this.buildId), this.instanceId, this.fullProjectName);
+            let testResult: string = await TestResultsBuilder.getTestsResultsByBuildId(api, this.fullProjectName, parseInt(this.buildId), this.instanceId, this.fullProjectName, this.logger);
             if(testResult) {
                 await this.sendTestResult(testResult);
             }

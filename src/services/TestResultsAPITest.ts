@@ -1,6 +1,7 @@
 import {TestResultsBuilder} from './TestResultsBuilder';
 import {ConnectionUtils} from '../ConnectionUtils';
 import {WebApi} from 'azure-devops-node-api';
+import {LogUtils} from "../LogUtils";
 
 let projectName = 'demo-app';
 
@@ -11,7 +12,7 @@ let buildId: number = 34;
 
 let api: WebApi = ConnectionUtils.getWebApiWithProxy(orgUrl, token);
 
-TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'serverId', 'jobId').then(res => {
+TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'serverId', 'jobId', new LogUtils('debug')).then(res => {
     console.log('######################### finished ###############################');
     console.log(res);
 });

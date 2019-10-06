@@ -18,9 +18,9 @@ let xmlescape = require('xml-escape');
 
 export class TestResultsBuilder {
 
-    public static buildTestResult(testResults: any, server_id: string, job_id: string): TestResult {
+    public static buildTestResult(testResults: any, server_id: string, job_id: string, logger: LogUtils): TestResult {
         if (!testResults || !testResults.length) {
-            LogUtils.info('No test results were retrieved/found');
+            logger.info('No test results were retrieved/found');
             return null;
         }
         let testResultTestRuns = this.buildTestResultTestRun(testResults);
@@ -29,16 +29,16 @@ export class TestResultsBuilder {
         return new TestResult(testResultBuild, testResultTestFields, testResultTestRuns);
     }
 
-    public static getTestResultXml(testResults: any, server_id: string, job_id: string): any {
-        let result: TestResult = TestResultsBuilder.buildTestResult(testResults, server_id, job_id);
+    public static getTestResultXml(testResults: any, server_id: string, job_id: string, logger: LogUtils): any {
+        let result: TestResult = TestResultsBuilder.buildTestResult(testResults, server_id, job_id, logger);
         let options = {compact: true, ignoreComment: true, spaces: 4};
         let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><test_result>' + convert.js2xml(result, options) + '</test_result>';
-        LogUtils.info('Test results converted for Octane');
-        LogUtils.debug(convertedXml);
+        logger.info('Test results converted for Octane');
+        logger.debug(convertedXml);
         return convertedXml;
     }
 
-    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string): Promise<string> {
+    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string, logger: LogUtils): Promise<string> {
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
         let build = await buildApi.getBuild(projectName, buildId);
         let buildURI = build.uri;
@@ -50,9 +50,9 @@ export class TestResultsBuilder {
                 let testRunId = testRuns[i].id;
                 results = results.concat(await testApi.getTestResults(projectName, testRunId));
             }
-            return TestResultsBuilder.getTestResultXml(results, serverId, jobId);
+            return TestResultsBuilder.getTestResultXml(results, serverId, jobId, logger);
         } else {
-            LogUtils.info('No test results found');
+            logger.info('No test results found');
             return null;
         }
     }

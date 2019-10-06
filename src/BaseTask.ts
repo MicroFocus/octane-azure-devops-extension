@@ -35,9 +35,13 @@ export class BaseTask {
     protected isPipelineJob: boolean;
     protected fullProjectName: string;
     protected jobStatus: Result;
+    protected logger: LogUtils;
 
     protected constructor(tl: any) {
         this.tl = tl;
+        let logLevel = this.tl.getVariable('ALMOctaneLogLevel');
+        this.logger = new LogUtils(logLevel);
+        this.logger.debug("ALMOctaneLogLevel: " + logLevel);
     }
 
     protected static generateUUID() {
@@ -52,8 +56,8 @@ export class BaseTask {
     protected async getCiServer(instanceId, serverName, collectionUri, projectId, octaneService, createOnAbsence) {
         let ciServerQuery = Query.field('instance_id').equal(instanceId);
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
-        LogUtils.debug('ciServers: ');
-        LogUtils.debug(ciServers);
+        this.logger.debug('ciServers: ');
+        this.logger.debug(ciServers);
         let serverUrl = collectionUri + this.projectName;
         // this.sendTaskConnectCiServer();
 
@@ -68,9 +72,9 @@ export class BaseTask {
                 })
             ];
             if (ciServers.length === 1) {
-                LogUtils.info('CI server ' + ciServers[0].id + ' created');
+                this.logger.info('CI server ' + ciServers[0].id + ' created');
             } else {
-                LogUtils.error('CI server creation failed', LogUtils.getCaller());
+                this.logger.error('CI server creation failed', this.logger.getCaller());
             }
             this.tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
         } else {
@@ -95,10 +99,10 @@ export class BaseTask {
                     'notification_track_tester': false
                 })
             ];
-            if (pipelines.length === 1){
-                LogUtils.info('Pipeline ' + pipelines[0].id + ' created');
+            if (pipelines.length === 1) {
+                this.logger.info('Pipeline ' + pipelines[0].id + ' created');
             } else {
-                LogUtils.error('Pipeline creation failed', LogUtils.getCaller());
+                this.logger.error('Pipeline creation failed', this.logger.getCaller());
             }
         }
         return pipelines[0];
@@ -113,8 +117,8 @@ export class BaseTask {
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             json: events.toJSON()
         });
-        LogUtils.debug('sendEvent response:');
-        LogUtils.debug(ret);
+        this.logger.debug('sendEvent response:');
+        this.logger.debug(ret);
     }
 
     public async sendTestResult(testResult: string) {
@@ -133,22 +137,22 @@ export class BaseTask {
         await new Promise(async (resolve, reject) => {
             try {
                 let result = this.tl.execSync(`node`, `--version`);
-                LogUtils.info('node version = ' + result.stdout);
+                this.logger.info('node version = ' + result.stdout);
                 let octaneService = this.tl.getInput('OctaneServiceConnection', true);
-                LogUtils.info('OctaneService = ' + octaneService);
+                this.logger.info('OctaneService = ' + octaneService);
                 let endpointUrl = this.tl.getEndpointUrl(octaneService, false);
-                LogUtils.debug('rawUrl = ' + endpointUrl);
+                this.logger.debug('rawUrl = ' + endpointUrl);
                 let url = new URL(endpointUrl);
-                LogUtils.info('url.href = ' + url.href);
+                this.logger.info('url.href = ' + url.href);
                 this.instanceId = this.tl.getEndpointDataParameter(octaneService, 'instance_id', true);
                 this.token = this.tl.getEndpointDataParameter(octaneService, 'AZURE_PERSONAL_ACCESS_TOKEN', true);
-                LogUtils.debug('token = ' + this.token);
-                LogUtils.info('instanceId = ' + this.instanceId);
+                this.logger.debug('token = ' + this.token);
+                this.logger.info('instanceId = ' + this.instanceId);
                 let endpointAuth = this.tl.getEndpointAuthorization(octaneService, false);
                 let clientId = endpointAuth.parameters['username'];
                 let clientSecret = endpointAuth.parameters['password'];
-                LogUtils.debug('clientId = ' + clientId);
-                LogUtils.debug('clientSecret = ' + clientSecret);
+                this.logger.debug('clientId = ' + clientId);
+                this.logger.debug('clientSecret = ' + clientSecret);
                 let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';
                 let pparam = url.searchParams.get('p');
                 if (pparam === null) {
@@ -166,10 +170,10 @@ export class BaseTask {
                 this.projectName = this.tl.getVariable('System.TeamProject');
                 this.buildName = this.tl.getVariable('Build.DefinitionName');
                 this.buildId = this.tl.getVariable('Build.BuildId');
-                LogUtils.info('collectionUri = ' + this.collectionUri);
-                LogUtils.info('projectId = ' + this.projectId);
-                LogUtils.info('projectName = ' + this.projectName);
-                LogUtils.info('buildName = ' + this.buildName);
+                this.logger.info('collectionUri = ' + this.collectionUri);
+                this.logger.info('projectId = ' + this.projectId);
+                this.logger.info('projectName = ' + this.projectName);
+                this.logger.info('buildName = ' + this.buildName);
                 if (!this.octane) {
                     this.octane = new Octane({
                         protocol: url.protocol.endsWith(':') ? url.protocol.slice(0, -1) : url.protocol,
@@ -193,7 +197,7 @@ export class BaseTask {
                     client_secret: clientSecret
                 });
 
-                LogUtils.info('Authentication passed');
+                this.logger.info('Authentication passed');
 
                 this.instanceId = this.instanceId && this.instanceId.trim() || BaseTask.generateUUID();
 
@@ -207,7 +211,7 @@ export class BaseTask {
                 reject(ex);
             }
         }).catch(ex => {
-            LogUtils.error(ex);
+            this.logger.error(ex);
             this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
         });
     }

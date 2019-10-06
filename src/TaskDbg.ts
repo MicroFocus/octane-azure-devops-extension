@@ -3,6 +3,7 @@ import tlr = require('azure-pipelines-task-lib/toolrunner');
 import {StartTask} from './StartTask';
 import {EndTask} from "./EndTask";
 import {BaseTask} from "./BaseTask";
+import {LogUtils} from "./LogUtils";
 
 let testTask = {};
 let input = new Map();
@@ -13,22 +14,28 @@ sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelo
 sysVar.set('System.TeamProjectId', '86819eb3-d6b0-4490-ba8d-fe4d8e808656');
 sysVar.set('System.TeamProject', 'demo-app');
 sysVar.set('Build.DefinitionName', 'demo-app');
-sysVar.set('Build.BuildId', '138');
+sysVar.set('Build.BuildId', '156');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane_server');
 sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq');
 
 let auth = {
-    parameters: {'username': 'azure_8go72rjl4mnp5i0yodz76x1lq', 'password': ')d91a7ffff9c929eK'},
+    parameters: {'username': 'azure_mdp9ln8gjggevtkqr9e6pl536', 'password': '?914b638be36f9a92K'},
+    // parameters: {'username': 'sa@nga', 'password': 'Welcome1'},
     scheme: 'username'
 };
 
 function initTl(testTask: any) {
+    let logger = new LogUtils('debug');
+    logger.debug("blablalbla");
+    logger.debug("****blablalbla", logger.getCaller());
+    logger.debug("****blablalbla");
     testTask.execSync = (tool: string, args: string | string[], options?: tlr.IExecSyncOptions) => {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
         // return 'http://10.14.83.153:8080/ui/?p=1001/1002';
         return 'http://ILlokshin01.microfocus.com:8080/ui/?p=1001/1002';
+        // return 'http://localhost:8080/ui/?p=1001/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
         return input.get(name);
