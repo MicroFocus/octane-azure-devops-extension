@@ -124,13 +124,15 @@ export class BaseTask {
     public async sendTestResult(testResult: string) {
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
-        await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
+        let ret = await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
             url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.fullProjectName + '&build-ci-id=' + this.buildId,
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             headers: {'Content-Type': 'application/xml'},
             json: false,
             body: testResult
         });
+        this.logger.debug('sendTestResult response:');
+        this.logger.debug(ret);
     }
 
     protected async init() {

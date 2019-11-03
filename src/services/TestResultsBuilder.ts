@@ -23,7 +23,7 @@ export class TestResultsBuilder {
             logger.info('No test results were retrieved/found');
             return null;
         }
-        let testResultTestRuns = this.buildTestResultTestRun(testResults);
+        let testResultTestRuns = this.buildTestResultTestRun(testResults, logger);
         let testResultTestFields = this.buildTestResultTestFields(testResults[0].automatedTestType);
         let testResultBuild = this.buildTestResultBuild(server_id, job_id, testResults[0].build.id);
         return new TestResult(testResultBuild, testResultTestFields, testResultTestRuns);
@@ -57,12 +57,24 @@ export class TestResultsBuilder {
         }
     }
 
-    private static buildTestResultTestRun(testResults: any): TestResultTestRunElement[] {
+    private static buildTestResultTestRun(testResults: any,  logger: LogUtils): TestResultTestRunElement[] {
         let testResultTestRunList: Array<TestResultTestRunElement> = [];
         testResults.forEach(element => {
             let packagename = element.automatedTestStorage;
+            if (packagename.length > 255) {
+                logger.error("Package name is longer than 255 chars: " + packagename);
+                return;
+            }
             let name = element.automatedTestName;
+            if (name.length > 255) {
+                logger.error("Test name is longer than 255 chars: " + name);
+                return;
+            }
             let classname = packagename + '.' + name;
+            if (classname.length > 255) {
+                logger.error("Classname name is longer than 255 chars: " + classname);
+                return;
+            }
             let duration = element.durationInMs || 0;
             let status = this.getStatus(element.outcome);
             let started = Date.parse(element.startedDate);
