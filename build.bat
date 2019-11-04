@@ -1,18 +1,16 @@
 @echo off
-rmdir /S /Q pkg
-mkdir pkg
-xcopy /S /Y templates\* pkg\
-mkdir pkg\Tasks\StartTask\
-xcopy /S /Y src\* pkg\Tasks\StartTask\
-mkdir pkg\Tasks\EndTask\
-xcopy /S /Y src\* pkg\Tasks\EndTask\
+rmdir /S /Q pkg || goto :error
+mkdir pkg || goto :error
+xcopy /S /Y templates\* pkg\ || goto :error
+xcopy /S /Y src\* pkg\Tasks\StartTask\ || goto :error
+xcopy /S /Y src\* pkg\Tasks\EndTask\ || goto :error
 
 pushd .
 echo.
 echo ======================================
 echo Building StartTask
 cd pkg\Tasks\StartTask
-cmd /C "npm install && tsc || goto :build_error"
+cmd /C "npm install && tsc || goto :error"
 echo StartTask is ready
 echo ======================================
 popd
@@ -22,7 +20,7 @@ echo.
 echo ======================================
 echo Building EndTask
 cd pkg\Tasks\EndTask
-cmd /C "npm install && tsc || goto :build_error"
+cmd /C "npm install && tsc || goto :error"
 echo EndTask is ready
 echo ======================================
 popd
@@ -38,11 +36,7 @@ echo ======================================
 popd
 goto :eof
 
-:build_error
-echo Error occurred
-popd
-goto :eof
-
 :error
 echo Error occurred
+popd
 goto :eof
