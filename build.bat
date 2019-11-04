@@ -1,7 +1,10 @@
 @echo off
-
+rmdir /S /Q pkg
+mkdir pkg
 xcopy /S /Y templates\* pkg\
+mkdir pkg\Tasks\StartTask\
 xcopy /S /Y src\* pkg\Tasks\StartTask\
+mkdir pkg\Tasks\EndTask\
 xcopy /S /Y src\* pkg\Tasks\EndTask\
 
 pushd .

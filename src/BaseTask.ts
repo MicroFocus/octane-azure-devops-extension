@@ -215,6 +215,7 @@ export class BaseTask {
         }).catch(ex => {
             this.logger.error(ex);
             this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
+            throw ex;
         });
     }
 

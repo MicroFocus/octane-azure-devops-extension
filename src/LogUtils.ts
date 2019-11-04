@@ -30,10 +30,11 @@ export class LogUtils {
         }
         msg = caller ? caller + '| ' + msg : msg;
         msg = '[' + msgType + ']' + msg;
+        let logFunction = (console[msgType.toLowerCase()] || console.log).bind(console);
         if (optionalParams.toString().length > 0) {
-            console.log(msg, optionalParams);
+            logFunction(msg, optionalParams);
         } else {
-            console.log(msg);
+            logFunction(msg);
         }
     }
 
