@@ -1,5 +1,6 @@
-@echo off
-rmdir /S /Q pkg || goto :error
+if exist pkg (
+   rmdir /S /Q pkg || goto :error
+)
 mkdir pkg || goto :error
 xcopy /S /Y templates\* pkg\ || goto :error
 xcopy /S /Y src\* pkg\Tasks\StartTask\ || goto :error
