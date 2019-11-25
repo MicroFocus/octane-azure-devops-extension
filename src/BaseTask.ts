@@ -53,7 +53,7 @@ export class BaseTask {
     }
 
 
-    protected async getCiServer(instanceId, serverName, collectionUri, projectId, octaneService, createOnAbsence) {
+    protected async getCiServer(instanceId, projectName, collectionUri, projectId, octaneService, createOnAbsence) {
         let ciServerQuery = Query.field('instance_id').equal(instanceId);
         let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
         this.logger.debug('ciServers: ');
@@ -61,11 +61,13 @@ export class BaseTask {
         let serverUrl = collectionUri + this.projectName;
         // this.sendTaskConnectCiServer();
 
+        let serverName = projectName.concat(instanceId);
+
         if (!ciServers || ciServers.length == 0) {
             if (!createOnAbsence) throw new Error('CI Server \'' + serverName + '(instanceId=\'' + instanceId + '\')\' not found.');
             ciServers = [
                 await util.promisify(this.octane.ciServers.create.bind(this.octane.ciServers))({
-                    'instance_id': instanceId && instanceId.trim() || BaseTask.generateUUID(),
+                    'instance_id': instanceId,
                     'name': serverName,
                     'server_type': CI_SERVER_INFO.CI_SERVER_TYPE,
                     'url': serverUrl
@@ -146,7 +148,7 @@ export class BaseTask {
                 this.logger.debug('rawUrl = ' + endpointUrl);
                 let url = new URL(endpointUrl);
                 this.logger.info('url.href = ' + url.href);
-                this.instanceId = this.tl.getEndpointDataParameter(octaneService, 'instance_id', true);
+                this.instanceId = this.tl.getEndpointDataParameter(octaneService, 'instance_id', false);
                 this.token = this.tl.getEndpointDataParameter(octaneService, 'AZURE_PERSONAL_ACCESS_TOKEN', true);
                 this.logger.debug('token = ' + this.token);
                 this.logger.info('instanceId = ' + this.instanceId);
