@@ -1,7 +1,10 @@
 steps:
 - ${{ if eq(variables['InjectAlmOctaneTasks'], 'true') }}:
-  - task: ALMOctane.alm-octane-integration.octane-start-task.octane-start-task@1
-    condition: always()
-    displayName: 'ALM Octane Job Start'
-    inputs:
-      OctaneServiceConnection: $(OctaneConnectionName)
+  - ${{ each var in variables }}:
+    - ${{ if and(startsWith(var.key, 'AlmOctaneConnection'), not(endsWith(var.key, 'Workspaces'))) }}:
+      - task: octane-start-task@1
+        condition: always()
+        displayName: 'ALM Octane Job Start (Connection: ${{ var.value }})'
+        inputs:
+          OctaneServiceConnection: '${{ var.value }}'
+          WorkspaceList: '$(${{ var.key }}Workspaces)'
