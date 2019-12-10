@@ -5,6 +5,7 @@ mkdir pkg || goto :error
 xcopy /S /Y templates\* pkg\ || goto :error
 xcopy /S /Y src\* pkg\Tasks\StartTask\ || goto :error
 xcopy /S /Y src\* pkg\Tasks\EndTask\ || goto :error
+xcopy /S /Y src\* pkg\Tasks\ConnectionVerifier\ || goto :error
 
 pushd .
 echo.
@@ -25,6 +26,17 @@ cmd /C "npm install && tsc || goto :error"
 echo EndTask is ready
 echo ======================================
 popd
+
+pushd .
+echo.
+echo ======================================
+echo Building EndTask
+cd pkg\Tasks\EndTask
+cmd /C "npm install && tsc || goto :error"
+echo EndTask is ready
+echo ======================================
+popd
+
 
 pushd .
 echo.
