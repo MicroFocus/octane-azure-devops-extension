@@ -10,19 +10,19 @@ let input = new Map();
 let sysVar = new Map();
 
 input.set('OctaneServiceConnection', 'Octane');
+input.set('WorkspaceList', '6001');
 sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelokshin0206/');
 sysVar.set('System.TeamProjectId', 'f2300d18-3a9d-4c64-b03a-18a00082a737');
 sysVar.set('System.TeamProject', 'TestProjectEvgeny');
 sysVar.set('Build.DefinitionName', 'TestProjectEvgeny');
-sysVar.set('Build.BuildId', '24');
+sysVar.set('Build.BuildId', '32');
 sysVar.set('ALMOctaneLogLevel', 'debug');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane123');
-// sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq'); //evgenelokshin
-sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli6455wvyeutmeaicgqrpvepxqgnapirt2mj7jxsa'); //el0206
+sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli6455wvyeutmeaicgqrpvepxqgnapirt2mj7jxsa');
 
 let auth = {
     // parameters: {'username': 'azure_mdp9ln8gjggevtkqr9e6pl536', 'password': '?914b638be36f9a92K'},
-    parameters: {'username': 'evgeny_azure_ejwk124jypmepuv2zp0qw50p9', 'password': '?eecc940e0c83a89Q'},
+    parameters: {'username': 'Azure Devops Service_kv1dl33m7nmdnfgpr1ddxly4g', 'password': '+1b4cee72b67e1d67Y'},
     scheme: 'username'
 };
 
@@ -35,8 +35,7 @@ function initTl(testTask: any) {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
-        return 'http://ILlokshin01.microfocus.com:8080/ui/?p=1001/1002';
-        // return 'https://qa52.almoctane.com/ui/?admin&p=1002/1002';
+        return 'https://almoctane-eur.saas.microfocus.com/ui/?p=173006';
     };
     testTask.getInput = (name: string, required?: boolean) => {
         return input.get(name);
@@ -80,10 +79,10 @@ let endpointAuth = task.getEndpointAuthorization(task.getInput('OctaneServiceCon
 let clientId = endpointAuth.parameters['username'];
 let clientSecret = endpointAuth.parameters['password'];
 console.log('clientId=' + clientId + " clientSecret=" + clientSecret);
-// process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
-// process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
-// process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
-// process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
+process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
+process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
+process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
+process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
 
 async function runTasks() {
     sysVar.set('Agent.JobName', BaseTask.ALM_OCTANE_PIPELINE_START);

@@ -21,21 +21,23 @@ export class EndTask extends BaseTask {
 
     public async run() {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
-        let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
-        if (!this.isPipelineJob) {
-            let buildResult = await this.getStatus(api);
-            let duration = await this.getDuration(api);
-            let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
-            await this.sendEvent(endEvent);
-        }
-        if (this.isPipelineEndJob) {
-            let buildResult = await this.getStatus(api);
-            let duration = await this.getDuration(api);
-            let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
-            await this.sendEvent(endEvent);
-            let testResult: string = await TestResultsBuilder.getTestsResultsByBuildId(api, this.fullProjectName, parseInt(this.buildId), this.instanceId, this.fullProjectName, this.logger);
-            if(testResult) {
-                await this.sendTestResult(testResult);
+        for(let ws in this.octaneConnections) {
+            if(this.octaneConnections[ws]) {
+                if (!this.isPipelineStartJob) {
+                    let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
+                    let buildResult = await this.getStatus(api);
+                    let duration = await this.getDuration(api);
+                    let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+                    await this.sendEvent(this.octaneConnections[ws], endEvent);
+                }
+
+                if (this.isPipelineEndJob) {
+                    let testResult = await TestResultsBuilder.getTestsResultsByBuildId(api, this.fullProjectName, parseInt(this.buildId), this.instanceId, this.fullProjectName, this.logger);
+                    if (testResult) {
+                        await this.sendTestResult(this.octaneConnections[ws], testResult);
+                    }
+                }
+                break; // events are sent to the sharedspace, thus sending event to a single connection is enough
             }
         }
     }

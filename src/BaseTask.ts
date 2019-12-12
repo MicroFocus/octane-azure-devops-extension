@@ -20,7 +20,7 @@ export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
     public static ALM_OCTANE_PIPELINE_END = 'AlmOctanePipelineEnd';
 
-    protected octane: any;
+    protected octaneConnections: object;
     protected tl: any;
     protected instanceId: string;
     protected collectionUri: string;
@@ -42,6 +42,7 @@ export class BaseTask {
         let logLevel = this.tl.getVariable('ALMOctaneLogLevel');
         this.logger = new LogUtils(logLevel);
         this.logger.debug("ALMOctaneLogLevel: " + logLevel);
+        this.octaneConnections = {};
     }
 
     protected static generateUUID() {
@@ -53,19 +54,21 @@ export class BaseTask {
     }
 
 
-    protected async getCiServer(instanceId, serverName, collectionUri, projectId, octaneService, createOnAbsence) {
+    protected async getCiServer(octaneConnection, instanceId, projectName, collectionUri, projectId, octaneService, createOnAbsence) {
         let ciServerQuery = Query.field('instance_id').equal(instanceId);
-        let ciServers = await util.promisify(this.octane.ciServers.getAll.bind(this.octane.ciServers))({query: ciServerQuery});
+        let ciServers = await util.promisify(octaneConnection.ciServers.getAll.bind(octaneConnection.ciServers))({query: ciServerQuery});
         this.logger.debug('ciServers: ');
         this.logger.debug(ciServers);
         let serverUrl = collectionUri + this.projectName;
         // this.sendTaskConnectCiServer();
 
+        let serverName = projectName.concat(instanceId);
+
         if (!ciServers || ciServers.length == 0) {
             if (!createOnAbsence) throw new Error('CI Server \'' + serverName + '(instanceId=\'' + instanceId + '\')\' not found.');
             ciServers = [
-                await util.promisify(this.octane.ciServers.create.bind(this.octane.ciServers))({
-                    'instance_id': instanceId && instanceId.trim() || BaseTask.generateUUID(),
+                await util.promisify(octaneConnection.ciServers.create.bind(octaneConnection.ciServers))({
+                    'instance_id': instanceId,
                     'name': serverName,
                     'server_type': CI_SERVER_INFO.CI_SERVER_TYPE,
                     'url': serverUrl
@@ -80,18 +83,18 @@ export class BaseTask {
         } else {
             ciServers[0].name = serverName;
             ciServers[0].url = serverUrl;
-            await util.promisify(this.octane.ciServers.update.bind(this.octane.ciServers))(ciServers[0]);
+            await util.promisify(octaneConnection.ciServers.update.bind(octaneConnection.ciServers))(ciServers[0]);
         }
         return ciServers[0];
     }
 
-    protected async getPipeline(pipelineName, rootJobName, ciServer, createOnAbsence) {
+    protected async getPipeline(octaneConnection, pipelineName, rootJobName, ciServer, createOnAbsence) {
         let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName));
-        let pipelines = await util.promisify(this.octane.pipelines.getAll.bind(this.octane.pipelines))({query: pipelineQuery});
+        let pipelines = await util.promisify(octaneConnection.pipelines.getAll.bind(octaneConnection.pipelines))({query: pipelineQuery});
         if (!pipelines || pipelines.length == 0) {
             if (!createOnAbsence) throw new Error('Pipeline \'' + pipelineName + '\' not found.');
             pipelines = [
-                await util.promisify(this.octane.pipelines.create.bind(this.octane.pipelines))({
+                await util.promisify(octaneConnection.pipelines.create.bind(octaneConnection.pipelines))({
                     'name': pipelineName,
                     'ci_server': {'type': 'ci_server', 'id': ciServer.id},
                     'root_job_name': rootJobName,
@@ -108,11 +111,11 @@ export class BaseTask {
         return pipelines[0];
     }
 
-    public async sendEvent(event: CiEvent) {
+    public async sendEvent(octaneConnection, event: CiEvent) {
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
-        const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
-        let ret = await util.promisify(this.octane.requestor.put.bind(this.octane.requestor))({
+        const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+        let ret = await util.promisify(octaneConnection.requestor.put.bind(octaneConnection.requestor))({
             url: '/analytics/ci/events',
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             json: events.toJSON()
@@ -121,10 +124,10 @@ export class BaseTask {
         this.logger.debug(ret);
     }
 
-    public async sendTestResult(testResult: string) {
+    public async sendTestResult(octaneConnection, testResult: string) {
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
-        const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
-        let ret = await util.promisify(this.octane.requestor.post.bind(this.octane.requestor))({
+        const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+        let ret = await util.promisify(octaneConnection.requestor.post.bind(octaneConnection.requestor))({
             url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.fullProjectName + '&build-ci-id=' + this.buildId,
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             headers: {'Content-Type': 'application/xml'},
@@ -146,7 +149,7 @@ export class BaseTask {
                 this.logger.debug('rawUrl = ' + endpointUrl);
                 let url = new URL(endpointUrl);
                 this.logger.info('url.href = ' + url.href);
-                this.instanceId = this.tl.getEndpointDataParameter(octaneService, 'instance_id', true);
+                this.instanceId = this.tl.getEndpointDataParameter(octaneService, 'instance_id', false);
                 this.token = this.tl.getEndpointDataParameter(octaneService, 'AZURE_PERSONAL_ACCESS_TOKEN', true);
                 this.logger.debug('token = ' + this.token);
                 this.logger.info('instanceId = ' + this.instanceId);
@@ -162,7 +165,7 @@ export class BaseTask {
                     return;
                 }
                 const spaces = pparam.match(/\d+/g);
-                if (!spaces || spaces.length < 2) {
+                if (!spaces || spaces.length < 1) {
                     reject(paramsError);
                     return;
                 }
@@ -176,38 +179,45 @@ export class BaseTask {
                 this.logger.info('projectId = ' + this.projectId);
                 this.logger.info('projectName = ' + this.projectName);
                 this.logger.info('buildName = ' + this.buildName);
-                if (!this.octane) {
-                    this.octane = new Octane({
-                        protocol: url.protocol.endsWith(':') ? url.protocol.slice(0, -1) : url.protocol,
-                        host: url.hostname,
-                        port: url.port,
-                        shared_space_id: spaces[0],
-                        workspace_id: spaces[1],
-                        routesConfig: getOctaneRoutes(),
-                        tech_preview_API: true
-                    });
-                }
+                var workspaces = this.tl.getInput('WorkspaceList', true);
+                this.logger.info('workspaces = ' + workspaces);
                 this.jobName = this.tl.getVariable('Agent.JobName');
                 this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
                 this.isPipelineStartJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
                 this.isPipelineEndJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
                 this.isPipelineJob = this.isPipelineStartJob || this.isPipelineEndJob;
                 this.fullProjectName = this.projectName + (this.isPipelineJob ? '' : '.' + this.jobName);
+                workspaces = workspaces.split(',');
 
-                await util.promisify(this.octane.authenticate.bind(this.octane))({
-                    client_id: clientId,
-                    client_secret: clientSecret
-                });
-
-                this.logger.info('Authentication passed');
-
-                this.instanceId = this.instanceId && this.instanceId.trim() || BaseTask.generateUUID();
-
-                let jobName = this.tl.getVariable('Agent.JobName');
-
-                let ciServer = await this.getCiServer(this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-                let rootJobName = this.projectName + '_' + this.buildName;
-                let pipeline = await this.getPipeline(this.buildName, rootJobName, ciServer, jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                for (let i in workspaces) {
+                    let ws = workspaces[i];
+                    await (async (ws) => {
+                        let connectionCandidate = this.octaneConnections[ws];
+                        if (!connectionCandidate) {
+                            connectionCandidate = new Octane({
+                                protocol: url.protocol.endsWith(':') ? url.protocol.slice(0, -1) : url.protocol,
+                                host: url.hostname,
+                                port: url.port,
+                                shared_space_id: spaces[0],
+                                workspace_id: ws,
+                                routesConfig: getOctaneRoutes(),
+                                tech_preview_API: true
+                            });
+                        }
+                        await util.promisify(connectionCandidate.authenticate.bind(connectionCandidate))({
+                            client_id: clientId,
+                            client_secret: clientSecret
+                        });
+                        this.logger.info('Workspace ' + ws + ': authentication passed');
+                        let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, this.jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                        let rootJobName = this.projectName + '_' + this.buildName;
+                        await this.getPipeline(connectionCandidate, this.buildName, rootJobName, ciServer, this.jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                        this.octaneConnections[ws] = connectionCandidate;
+                    })(ws).then(v => v, ex => {
+                        this.logger.error(ex);
+                        return ex;
+                    });
+                }
                 resolve();
             } catch (ex) {
                 reject(ex);
@@ -216,18 +226,6 @@ export class BaseTask {
             this.logger.error(ex);
             this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
             throw ex;
-        });
-    }
-
-    public async sendTaskConnectCiServer() {
-        const REST_API_SHAREDSPACE_BASE_URL = this.octane.config.protocol + '://' + this.octane.config.host + ':' + this.octane.config.port + '/internal-api/shared_spaces/' + this.octane.config.shared_space_id;
-        let url = '/analytics/ci/servers/' + this.instanceId + '/tasks?self-type=' + CI_SERVER_INFO.CI_SERVER_TYPE + '&self-url=' + escape(this.collectionUri + this.projectId) +
-            '&plugin-version=' + CI_SERVER_INFO.PLUGIN_VERSION;
-        util.promisify(this.octane.requestor.get.bind(this.octane.requestor))({
-            url: url,
-            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
-            headers: {'Content-Type': 'application/json'},
-            json: false
         });
     }
 

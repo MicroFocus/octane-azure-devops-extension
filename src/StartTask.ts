@@ -20,18 +20,22 @@ export class StartTask extends BaseTask {
 
     public async run() {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
+        for (let ws in this.octaneConnections) {
+            if (this.octaneConnections[ws]) {
+                if (!this.isPipelineEndJob) {
+                    let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
+                    let startEvent = new CiEvent(this.jobName, CiEventType.STARTED, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+                    await this.sendEvent(this.octaneConnections[ws], startEvent);
+                }
 
-        if(!this.isPipelineEndJob) {
-            let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
-            let startEvent = new CiEvent(this.jobName, CiEventType.STARTED, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
-            await this.sendEvent(startEvent);
-        }
-
-        if(this.isPipelineStartJob) {
-            let scmData = await ScmBuilder.buildScmData(api, this.fullProjectName, parseInt(this.buildId), this.logger);
-            this.logger.debug(scmData);
-            let scmEvent = new CiEvent(this.jobName, CiEventType.SCM, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
-            await this.sendEvent(scmEvent);
+                if (this.isPipelineStartJob) {
+                    let scmData = await ScmBuilder.buildScmData(api, this.fullProjectName, parseInt(this.buildId), this.logger);
+                    this.logger.debug(scmData);
+                    let scmEvent = new CiEvent(this.jobName, CiEventType.SCM, this.buildId, this.buildId, this.fullProjectName, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
+                    await this.sendEvent(this.octaneConnections[ws], scmEvent);
+                }
+                break; // events are sent to the sharedspace, thus sending event to a single connection is enough
+            }
         }
     }
 }
