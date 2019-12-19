@@ -33,7 +33,8 @@ export class BaseTask {
     protected isPipelineStartJob: boolean;
     protected isPipelineEndJob: boolean;
     protected isPipelineJob: boolean;
-    protected fullProjectName: string;
+    protected fullBuildName: string;
+    protected fullPipelineName: string;
     protected jobStatus: Result;
     protected logger: LogUtils;
 
@@ -112,6 +113,7 @@ export class BaseTask {
     }
 
     public async sendEvent(octaneConnection, event: CiEvent) {
+        this.logger.debug('Sending event:\n' + JSON.stringify(event));
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
         const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
@@ -127,8 +129,11 @@ export class BaseTask {
     public async sendTestResult(octaneConnection, testResult: string) {
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+        let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.fullPipelineName + '&build-ci-id=' + this.buildId;
+        this.logger.debug('Sending results to:' + REST_API_SHAREDSPACE_BASE_URL + '/' + testResultsApiUrl);
+        this.logger.debug('The result string is: ' + testResult);
         let ret = await util.promisify(octaneConnection.requestor.post.bind(octaneConnection.requestor))({
-            url: '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.fullProjectName + '&build-ci-id=' + this.buildId,
+            url: testResultsApiUrl,
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
             headers: {'Content-Type': 'application/xml'},
             json: false,
@@ -186,7 +191,8 @@ export class BaseTask {
                 this.isPipelineStartJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
                 this.isPipelineEndJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
                 this.isPipelineJob = this.isPipelineStartJob || this.isPipelineEndJob;
-                this.fullProjectName = this.projectName + (this.isPipelineJob ? '' : '.' + this.jobName);
+                this.fullBuildName = this.projectName + '.' + this.buildName;
+                this.fullPipelineName = this.fullBuildName + (this.isPipelineJob ? '' : '.' + this.jobName);
                 workspaces = workspaces.split(',');
 
                 for (let i in workspaces) {
@@ -210,7 +216,8 @@ export class BaseTask {
                         });
                         this.logger.info('Workspace ' + ws + ': authentication passed');
                         let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, this.jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-                        let rootJobName = this.projectName + '_' + this.buildName;
+                        let rootJobName = this.fullBuildName + '_' + this.jobName;
+                        this.logger.info('Root job name:' + rootJobName);
                         await this.getPipeline(connectionCandidate, this.buildName, rootJobName, ciServer, this.jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
                         this.octaneConnections[ws] = connectionCandidate;
                     })(ws).then(v => v, ex => {

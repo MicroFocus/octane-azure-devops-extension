@@ -24,15 +24,15 @@ export class EndTask extends BaseTask {
         for(let ws in this.octaneConnections) {
             if(this.octaneConnections[ws]) {
                 if (!this.isPipelineStartJob) {
-                    let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId));
+                    let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, parseInt(this.buildId), this.fullBuildName);
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
-                    let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullProjectName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+                    let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.fullPipelineName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
                     await this.sendEvent(this.octaneConnections[ws], endEvent);
                 }
 
                 if (this.isPipelineEndJob) {
-                    let testResult = await TestResultsBuilder.getTestsResultsByBuildId(api, this.fullProjectName, parseInt(this.buildId), this.instanceId, this.fullProjectName, this.logger);
+                    let testResult = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.fullPipelineName, this.logger);
                     if (testResult) {
                         await this.sendTestResult(this.octaneConnections[ws], testResult);
                     }

@@ -21,13 +21,21 @@ export class ScmBuilder {
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
         let gitApi: git.IGitApi = await connection.getGitApi();
         let repos = await gitApi.getRepositories(projectName);
+        if(!repos || repos.length == 0) {
+            logger.info('No local repositories found. SCM information could not be collected');
+            return null;
+        }
         let repo = repos[0];
         let prev_build = await buildApi.getBuild(projectName, fromBuild);
         let changes_between_builds;
         if (prev_build == null) {
             changes_between_builds =await buildApi.getBuildChanges(projectName, toBuild);
         } else {
-            changes_between_builds = await buildApi.getChangesBetweenBuilds(projectName, fromBuild, toBuild);
+            try {
+                changes_between_builds = await buildApi.getChangesBetweenBuilds(projectName, fromBuild, toBuild);
+            } catch (e) {
+                changes_between_builds = await buildApi.getBuildChanges(projectName, toBuild);
+            }
         }
 
         if (!changes_between_builds || !changes_between_builds.length) {

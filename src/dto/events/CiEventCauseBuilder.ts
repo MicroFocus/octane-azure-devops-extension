@@ -5,12 +5,12 @@ import {CiCausesType} from "./CiTypes";
 import {BuildReason} from "azure-devops-node-api/interfaces/BuildInterfaces";
 
 export class CiEventCauseBuilder {
-    public static async buildCiEventCauses(isRoot, connection: WebApi, projectName: string, buildId: number): Promise<CiEventCause[]> {
+    public static async buildCiEventCauses(isRoot, connection: WebApi, projectName: string, buildId: number, buildName: string): Promise<CiEventCause[]> {
         let rootCause: CiEventCause = await CiEventCauseBuilder.buildCiEventRootCause(connection, projectName, buildId);
         if(isRoot) {
             return [rootCause];
         } else {
-            let cause = new CiEventCause(CiCausesType.UPSTREAM, rootCause.userName, rootCause.userId, projectName, buildId, [rootCause]);
+            let cause = new CiEventCause(CiCausesType.UPSTREAM, rootCause.userName, rootCause.userId, buildName, buildId, [rootCause]);
             return [cause];
         }
     }
