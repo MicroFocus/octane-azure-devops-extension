@@ -51,7 +51,9 @@ export class BaseTask {
     }
 
     protected static escapeOctaneQueryValue(q) {
-        return q && q.replace(/\\/g, '\\\\');
+        return q && q.replace(/\\/g, '\\\\')
+            .replace(/\(/g, '\\(')
+            .replace(/\)/g, '\\)');
     }
 
 
@@ -61,7 +63,6 @@ export class BaseTask {
         this.logger.debug('ciServers: ');
         this.logger.debug(ciServers);
         let serverUrl = collectionUri + this.projectName;
-        // this.sendTaskConnectCiServer();
 
         let serverName = projectName.concat(instanceId);
 

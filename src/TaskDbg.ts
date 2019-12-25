@@ -11,7 +11,7 @@ let sysVar = new Map();
 
 input.set('OctaneServiceConnection', 'Octane');
 input.set('gitHubServiceConnection', 'gitHub');
-input.set('WorkspaceList', '6001');
+input.set('WorkspaceList', '1002');
 
 sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelokshin0206/');
 sysVar.set('System.TeamProjectId', 'f2300d18-3a9d-4c64-b03a-18a00082a737');
@@ -25,7 +25,7 @@ sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli645
 function initRepository(type: string) {
     if (type == 'int') {
         sysVar.set('System.TeamProject', 'TestProjectEvgeny');
-        sysVar.set('Build.DefinitionName', 'TestProject');
+        sysVar.set('Build.DefinitionName', 'MyFirstProject.local(1)_AlmOctanePipelineStart');
         sysVar.set('Build.BuildId', '34');
     } else {
         sysVar.set('System.TeamProject', 'GitTestProject');
@@ -35,7 +35,7 @@ function initRepository(type: string) {
 }
 
 let auth = {
-    parameters: {'username': 'Azure Devops Service_kv1dl33m7nmdnfgpr1ddxly4g', 'password': '+1b4cee72b67e1d67Y'},
+    parameters: {'username': 'sa@nga', 'password': 'Welcome1'},
     scheme: 'username'
 };
 
@@ -55,8 +55,8 @@ function initTl(testTask: any) {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
-        return 'https://almoctane-eur.saas.microfocus.com/ui/?p=173006';
-        // return 'http://10.14.83.153:8080/ui/?p=1001/1002';
+        //return 'https://almoctane-eur.saas.microfocus.com/ui/?p=173006';
+        return 'http://ILstekel02.microfocus.com:8080/ui/?p=1001/1002';
         // return 'https://qa52.almoctane.com/ui/?admin&p=1002/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
@@ -106,6 +106,8 @@ let endpointAuth = task.getEndpointAuthorization(task.getInput('OctaneServiceCon
 let clientId = endpointAuth.parameters['username'];
 let clientSecret = endpointAuth.parameters['password'];
 console.log('clientId=' + clientId + " clientSecret=" + clientSecret);
+
+process.env.no_proxy = "ILstekel02.microfocus.com";
 process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
 process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
 process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
