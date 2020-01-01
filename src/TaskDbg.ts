@@ -10,7 +10,7 @@ let input = new Map();
 let sysVar = new Map();
 
 input.set('OctaneServiceConnection', 'Octane');
-input.set('gitHubServiceConnection', 'gitHub');
+input.set('RepositoryConnection', 'gitHub');
 input.set('WorkspaceList', '1002');
 
 sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelokshin0206/');
@@ -113,7 +113,7 @@ process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
 process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
 process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
 
-let endpointGitAuth = task.getEndpointAuthorization(task.getInput('gitHubServiceConnection'), false);
+let endpointGitAuth = task.getEndpointAuthorization(task.getInput('RepositoryConnection'), false);
 let token = endpointGitAuth.parameters['accessToken'];
 console.log('token=' + token);
 

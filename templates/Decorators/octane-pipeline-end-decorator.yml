@@ -8,3 +8,4 @@ steps:
         inputs:
           OctaneServiceConnection: '${{ var.value }}'
           WorkspaceList: '$(${{ var.key }}Workspaces)'
+          RepositoryConnection: '${{ RepositoryConnection }}'

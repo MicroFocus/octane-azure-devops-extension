@@ -19,11 +19,11 @@
   "instanceNameFormat": "ALM Octane Connection Verifier",
   "inputs": [
     {
-      "name": "OctaneServiceConnection",
-      "type": "connectedService:OctaneServiceConnection",
-      "label": "Octane service/server end point",
-      "required": false,
-      "helpMarkDown": "Select the Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'Octane server connection'"
+      "name": "Connection",
+      "type": "connectedService:Generic",
+      "label": "Generic connection",
+      "required": true,
+      "helpMarkDown": "Generic connection"
     }
   ],
   "execution": {

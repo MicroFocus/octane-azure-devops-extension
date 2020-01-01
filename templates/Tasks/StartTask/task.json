@@ -31,6 +31,13 @@
       "label": "Target ALM Octane workspaces",
       "required": true,
       "helpMarkDown": "Comma separated list of target Octane workspaces"
+    },
+    {
+      "name": "RepositoryConnection",
+      "type": "connectedService:Generic",
+      "label": "External repository connection",
+      "required": true,
+      "helpMarkDown": "External repository connection"
     }
   ],
   "execution": {
