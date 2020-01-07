@@ -36,7 +36,7 @@
       "name": "RepositoryConnection",
       "type": "connectedService:Generic",
       "label": "External repository connection",
-      "required": true,
+      "required": false,
       "helpMarkDown": "External repository connection"
     }
   ],

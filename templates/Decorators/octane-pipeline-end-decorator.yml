@@ -6,6 +6,6 @@ steps:
         condition: always()
         displayName: 'ALM Octane Job End (Connection: ${{ var.value }})'
         inputs:
-          OctaneServiceConnection: '${{ var.value }}'
-          WorkspaceList: '$(${{ var.key }}Workspaces)'
-          RepositoryConnection: '${{ RepositoryConnection }}'
+          OctaneServiceConnection: ${{ var.value }}
+          WorkspaceList: $(${{ var.key }}Workspaces)
+          RepositoryConnection: ${{ variables['RepositoryConnection'] }}

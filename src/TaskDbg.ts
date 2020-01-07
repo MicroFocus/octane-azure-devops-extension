@@ -56,7 +56,7 @@ function initTl(testTask: any) {
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
         //return 'https://almoctane-eur.saas.microfocus.com/ui/?p=173006';
-        return 'http://ILstekel02.microfocus.com:8080/ui/?p=1001/1002';
+        return 'http://10.14.81.80:8080/ui/?p=1001/1002';
         // return 'https://qa52.almoctane.com/ui/?admin&p=1002/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
@@ -107,11 +107,15 @@ let clientId = endpointAuth.parameters['username'];
 let clientSecret = endpointAuth.parameters['password'];
 console.log('clientId=' + clientId + " clientSecret=" + clientSecret);
 
-process.env.no_proxy = "ILstekel02.microfocus.com";
+//process.env.no_proxy = "ILstekel02.microfocus.com";
 process.env.HTTPS_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
 process.env.https_proxy = "http://web-proxy.il.softwaregrp.net:8080";
 process.env.HTTP_PROXY = "http://web-proxy.il.softwaregrp.net:8080";
 process.env.http_proxy = "http://web-proxy.il.softwaregrp.net:8080";
+// process.env.HTTPS_PROXY = "";
+// process.env.https_proxy = "";
+// process.env.HTTP_PROXY = "";
+// process.env.http_proxy = "";
 
 let endpointGitAuth = task.getEndpointAuthorization(task.getInput('RepositoryConnection'), false);
 let token = endpointGitAuth.parameters['accessToken'];
