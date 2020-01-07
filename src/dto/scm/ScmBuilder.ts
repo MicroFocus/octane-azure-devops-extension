@@ -15,7 +15,7 @@ var request = require('request');
 
 export class ScmBuilder {
 
-    public static async buildScmData(connection: WebApi, projectName: string, toBuild: number, token: string, logger: LogUtils): Promise<ScmData> {
+    public static async buildScmData(connection: WebApi, projectName: string, toBuild: number, tl: any, logger: LogUtils): Promise<ScmData> {
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
         let gitApi: git.IGitApi = await connection.getGitApi();
 
@@ -31,14 +31,14 @@ export class ScmBuilder {
         logger.debug(buildChanges);
         let type = repo.type;
         let scmData = await this.setData(type, repo, buildChanges, gitApi, projectName,
-            build.buildNumberRevision, token, build.repository.id);
+            build.buildNumberRevision, build.repository.id, tl, logger);
         logger.info("ScmData was created");
         logger.debug(scmData);
         return scmData;
     }
 
     private static async setData(type: string, repo: BuildRepository, changes: Change[], gitApi: IGitApi,
-                                 projectName: string, buildNumber: number, token: string, repoId: string): Promise<ScmData> {
+                                 projectName: string, buildNumber: number, repoId: string, tl: any, logger: LogUtils): Promise<ScmData> {
         function convertType(changeType: number): string {
             return VersionControlChangeType[changeType].toLowerCase();
         }
@@ -56,7 +56,6 @@ export class ScmBuilder {
 
         let scmData: ScmData;
         let scmCommit = new Array<ScmCommit>();
-        let url = type === 'TfsGit' ? repo.url : changes[0].displayUri.split('/commit')[0];
 
         for (let change of changes) {
             let time = new Date(change.timestamp).getTime();
@@ -79,9 +78,14 @@ export class ScmBuilder {
                         fileChanges.push(new ScmCommitFileChange(type, realChange.item.path));
                     }
                     break;
-                default:
+                case 'GitHub':
                     //todo FIND/CHECK the way to fetch commits by bulk and not one by one!
-                    let testCommit = await this.getCommit(token, repoId, change.id);
+                    let endpointGitAuth = tl.getEndpointAuthorization(tl.getInput('GithubRepositoryConnection', true));
+                    let githubAccessToken = Utility.getGithubEndPointToken(endpointGitAuth);
+                    logger.info('Repository type: ' + type)
+                    logger.debug('githubAccessToken = ' + githubAccessToken);
+
+                    let testCommit = await this.getCommit(githubAccessToken, repoId, change.id);
                     let commit = JSON.parse(testCommit['body']);
                     revId = commit[GitHubAttributes.sha];
                     parentRevId = commit[GitHubAttributes.parents][0][GitHubAttributes.sha];
@@ -91,9 +95,13 @@ export class ScmBuilder {
                         fileChanges.push(new ScmCommitFileChange(type, filePath));
                     }
                     break;
+                default:
+                    logger.error('Unknown ');
             }
             scmCommit.push(new ScmCommit(time, user, revId, fileChanges, user_email, parentRevId, comment));
         }
+
+        let url = type === 'TfsGit' ? repo.url : changes[0].displayUri.split('/commit')[0];
         let scmRepo = new ScmRepository(type, url, repo.defaultBranch);
         scmData = new ScmData(scmRepo, buildNumber, scmCommit);
 

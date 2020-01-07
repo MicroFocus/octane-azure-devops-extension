@@ -31,7 +31,6 @@ export class BaseTask {
     protected buildName: string;
     protected buildId: string;
     protected token: string;
-    protected gitAccessToken: string;
     protected jobName: string;
     protected isPipelineStartJob: boolean;
     protected isPipelineEndJob: boolean;
@@ -164,9 +163,6 @@ export class BaseTask {
                 let clientSecret = endpointAuth.parameters['password'];
                 this.logger.debug('clientId = ' + clientId);
                 this.logger.debug('clientSecret = ' + clientSecret);
-                let endpointGitAuth = this.tl.getEndpointAuthorization(this.tl.getInput('RepositoryConnection'), false);
-                this.gitAccessToken = Utility.getGithubEndPointToken(endpointGitAuth);
-                this.logger.debug('gitAccessToken = ' + this.gitAccessToken);
                 let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';
                 let pparam = url.searchParams.get('p');
                 if (pparam === null) {

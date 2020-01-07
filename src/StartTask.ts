@@ -29,7 +29,7 @@ export class StartTask extends BaseTask {
                 }
 
                 if (this.isPipelineStartJob) {
-                    let scmData = await ScmBuilder.buildScmData(api, this.projectName, parseInt(this.buildId), this.gitAccessToken, this.logger);
+                    let scmData = await ScmBuilder.buildScmData(api, this.projectName, parseInt(this.buildId), this.tl, this.logger);
                     this.logger.debug(scmData);
                     let scmEvent = new CiEvent(this.jobName, CiEventType.SCM, this.buildId, this.buildId, this.jobFullName, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
                     await this.sendEvent(this.octaneConnections[ws], scmEvent);

@@ -33,11 +33,11 @@
       "helpMarkDown": "Comma separated list of target Octane workspaces"
     },
     {
-      "name": "RepositoryConnection",
-      "type": "connectedService:Generic",
-      "label": "External repository connection",
+      "name": "GithubRepositoryConnection",
+      "type": "connectedService:github:OAuth,OAuth2,PersonalAccessToken,Token",
+      "label": "Github repository connection",
       "required": false,
-      "helpMarkDown": "External repository connection"
+      "helpMarkDown": "Github repository connection"
     }
   ],
   "execution": {
