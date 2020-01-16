@@ -27,7 +27,7 @@ export class EndTask extends BaseTask {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
-                    let endEvent = new CiEvent(this.jobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+                    let endEvent = new CiEvent(this.agentJobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
                     await this.sendEvent(this.octaneConnections[ws], endEvent);
                 }
 
@@ -59,7 +59,7 @@ export class EndTask extends BaseTask {
     private async getDuration(api: WebApi) {
         let buildApi: ba.IBuildApi = await api.getBuildApi();
         let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
-        let jobName = this.isPipelineEndJob ? BaseTask.ALM_OCTANE_PIPELINE_START : this.jobName;
+        let jobName = this.isPipelineEndJob ? BaseTask.ALM_OCTANE_PIPELINE_START : this.agentJobName;
         let job = timeline.records.filter(r => r.type == 'Job' && r.name.toLowerCase() === jobName.toLowerCase())[0];
         if(!job){
             return 0;

@@ -28,15 +28,17 @@ export class BaseTask {
     protected projectId: string;
     protected projectName: string;
     protected jobFullName: string;
-    protected buildName: string;
+    protected buildDefinitionName: string;
     protected buildId: string;
     protected token: string;
-    protected jobName: string;
+    protected agentJobName: string;
     protected isPipelineStartJob: boolean;
     protected isPipelineEndJob: boolean;
     protected isPipelineJob: boolean;
     protected jobStatus: Result;
     protected logger: LogUtils;
+    protected projectFullName: string;
+    protected pipelineFullName: string;
     protected rootJobFullName: string;
 
     protected constructor(tl: any) {
@@ -66,11 +68,11 @@ export class BaseTask {
         let serverUrl = collectionUri + this.projectName;
 
         if (!ciServers || ciServers.length == 0) {
-            if (!createOnAbsence) throw new Error('CI Server \'' + this.rootJobFullName + '(instanceId=\'' + instanceId + '\')\' not found.');
+            if (!createOnAbsence) throw new Error('CI Server \'' + this.projectFullName + '(instanceId=\'' + instanceId + '\')\' not found.');
             ciServers = [
                 await util.promisify(octaneConnection.ciServers.create.bind(octaneConnection.ciServers))({
                     'instance_id': instanceId,
-                    'name': this.rootJobFullName,
+                    'name': this.projectFullName,
                     'server_type': CI_SERVER_INFO.CI_SERVER_TYPE,
                     'url': serverUrl
                 })
@@ -82,7 +84,7 @@ export class BaseTask {
             }
             this.tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
         } else {
-            ciServers[0].name = this.rootJobFullName;
+            ciServers[0].name = this.projectFullName;
             ciServers[0].url = serverUrl;
             await util.promisify(octaneConnection.ciServers.update.bind(octaneConnection.ciServers))(ciServers[0]);
         }
@@ -178,19 +180,25 @@ export class BaseTask {
                 this.collectionUri = this.tl.getVariable('System.TeamFoundationCollectionUri');
                 this.projectId = this.tl.getVariable('System.TeamProjectId');
                 this.projectName = this.tl.getVariable('System.TeamProject');
-                this.buildName = this.tl.getVariable('Build.DefinitionName');
+                this.buildDefinitionName = this.tl.getVariable('Build.DefinitionName');
                 this.buildId = this.tl.getVariable('Build.BuildId');
+                this.agentJobName = this.tl.getVariable('Agent.JobName');
                 this.logger.info('collectionUri = ' + this.collectionUri);
                 this.logger.info('projectId = ' + this.projectId);
                 this.logger.info('projectName = ' + this.projectName);
-                this.logger.info('buildName = ' + this.buildName);
-                this.jobName = this.tl.getVariable('Agent.JobName');
+                this.logger.info('buildDefinitionName = ' + this.buildDefinitionName);
+                this.logger.info('agentJobName = ' + this.agentJobName);
                 this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
-                this.isPipelineStartJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
-                this.isPipelineEndJob = this.jobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
+                this.isPipelineStartJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
+                this.isPipelineEndJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
                 this.isPipelineJob = this.isPipelineStartJob || this.isPipelineEndJob;
-                this.rootJobFullName = 'AzureDevOps.' + this.instanceId + '.' + this.projectName;
-                this.jobFullName = this.rootJobFullName + (this.isPipelineJob ? '' : '.' + this.jobName);
+                this.projectFullName = 'AzureDevOps.' + this.instanceId + '.' + this.projectName;
+                this.logger.info('Project full name:' + this.projectFullName);
+                this.jobFullName = this.projectFullName + '.' + this.buildDefinitionName + (this.isPipelineJob ? '' : '.' + this.agentJobName);
+                this.logger.info('Job full name:' + this.jobFullName);
+                this.rootJobFullName = this.projectFullName + '.' + this.buildDefinitionName;
+                this.pipelineFullName = this.projectFullName + '.' + this.buildDefinitionName + '@@@' + this.agentJobName;
+                this.logger.info('Pipeline full name:' + this.pipelineFullName);
                 let workspaces = this.tl.getInput('WorkspaceList', true);
                 this.logger.info('workspaces = ' + workspaces);
                 workspaces = workspaces.split(',');
@@ -214,10 +222,8 @@ export class BaseTask {
                             client_secret: clientSecret
                         });
                         this.logger.info('Workspace ' + ws + ': authentication passed');
-                        let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, this.jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-                        let rootJobName = this.rootJobFullName + '_' + this.jobName;
-                        this.logger.info('Root job name:' + rootJobName);
-                        await this.getPipeline(connectionCandidate, this.buildName, rootJobName, ciServer, this.jobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                        let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                        await this.getPipeline(connectionCandidate, this.buildDefinitionName, this.pipelineFullName, ciServer, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
                         this.octaneConnections[ws] = connectionCandidate;
                     })(ws).then(v => v, ex => {
                         this.logger.error(ex);

@@ -25,11 +25,11 @@ sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli645
 function initRepository(type: string) {
     if (type == 'int') {
         sysVar.set('System.TeamProject', 'TestProjectEvgeny');
-        sysVar.set('Build.DefinitionName', 'MyFirstProject.local(1)_AlmOctanePipelineStart');
+        sysVar.set('Build.DefinitionName', 'pipeline3');
         sysVar.set('Build.BuildId', '34');
     } else {
         sysVar.set('System.TeamProject', 'GitTestProject');
-        sysVar.set('Build.DefinitionName', 'elokshin.hpe-demo-app');
+        sysVar.set('Build.DefinitionName', 'pipeline1');
         sysVar.set('Build.BuildId', '42');
     }
 }
@@ -56,7 +56,7 @@ function initTl(testTask: any) {
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
         //return 'https://almoctane-eur.saas.microfocus.com/ui/?p=173006';
-        return 'http://10.14.81.80:8080/ui/?p=1001/1002';
+        return 'http://ilstekel02.microfocus.com:8080/ui/?p=1001/1002';
         // return 'https://qa52.almoctane.com/ui/?admin&p=1002/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
