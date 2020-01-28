@@ -92,7 +92,8 @@ export class BaseTask {
     }
 
     protected async getPipeline(octaneConnection, pipelineName, rootJobName, ciServer, createOnAbsence) {
-        let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName));
+        let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName))
+            .and(Query.field('ci_server').equal(Query.field('id').equal(ciServer.id)));
         let pipelines = await util.promisify(octaneConnection.pipelines.getAll.bind(octaneConnection.pipelines))({query: pipelineQuery});
         if (!pipelines || pipelines.length == 0) {
             if (!createOnAbsence) throw new Error('Pipeline \'' + pipelineName + '\' not found.');
