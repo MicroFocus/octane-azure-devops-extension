@@ -10,6 +10,16 @@ xcopy /S /Y src\* pkg\Tasks\ConnectionVerifier\ || goto :error
 pushd .
 echo.
 echo ======================================
+echo Building src
+cd src
+cmd /C "npm install && tsc || goto :build_error"
+echo src is ready
+echo ======================================
+popd
+
+pushd .
+echo.
+echo ======================================
 echo Building StartTask
 cd pkg\Tasks\StartTask
 cmd /C "npm install && tsc || goto :error"

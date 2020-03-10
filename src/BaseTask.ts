@@ -61,7 +61,9 @@ export class BaseTask {
 
 
     protected async getCiServer(octaneConnection, instanceId, projectName, collectionUri, projectId, octaneService, createOnAbsence) {
+        this.logger.debug('instanceId: ' + instanceId);
         let ciServerQuery = Query.field('instance_id').equal(instanceId);
+        this.logger.debug('ciServers: ' + ciServerQuery);
         let ciServers = await util.promisify(octaneConnection.ciServers.getAll.bind(octaneConnection.ciServers))({query: ciServerQuery});
         this.logger.debug('ciServers: ');
         this.logger.debug(ciServers);
