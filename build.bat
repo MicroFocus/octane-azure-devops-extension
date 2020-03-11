@@ -40,10 +40,10 @@ popd
 pushd .
 echo.
 echo ======================================
-echo Building EndTask
-cd pkg\Tasks\EndTask
+echo Building ConnectionVerifier
+cd pkg\Tasks\ConnectionVerifier
 cmd /C "npm install && tsc || goto :error"
-echo EndTask is ready
+echo ConnectionVerifier is ready
 echo ======================================
 popd
 
