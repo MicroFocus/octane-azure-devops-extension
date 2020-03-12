@@ -4,9 +4,6 @@ import {CiEvent} from "./dto/events/CiEvent";
 import {Result} from "./dto/events/CiTypes";
 import {CI_SERVER_INFO} from "./ConstantsEnum";
 import {LogUtils} from "./LogUtils";
-import {Utility} from "./dto/scm/Utils";
-
-const querystring = require('querystring');
 
 const Octane = require('@microfocus/alm-octane-js-rest-sdk');
 const getOctaneRoutes = require('./octane_routes.js');
@@ -63,7 +60,6 @@ export class BaseTask {
     protected async getCiServer(octaneConnection, instanceId, projectName, collectionUri, projectId, octaneService, createOnAbsence) {
         this.logger.debug('instanceId: ' + instanceId);
         let ciServerQuery = Query.field('instance_id').equal(instanceId);
-        this.logger.debug('ciServers: ' + ciServerQuery);
         let ciServers = await util.promisify(octaneConnection.ciServers.getAll.bind(octaneConnection.ciServers))({query: ciServerQuery});
         this.logger.debug('ciServers: ');
         this.logger.debug(ciServers);
@@ -132,7 +128,7 @@ export class BaseTask {
     }
 
     public async sendTestResult(octaneConnection, testResult: string) {
-        let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+     //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
         let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
         this.logger.debug('Sending results to:' + REST_API_SHAREDSPACE_BASE_URL + '/' + testResultsApiUrl);
@@ -206,7 +202,7 @@ export class BaseTask {
                 this.logger.info('workspaces = ' + workspaces);
                 workspaces = workspaces.split(',');
                 for (let i in workspaces) {
-                    let ws = workspaces[i];
+                    let ws = workspaces[i].trim();
                     await (async (ws) => {
                         let connectionCandidate = this.octaneConnections[ws];
                         if (!connectionCandidate) {
