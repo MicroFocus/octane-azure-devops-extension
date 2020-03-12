@@ -1,4 +1,6 @@
+// @ts-ignore
 async function runTask() {
+    // @ts-ignore
     await Promise.resolve();
 }
 
