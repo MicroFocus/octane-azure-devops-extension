@@ -220,6 +220,7 @@ export class BaseTask {
                             client_id: clientId,
                             client_secret: clientSecret
                         });
+                        connectionCandidate.requestor = connectionCandidate.requestor.defaults({headers: {'HPECLIENTTYPE': 'HPE_CI_CLIENT'}});
                         this.logger.info('Workspace ' + ws + ': authentication passed');
                         let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
                         await this.getPipeline(connectionCandidate, this.buildDefinitionName, this.pipelineFullName, ciServer, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
