@@ -13,11 +13,12 @@ input.set('OctaneServiceConnection', 'Octane');
 input.set('RepositoryConnection', 'gitHub');
 input.set('WorkspaceList', '1002');
 
-sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/evgenelokshin0206/');
+sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/mayar0110/');
 sysVar.set('System.TeamProjectId', 'f2300d18-3a9d-4c64-b03a-18a00082a737');
-sysVar.set("agent.proxyurl", null);
+sysVar.set("agent.proxyurl", "http://web-proxy.il.softwaregrp.net:8080");
+sysVar.set("Agent.ProxyUrl", "http://web-proxy.il.softwaregrp.net:8080");
 sysVar.set('ALMOctaneLogLevel', 'debug');
-sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane123');
+sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'qa9');
 // sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq'); //evgenelokshin
 sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli6455wvyeutmeaicgqrpvepxqgnapirt2mj7jxsa'); //el0206
 
@@ -35,7 +36,7 @@ function initRepository(type: string) {
 }
 
 let auth = {
-    parameters: {'username': 'sa@nga', 'password': 'Welcome1'},
+    parameters: {'username': 'mqm_aws_qa9@microfocus.com', 'password': 'Welcome1'},
     scheme: 'username'
 };
 
