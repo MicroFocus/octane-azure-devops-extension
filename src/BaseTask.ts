@@ -37,6 +37,7 @@ export class BaseTask {
     protected projectFullName: string;
     protected pipelineFullName: string;
     protected rootJobFullName: string;
+    protected sourceBranchName: string;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -128,7 +129,7 @@ export class BaseTask {
     }
 
     public async sendTestResult(octaneConnection, testResult: string) {
-     //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
         let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
         this.logger.debug('Sending results to:' + REST_API_SHAREDSPACE_BASE_URL + '/' + testResultsApiUrl);
@@ -181,12 +182,14 @@ export class BaseTask {
                 this.projectName = this.tl.getVariable('System.TeamProject');
                 this.buildDefinitionName = this.tl.getVariable('Build.DefinitionName');
                 this.buildId = this.tl.getVariable('Build.BuildId');
+                this.sourceBranchName = this.tl.getVariable('Build.SourceBranchName');
                 this.agentJobName = this.tl.getVariable('Agent.JobName');
                 this.logger.info('collectionUri = ' + this.collectionUri);
                 this.logger.info('projectId = ' + this.projectId);
                 this.logger.info('projectName = ' + this.projectName);
                 this.logger.info('buildDefinitionName = ' + this.buildDefinitionName);
                 this.logger.info('agentJobName = ' + this.agentJobName);
+                this.logger.info('sourceBranchName = ' + this.sourceBranchName);
                 this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
                 this.isPipelineStartJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
                 this.isPipelineEndJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();

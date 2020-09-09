@@ -9,13 +9,14 @@ import {ScmCommit} from './ScmCommit';
 import {VersionControlChangeType} from 'azure-devops-node-api/interfaces/GitInterfaces';
 import {LogUtils} from "../../LogUtils";
 import {GitHubAttributes, Utility} from "./Utils";
-import {Build, BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInterfaces";
+import {BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInterfaces";
 import * as util from "util";
+
 var request = require('request');
 
 export class ScmBuilder {
 
-    public static async buildScmData(connection: WebApi, projectName: string, toBuild: number, tl: any, logger: LogUtils): Promise<ScmData> {
+    public static async buildScmData(connection: WebApi, projectName: string, toBuild: number, sourceBranchName: string, tl: any, logger: LogUtils): Promise<ScmData> {
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
         let gitApi: git.IGitApi = await connection.getGitApi();
 
@@ -31,14 +32,15 @@ export class ScmBuilder {
         logger.debug(buildChanges);
         let type = repo.type;
         let scmData = await this.setData(type, repo, buildChanges, gitApi, projectName,
-            build.buildNumberRevision, build.repository.id, tl, logger);
+            build.buildNumberRevision, build.repository.id, sourceBranchName, tl, logger);
         logger.info("ScmData was created");
         logger.debug(scmData);
         return scmData;
     }
 
     private static async setData(type: string, repo: BuildRepository, changes: Change[], gitApi: IGitApi,
-                                 projectName: string, buildNumber: number, repoId: string, tl: any, logger: LogUtils): Promise<ScmData> {
+                                 projectName: string, buildNumber: number, repoId: string, sourceBranchName: string,
+                                 tl: any, logger: LogUtils): Promise<ScmData> {
         function convertType(changeType: number): string {
             return VersionControlChangeType[changeType].toLowerCase();
         }
@@ -102,11 +104,12 @@ export class ScmBuilder {
         }
 
         let url = type === 'TfsGit' ? repo.url : changes[0].displayUri.split('/commit')[0];
-        let scmRepo = new ScmRepository(type, url, repo.defaultBranch);
+        let scmRepo = new ScmRepository(type, url, sourceBranchName);
         scmData = new ScmData(scmRepo, buildNumber, scmCommit);
 
         return scmData;
     }
+
     private static async getCommit(githubEndpointToken: string, repositoryName: string, commitSha: string): Promise<any> {
         var options = {
             url: util.format(GitHubAttributes.getCommitUrlFormat, Utility.getGitHubApiUrl(), repositoryName, commitSha),
