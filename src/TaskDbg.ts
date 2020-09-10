@@ -44,7 +44,7 @@ let auth = {
 
 let gitHubAuth = {
     // parameters: {'accessToken': '50b6cc336829d163c6c34b41137bf66ee58952ed'},
-    parameters: {'accessToken': '44df0eac6121ab8f0c02282d22d9fdfbcddbbe7c'},
+    parameters: {'accessToken': 'c5a31d212ccc96dfe61a9ebf4fac4de03c58a710'},
     scheme: 'PersonalAccessToken'
 };
 
