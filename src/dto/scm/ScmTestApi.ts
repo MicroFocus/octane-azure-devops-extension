@@ -12,7 +12,7 @@ let toBuild: number = 39;
 
 let api: WebApi = ConnectionUtils.getWebApiWithProxy(orgUrl, token);
 
-ScmBuilder.buildScmData(api, projectName, toBuild, '', new LogUtils('debug')).then(scm => {
+ScmBuilder.buildScmData(api, projectName, toBuild, 'master','', new LogUtils('debug')).then(scm => {
     console.log('########################## finished ###############################');
     console.log(scm);
 });
