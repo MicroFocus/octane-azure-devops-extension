@@ -21,7 +21,7 @@ sysVar.set('ALMOctaneLogLevel', 'debug');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane123');
 sysVar.set('Build.SourceBranchName', 'my_br');
 // sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq'); //evgenelokshin
-sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli6455wvyeutmeaicgqrpvepxqgnapirt2mj7jxsa'); //el0206
+sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fkbe666mkozzwa3m4owu7x3dyzghvaywejwgdoiyimnwxdxzdrha'); //el0206
 
 
 function initRepository(type: string) {
