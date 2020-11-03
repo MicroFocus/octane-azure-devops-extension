@@ -1,7 +1,7 @@
 {
   "id": "c4fe5a36-45d1-4ecc-9ad5-6ec18a1ba0f8",
   "name": "octane-connection-verifier",
-  "friendlyName": "ALM Octane Connection Verifier",
+  "friendlyName": "ALM Octane Connection Verifier (private)",
   "description": "ALM Octane Connection Verifier",
   "author": "Micro Focus",
   "category": "Build",
@@ -12,7 +12,7 @@
   "demands": [],
   "version": {
     "Major": "1",
-    "Minor": "7",
+    "Minor": "8",
     "Patch": "0"
   },
   "minimumAgentVersion": "1.95.0",

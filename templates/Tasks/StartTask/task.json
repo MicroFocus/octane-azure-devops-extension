@@ -1,7 +1,7 @@
 {
   "id": "6557a6d2-4caf-4247-99ea-5131286a8755",
   "name": "octane-start-task",
-  "friendlyName": "ALM Octane Job Start",
+  "friendlyName": "ALM Octane Job Start (private)",
   "description": "ALM Octane Start Task",
   "author": "Micro Focus",
   "category": "Build",
@@ -12,7 +12,7 @@
   "demands": [],
   "version": {
     "Major": "1",
-    "Minor": "7",
+    "Minor": "8",
     "Patch": "0"
   },
   "minimumAgentVersion": "1.95.0",

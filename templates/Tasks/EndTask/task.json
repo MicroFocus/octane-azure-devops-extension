@@ -1,7 +1,7 @@
 {
   "id": "444a4f87-70b6-4f07-aa4a-6a892ca38c8e",
   "name": "octane-end-task",
-  "friendlyName": "ALM Octane Job End",
+  "friendlyName": "ALM Octane Job End (private)",
   "description": "ALM Octane End Task",
   "author": "Micro Focus",
   "category": "Build",
@@ -12,7 +12,7 @@
   "demands": [],
   "version": {
     "Major": "1",
-    "Minor": "7",
+    "Minor": "8",
     "Patch": "0"
   },
   "minimumAgentVersion": "1.95.0",
