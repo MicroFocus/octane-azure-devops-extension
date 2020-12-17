@@ -38,6 +38,7 @@ export class BaseTask {
     protected pipelineFullName: string;
     protected rootJobFullName: string;
     protected sourceBranchName: string;
+    protected custWebContext: string;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -118,7 +119,7 @@ export class BaseTask {
         this.logger.debug('Sending event:\n' + JSON.stringify(event));
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
-        const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
         let ret = await util.promisify(octaneConnection.requestor.put.bind(octaneConnection.requestor))({
             url: '/analytics/ci/events',
             baseUrl: REST_API_SHAREDSPACE_BASE_URL,
@@ -130,7 +131,7 @@ export class BaseTask {
 
     public async sendTestResult(octaneConnection, testResult: string) {
         //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
-        const REST_API_SHAREDSPACE_BASE_URL = octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port + '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
         let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
         this.logger.debug('Sending results to:' + REST_API_SHAREDSPACE_BASE_URL + '/' + testResultsApiUrl);
         this.logger.debug('The result string is: ' + testResult);
@@ -145,7 +146,7 @@ export class BaseTask {
         this.logger.debug(ret);
     }
 
-    protected async init() {
+    protected async init(agentJobName: string) {
         await new Promise(async (resolve, reject) => {
             try {
                 let result = this.tl.execSync(`node`, `--version`);
@@ -176,19 +177,21 @@ export class BaseTask {
                     reject(paramsError);
                     return;
                 }
-
+                this.custWebContext = url.pathname.toString().split('/ui/')[0].substring(1);
+                this.logger.info('custWebContext = ' + this.custWebContext);
                 this.collectionUri = this.tl.getVariable('System.TeamFoundationCollectionUri');
                 this.projectId = this.tl.getVariable('System.TeamProjectId');
                 this.projectName = this.tl.getVariable('System.TeamProject');
                 this.buildDefinitionName = this.tl.getVariable('Build.DefinitionName');
                 this.buildId = this.tl.getVariable('Build.BuildId');
                 this.sourceBranchName = this.tl.getVariable('Build.SourceBranchName');
-                this.agentJobName = this.tl.getVariable('Agent.JobName');
+                this.agentJobName = agentJobName;
                 this.logger.info('collectionUri = ' + this.collectionUri);
                 this.logger.info('projectId = ' + this.projectId);
                 this.logger.info('projectName = ' + this.projectName);
                 this.logger.info('buildDefinitionName = ' + this.buildDefinitionName);
                 this.logger.info('agentJobName = ' + this.agentJobName);
+                this.logger.info('agentJobNameInternalVar = ' + this.tl.getVariable('Agent.JobName'));
                 this.logger.info('sourceBranchName = ' + this.sourceBranchName);
                 this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
                 this.isPipelineStartJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
@@ -215,6 +218,7 @@ export class BaseTask {
                                 port: url.port,
                                 shared_space_id: spaces[0],
                                 workspace_id: ws,
+                                pathPrefix: !!this.custWebContext ? this.custWebContext : null,
                                 routesConfig: getOctaneRoutes(),
                                 tech_preview_API: true
                             });
@@ -257,5 +261,15 @@ export class BaseTask {
             default:
                 return Result.UNAVAILABLE;
         }
+    }
+
+    private buildEventBaseURL(octaneConnection): string {
+        if (!!octaneConnection.config.pathPrefix) {
+            return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
+                '/' + octaneConnection.config.pathPrefix + '/' +
+                'internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+        }
+        return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
+            '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
     }
 }

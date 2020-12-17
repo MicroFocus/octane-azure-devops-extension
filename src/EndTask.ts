@@ -15,7 +15,7 @@ export class EndTask extends BaseTask {
 
     public static async instance(tl: any): Promise<EndTask> {
         let task = new EndTask(tl);
-        await task.init();
+        await task.init(BaseTask.ALM_OCTANE_PIPELINE_END);
         return task;
     }
 

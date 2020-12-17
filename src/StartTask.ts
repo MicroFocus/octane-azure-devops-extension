@@ -14,13 +14,14 @@ export class StartTask extends BaseTask {
 
     public static async instance(tl: any): Promise<StartTask> {
         let task = new StartTask(tl);
-        await task.init();
+        await task.init(BaseTask.ALM_OCTANE_PIPELINE_START);
         return task;
     }
 
     public async run() {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
         for (let ws in this.octaneConnections) {
+            this.logger.debug("octaneConnection per ws: " + ws);
             if (this.octaneConnections[ws]) {
                 if (!this.isPipelineEndJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
