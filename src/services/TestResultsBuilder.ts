@@ -78,7 +78,7 @@ export class TestResultsBuilder {
             let duration = element.durationInMs || 0;
             let status = this.getStatus(element.outcome);
             let started = Date.parse(element.startedDate);
-            let external_report_url = this.buildReportUrl(element);
+            let external_report_url = element.url; //this.buildReportUrl(element);
             let error;
             if (status === TestRunResults.FAILED) {
                 let message = element.errorMessage;
@@ -100,8 +100,10 @@ export class TestResultsBuilder {
     }
 
     private static buildReportUrl(element: any): string {
-        return element.project.url.split('_apis')[0] + element.project.name + '/_build/results?buildId=' + element.build.id + '&view=ms.vss-test-web.build-test-results-tab&runId=' +
-            element.testRun.id + '&resultId=' + element.id + '&paneView=debug';
+        return element.project.url.split('_apis')[0] + element.project.name + '/_build/results?view=ms.vss-test-web.build-test-results-tab' +
+            encodeURIComponent('&runId=' + element.testRun.id +
+            '&buildId=' + element.build.id +
+            '&resultId=' + element.id + '&paneView=debug');
     }
 
     private static buildTestResultBuild(server_id: string, job_id: string, build_id: string): TestResultBuildAttributes {
