@@ -12,7 +12,7 @@ let toBuild: number = 39;
 
 let api: WebApi = ConnectionUtils.getWebApiWithProxy(orgUrl, token);
 
-CiEventCauseBuilder.buildCiEventCauses(true, api, projectName, toBuild, fullBuildName).then(causes => {
+CiEventCauseBuilder.buildCiEventCauses(true, api, projectName, fullBuildName, toBuild).then(causes => {
     console.log('########################## finished ###############################');
     console.log(causes);
 });
