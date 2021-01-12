@@ -57,7 +57,7 @@ export class TestResultsBuilder {
         }
     }
 
-    private static buildTestResultTestRun(testResults: any,  logger: LogUtils): TestResultTestRunElement[] {
+    private static buildTestResultTestRun(testResults: any, logger: LogUtils): TestResultTestRunElement[] {
         let testResultTestRunList: Array<TestResultTestRunElement> = [];
         testResults.forEach(element => {
             let packagename = element.automatedTestStorage;
@@ -78,7 +78,7 @@ export class TestResultsBuilder {
             let duration = element.durationInMs || 0;
             let status = this.getStatus(element.outcome);
             let started = Date.parse(element.startedDate);
-            let external_report_url = element.url;
+            let external_report_url = this.buildReportUrl(element);
             let error;
             if (status === TestRunResults.FAILED) {
                 let message = element.errorMessage;
@@ -97,6 +97,14 @@ export class TestResultsBuilder {
             testResultTestRunList.push(testResultElem);
         });
         return testResultTestRunList;
+    }
+
+    private static buildReportUrl(element: any): string {
+        return element.project.url.split('_apis')[0] + element.project.name + '/_build/results?view=ms.vss-test-web.build-test-results-tab' +
+            '&amp;runId=' + element.testRun.id +
+            '&amp;buildId=' + element.build.id +
+            '&amp;resultId=' + element.id +
+            '&amp;paneView=debug';
     }
 
     private static buildTestResultBuild(server_id: string, job_id: string, build_id: string): TestResultBuildAttributes {

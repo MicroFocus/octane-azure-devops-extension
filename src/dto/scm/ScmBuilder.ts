@@ -9,8 +9,8 @@ import {ScmCommit} from './ScmCommit';
 import {VersionControlChangeType} from 'azure-devops-node-api/interfaces/GitInterfaces';
 import {LogUtils} from "../../LogUtils";
 import {GitHubAttributes, Utility} from "./Utils";
-import {BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInterfaces";
 import * as util from "util";
+import {BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInterfaces";
 
 var request = require('request');
 
@@ -22,19 +22,58 @@ export class ScmBuilder {
 
         let build = await buildApi.getBuild(projectName, toBuild);
         let buildChanges = await buildApi.getBuildChanges(projectName, toBuild);
+        logger.debug("Initial buildChanges: " + JSON.stringify(buildChanges));
+        let builds = await buildApi.getBuilds(
+            projectName,
+            null,                       // definitions: number[]
+            null,                       // queues: number[]
+            null,                       // buildNumber
+            null,                      // minFinishTime
+            null,                       // maxFinishTime
+            null,                       // requestedFor: string
+            null,                       // reason
+            null,
+            null,
+            null,                       // tagFilters: string[]
+            null,                        // properties: string[]
+            2                               // top: number
+        );
+        logger.info("Builds: " + JSON.stringify(builds));
 
-        let repo = build.repository;
+        if (builds && builds.length > 1) {
+            let from = builds[1];
+            logger.info("Git revision from [" + from.sourceVersion + ":" + build.sourceVersion + "]");
+            logger.info("RepoType : " + build.repository.type);
+
+            if (from.sourceVersion === build.sourceVersion) {
+                //Git external brings the last changes even there were no changes between 2 builds
+                logger.info('No changes were found for build [' + toBuild + ']');
+                return null;
+            } else if (build.repository.type === 'TfsGit') {
+                //TfsGit always brings ALL changes for each build
+                //it works for Azure DevOps Server 2020 and doeas not for 2019
+                // buildChanges = await buildApi.getChangesBetweenBuilds(projectName, from.id, toBuild);
+                let buildChangesFrom = await buildApi.getBuildChanges(projectName, from.id);
+                buildChanges = buildChanges.filter(({ id: id1 }) => !buildChangesFrom.some(({ id: id2 }) => id2 === id1));
+                logger.info(buildChanges ? buildChanges.length : 0 + ' changes were found between builds [' + from.id + ',' + toBuild + ']');
+                logger.debug("Diff buildChanges: " + JSON.stringify(buildChanges));
+            }
+        }
+
+
         if (!buildChanges || !buildChanges.length) {
             logger.info('No changes were found for build [' + toBuild + ']');
             return null;
         }
         logger.debug('Changes for build [' + toBuild + ']');
         logger.debug(buildChanges);
-        let type = repo.type;
-        let scmData = await this.setData(type, repo, buildChanges, gitApi, projectName,
+
+        let repo = build.repository;
+        let scmData = await this.setData(repo.type, repo, buildChanges, gitApi, projectName,
             build.buildNumberRevision, build.repository.id, sourceBranchName, tl, logger);
         logger.info("ScmData was created");
         logger.debug(scmData);
+
         return scmData;
     }
 
@@ -58,7 +97,7 @@ export class ScmBuilder {
 
         let scmData: ScmData;
         let scmCommit = new Array<ScmCommit>();
-
+        logger.info('Repository type: ' + type)
         for (let change of changes) {
             let time = new Date(change.timestamp).getTime();
             let comment = change.message;
@@ -80,8 +119,12 @@ export class ScmBuilder {
                         fileChanges.push(new ScmCommitFileChange(type, realChange.item.path));
                     }
                     break;
+                case 'Git':
+                case 'GitHubEnterprise':
                 case 'GitHub':
                     //todo FIND/CHECK the way to fetch commits by bulk and not one by one!
+                    let giHubService = tl.getInput('GithubRepositoryConnection', true);
+                    logger.info('giHubService = ' + giHubService);
                     let endpointGitAuth = tl.getEndpointAuthorization(tl.getInput('GithubRepositoryConnection', true));
                     let githubAccessToken = Utility.getGithubEndPointToken(endpointGitAuth);
                     logger.info('Repository type: ' + type)
@@ -98,7 +141,7 @@ export class ScmBuilder {
                     }
                     break;
                 default:
-                    logger.error('Unknown ');
+                    logger.error('Unknown repository type: ' + type);
             }
             scmCommit.push(new ScmCommit(time, user, revId, fileChanges, user_email, parentRevId, comment));
         }

@@ -15,7 +15,7 @@ export class EndTask extends BaseTask {
 
     public static async instance(tl: any): Promise<EndTask> {
         let task = new EndTask(tl);
-        await task.init();
+        await task.init(BaseTask.ALM_OCTANE_PIPELINE_END);
         return task;
     }
 
@@ -59,8 +59,7 @@ export class EndTask extends BaseTask {
     private async getDuration(api: WebApi) {
         let buildApi: ba.IBuildApi = await api.getBuildApi();
         let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
-        let jobName = this.isPipelineEndJob ? BaseTask.ALM_OCTANE_PIPELINE_START : this.agentJobName;
-        let job = timeline.records.filter(r => r.type == 'Job' && r.name.toLowerCase() === jobName.toLowerCase())[0];
+        let job = timeline.records.filter(r => r.name.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase())[0];
         if(!job){
             return 0;
         }

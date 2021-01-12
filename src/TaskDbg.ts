@@ -14,26 +14,32 @@ input.set('RepositoryConnection', 'gitHub');
 input.set('GithubRepositoryConnection', 'gitHub');
 input.set('WorkspaceList', '1002');
 
-sysVar.set('System.TeamFoundationCollectionUri', 'https://dev.azure.com/mayar0110/');
+
+
+sysVar.set('System.TeamFoundationCollectionUri', 'http://ILlokshin02.microfocus.com:8585/DefaultCollection/');
+// sysVar.set('System.TeamFoundationCollectionUri', 'http://myd-hvm05777.swinfra.net/MyTest/');
 sysVar.set('System.TeamProjectId', 'f2300d18-3a9d-4c64-b03a-18a00082a737');
 sysVar.set("agent.proxyurl", "http://web-proxy.il.softwaregrp.net:8080");
 sysVar.set("Agent.ProxyUrl", "http://web-proxy.il.softwaregrp.net:8080");
 sysVar.set('ALMOctaneLogLevel', 'debug');
 sysVar.set('ENDPOINT_DATA_Octane_INSTANCE_ID', 'octane123');
-sysVar.set('Build.SourceBranchName', 'my_br');
+sysVar.set('Build.SourceBranchName', 'master');
 // sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'fzhzniawld2wh524y2h2sft2ksm23nanspwk6blg4lxhegirixcq'); //evgenelokshin
-sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli6455wvyeutmeaicgqrpvepxqgnapirt2mj7jxsa'); //el0206
+// sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', '4xgexy6mionli6455wvyeutmeaicgqrpvepxqgnapirt2mj7jxsa'); //el0206
+// sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'vmy5g6t52kfvwhigzpeshsau6mzqxsq2gegtptradx4uxzslkqmq'); //DefaultCollection local
+sysVar.set('ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN', 'praowgkcfjpflpo7lkyq4fo44oxgjptpw4fj5dtmwkz3felaew3q'); //DefaultCollection local
 
 
 function initRepository(type: string) {
     if (type == 'int') {
-        sysVar.set('System.TeamProject', 'TestProjectEvgeny');
+        sysVar.set('System.TeamProject', 'AzureRepoProj');
         sysVar.set('Build.DefinitionName', 'pipeline test3');
-        sysVar.set('Build.BuildId', '238');
+        sysVar.set('Build.BuildId', '344');
     } else {
-        sysVar.set('System.TeamProject', 'GitTestProject');
+        // sysVar.set('System.TeamProject', 'GitTFS');
+        sysVar.set('System.TeamProject', 'AzureGitRepo');
         sysVar.set('Build.DefinitionName', 'pipeline1');
-        sysVar.set('Build.BuildId', '364');
+        sysVar.set('Build.BuildId', '46');
     }
 }
 
@@ -45,7 +51,7 @@ let auth = {
 
 let gitHubAuth = {
     // parameters: {'accessToken': '50b6cc336829d163c6c34b41137bf66ee58952ed'},
-    parameters: {'accessToken': 'c5a31d212ccc96dfe61a9ebf4fac4de03c58a710'},
+    parameters: {'accessToken': '309fc1a0e6afd401fc0ed6b1895f3b4e961b173e'},
     scheme: 'PersonalAccessToken'
 };
 
@@ -54,14 +60,14 @@ function initTl(testTask: any) {
     logger.debug("blablalbla");
     logger.debug("****blablalbla", logger.getCaller());
     logger.debug("****blablalbla");
-    // initRepository('ext');
-    initRepository('ext');
+    initRepository('int');
+    // initRepository('int');
     testTask.execSync = (tool: string, args: string | string[], options?: tlr.IExecSyncOptions) => {
         return tl.execSync(tool, args, options);
     };
     testTask.getEndpointUrl = (id: string, optional: boolean) => {
         //return 'https://almoctane-eur.saas.microfocus.com/ui/?p=173006';
-        return 'http://15.122.64.112:8080/ui/?p=1001/1002';
+        return 'http://localhost:8080/dev/ui/?p=1001/1002';
         // return 'https://qa8.almoctane.com/ui/?p=1001/1002';
     };
     testTask.getInput = (name: string, required?: boolean) => {
