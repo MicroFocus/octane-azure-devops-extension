@@ -34,7 +34,7 @@ function initRepository(type: string) {
     if (type == 'int') {
         sysVar.set('System.TeamProject', 'AzureRepoProj');
         sysVar.set('Build.DefinitionName', 'pipeline test3');
-        sysVar.set('Build.BuildId', '344');
+        sysVar.set('Build.BuildId', '407');
     } else {
         // sysVar.set('System.TeamProject', 'GitTFS');
         sysVar.set('System.TeamProject', 'AzureGitRepo');
