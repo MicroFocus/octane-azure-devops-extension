@@ -3,7 +3,7 @@ export class LogUtils {
     private readonly isDebug: boolean;
 
     constructor(config: string) {
-        this.isDebug = config === 'DEBUG';
+        this.isDebug = config === 'debug';
     }
 
     public debug(message: any, caller?: any, ...optionalParams: any[]): void {
