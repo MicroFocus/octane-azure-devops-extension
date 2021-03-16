@@ -1,18 +1,10 @@
 import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from "../ExtensionConstants";
 import {EndpointAuthorization} from "azure-pipelines-task-lib";
 
-enum LogLevel {
-    UNDEFINED = 'UNDEFINED',
-    DEBUG = 'DEBUG',
-    INFO = 'INFO',
-    WARNING = 'WARNING',
-    ERROR = 'ERROR'
-}
-
 enum RepositoryType {
     UNDEFINED,
-    INTERNAL= 'INTERNAL',
-    GIT = 'GIT'
+    INTERNAL= 'int',
+    GIT = 'git'
 }
 
 enum AuthScheme {
@@ -28,18 +20,18 @@ interface System {
 }
 
 interface Logging {
-    logLevel: LogLevel;
+    logLevel: string;
 }
 
 interface Build {
     sourceBranchName: string;
     definitionName: string;
-    buildId: number;
+    buildId: string;
 }
 
 interface Octane {
     serviceConnectionName: string;
-    workspaces: number[];
+    workspaces: string;
     auth: Auth;
 }
 
@@ -115,7 +107,7 @@ export class DebugConfToDebugMapsConverter {
 
     private static populateInputMap(conf: TomlDebugConf, map: Map<string, any>) {
         map.set(InputConstants.OCTANE_SERVICE_CONNECTION, conf.octane.serviceConnectionName);
-        map.set(InputConstants.WORKSPACES_LIST, conf.octane.workspaces.join(','));
+        map.set(InputConstants.WORKSPACES_LIST, conf.octane.workspaces);
         map.set(InputConstants.GITHUB_REPOSITORY_CONNECTION, conf.repository.repositoryConnection);
     }
 
@@ -130,7 +122,7 @@ export class DebugConfToDebugMapsConverter {
         map.set(EndpointDataConstants.ENDPOINT_URL, conf.endpoint.url);
 
         map.set(SystemVariablesConstants.SYSTEM_TEAM_PROJECT, conf.system.teamProject);
-        map.set(SystemVariablesConstants.BUILD_BUILD_ID, <number>conf.build.buildId);
+        map.set(SystemVariablesConstants.BUILD_BUILD_ID, conf.build.buildId);
         map.set(SystemVariablesConstants.BUILD_DEFINITION_NAME, conf.build.definitionName);
     }
 
