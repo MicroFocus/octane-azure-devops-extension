@@ -147,7 +147,7 @@ export class BaseTask {
     }
 
     protected async init(agentJobName: string) {
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             try {
                 let result = this.tl.execSync(`node`, `--version`);
                 this.logger.info('node version = ' + result.stdout);
