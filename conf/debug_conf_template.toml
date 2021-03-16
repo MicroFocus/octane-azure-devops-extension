@@ -2,36 +2,38 @@ title = "Template file containing all configuration for debug"
 
 [system]
 teamFoundationCollectionUri = "" # URL of the Azure DevOps Server/Services. Example: http://192.168.1.32/DefaultCollection/
-teamProjectId = "" # Example: f0000d00-0a0d-0c00-b00a-00a00000a000
-teamProject = "" # Example: MyTeamProject
+teamProjectId = "" # Can be retrieved by executing: "teamFoundationCollectionUri/_apis/projects" Example: f0000d00-0a0d-0c00-b00a-00a00000a000
+teamProject = "" # The name of the project you want to debug. Example: MyTeamProject
 
 [logging]
 logLevel = "" # Example: "DEBUG", "INFO", "WARNING", "ERROR"
 
 [build]
 sourceBranchName = "" # Example: main
-definitionName = "" # Example: pipeline1
-buildId = 0 # Example: 20
+definitionName = "" # The name of the pipeline that will be created in Octane. Example: pipeline1
+buildId = "1" # While debugging, you need build with this id to exist in Azure for the required project. Example: "20"
 
 [octane]
-serviceConnectionName = "" # Example: "Octane"
-workspaces = [] # Example: 1002,1003
+serviceConnectionName = "Octane" # It should always be Octane for this case. See task-mock-initializer
+workspaces = "" # The list of workspaces, comma separated, as string. Example: "1002" or "1002,1003"
 [octane.auth]
-parameters = "" # Example 1: { username: "someuser@somecompany.com", password: "pwd"}
+parameters = "" # The connection details for the extension to connect to Octane. In Debug, site admin can be specified.
+                # Example 1: { username: "someuser@somecompany.com", password: "pwd"}
                 # Example 2: { accessToken: "000fc0a0e0afd000fc0ed0b0000f0b0e000b000e"}
 scheme = "" # Example 1: username; Example 2: PersonalAccessToken
 
 
 [endpoint]
-url = "" # Example: "http://localhost:9090/dev/ui/?p=1001/1002"
-octaneInstanceId = "" # Example octane123
-azurePersonalAccessToken = "" # Example ccccccccccccccc0cccc0cc00occccccc0cc0cccccc0cccccc0c
+url = "" # Octane connection URL. Don't forget /dev if you are in dev. Example: "http://localhost:9090/dev/ui/?p=1001/1002"
+octaneInstanceId = "" # The name of the InstanceID in CI Servers. Example octane123
+azurePersonalAccessToken = "" # The connection token for the debug to connect to azure. You need to create one. Example ccccccccccccccc0cccc0cc00occccccc0cc0cccccc0cccccc0c
 
 [repository]
-repositoryConnection = "" # Example: "gitHub"
-type = "" # Example: "INTERNAL" or "GIT"
+repositoryConnection = "" # Only used in case debugging gitHub. Example: "gitHub"
+type = "" # "INTERNAL" for Azure hosted, or "GIT" for git located
 [repository.auth]
-parameters = "" # Example 1: { username: "someuser@somecompany.com", password: "pwd"}
+parameters = "" # Connection details for the Repo.
+                # Example 1: { username: "someuser@somecompany.com", password: "pwd"}
                 # Example 2: { accessToken: "000fc0a0e0afd000fc0ed0b0000f0b0e000b000e"}
 scheme = "" # Example 1: username; Example 2: PersonalAccessToken
 

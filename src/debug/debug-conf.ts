@@ -1,12 +1,6 @@
 import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from "../ExtensionConstants";
 import {EndpointAuthorization} from "azure-pipelines-task-lib";
 
-enum RepositoryType {
-    UNDEFINED,
-    INTERNAL= 'int',
-    GIT = 'git'
-}
-
 enum AuthScheme {
     UNDEFINED,
     USERNAME_PASSWORD = 'username',
@@ -57,7 +51,7 @@ interface Auth {
 
 interface Repository {
     repositoryConnection: string;
-    type: RepositoryType;
+    type: string;
     auth: Auth;
 }
 
