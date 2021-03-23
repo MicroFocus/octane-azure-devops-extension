@@ -1,3 +1,11 @@
 node_modules
 *.js
 *.map
+.gitignore
+misc.xml
+modules.xml
+octane-azure-devops-extension.iml
+vcs.xml
+debug_conf.toml
+*.taskkey
+.idea

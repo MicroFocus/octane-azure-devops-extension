@@ -2,7 +2,7 @@ import {CiEventsList} from './dto/events/CiEventsList';
 import {CiServerInfo} from './dto/general/CiServerInfo';
 import {CiEvent} from "./dto/events/CiEvent";
 import {Result} from "./dto/events/CiTypes";
-import {CI_SERVER_INFO} from "./ConstantsEnum";
+import {CI_SERVER_INFO} from "./ExtensionConstants";
 import {LogUtils} from "./LogUtils";
 
 const Octane = require('@microfocus/alm-octane-js-rest-sdk');
@@ -147,7 +147,7 @@ export class BaseTask {
     }
 
     protected async init(agentJobName: string) {
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             try {
                 let result = this.tl.execSync(`node`, `--version`);
                 this.logger.info('node version = ' + result.stdout);
