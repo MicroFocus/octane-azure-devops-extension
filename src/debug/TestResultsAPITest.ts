@@ -1,4 +1,4 @@
-import {TestResultsBuilder} from '../services/TestResultsBuilder';
+import {TestResultsBuilder} from '../services/test_results/TestResultsBuilder';
 import {ConnectionUtils} from '../ConnectionUtils';
 import {WebApi} from 'azure-devops-node-api';
 import {LogUtils} from "../LogUtils";

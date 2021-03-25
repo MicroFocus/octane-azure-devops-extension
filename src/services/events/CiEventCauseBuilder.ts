@@ -1,7 +1,7 @@
 import {WebApi} from "azure-devops-node-api";
-import {CiEventCause} from "./CiEventCause";
+import {CiEventCause} from "../../dto/events/CiEventCause";
 import * as ba from "azure-devops-node-api/BuildApi";
-import {CiCausesType} from "./CiTypes";
+import {CiCausesType} from "../../dto/events/CiTypes";
 import {BuildReason} from "azure-devops-node-api/interfaces/BuildInterfaces";
 
 export class CiEventCauseBuilder {

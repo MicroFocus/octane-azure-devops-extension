@@ -1,5 +1,5 @@
 import {ScmCommitFileChange} from "../dto/scm/ScmCommitFileChange";
-import {GitHubAttributes} from "../dto/scm/Utils";
+import {GitHubAttributes} from "../services/scm/Utils";
 
 const fs = require('fs');
 

@@ -1,17 +1,17 @@
-import {TestResultTestRunAttributes} from '../dto/test_results/TestResultTestRunAttributes';
-import {Framework, TestFieldNames, TestRunResults} from '../dto/test_results/TestResultEnums';
-import {TestResultErrorAttributes} from '../dto/test_results/TestResultErrorAttributes';
-import {TestResultBuildAttributes} from '../dto/test_results/TestResultBuildAttributes';
-import {TestResultTestFieldAttributes} from '../dto/test_results/TestResultTestFieldAttributes';
-import {TestResult} from '../dto/test_results/TestResult';
-import {TestResultTestField} from '../dto/test_results/TestResultTestField';
-import {TestResultTestRunElement} from '../dto/test_results/TestResultTestRunElement';
-import {TestResultError} from '../dto/test_results/TestResultError';
+import {TestResultTestRunAttributes} from '../../dto/test_results/TestResultTestRunAttributes';
+import {Framework, TestFieldNames, TestRunResults} from '../../dto/test_results/TestResultEnums';
+import {TestResultErrorAttributes} from '../../dto/test_results/TestResultErrorAttributes';
+import {TestResultBuildAttributes} from '../../dto/test_results/TestResultBuildAttributes';
+import {TestResultTestFieldAttributes} from '../../dto/test_results/TestResultTestFieldAttributes';
+import {TestResult} from '../../dto/test_results/TestResult';
+import {TestResultTestField} from '../../dto/test_results/TestResultTestField';
+import {TestResultTestRunElement} from '../../dto/test_results/TestResultTestRunElement';
+import {TestResultError} from '../../dto/test_results/TestResultError';
 import {WebApi} from 'azure-devops-node-api';
 import * as ba from 'azure-devops-node-api/BuildApi';
 import * as ta from 'azure-devops-node-api/TestApi';
 import {TestCaseResult} from "azure-devops-node-api/interfaces/TestInterfaces";
-import {LogUtils} from "../LogUtils";
+import {LogUtils} from "../../LogUtils";
 
 let convert = require('xml-js');
 let xmlescape = require('xml-escape');

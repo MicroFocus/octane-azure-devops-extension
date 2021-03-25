@@ -1,5 +1,5 @@
 import {ConnectionUtils} from '../ConnectionUtils';
-import {ScmBuilder} from '../dto/scm/ScmBuilder';
+import {ScmBuilder} from '../services/scm/ScmBuilder';
 import {WebApi} from 'azure-devops-node-api';
 import {LogUtils} from "../LogUtils";
 import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";

@@ -1,6 +1,6 @@
 import {ConnectionUtils} from "../ConnectionUtils";
 import {WebApi} from "azure-devops-node-api";
-import {CiEventCauseBuilder} from "../dto/events/CiEventCauseBuilder";
+import {CiEventCauseBuilder} from "../services/events/CiEventCauseBuilder";
 import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";
 import {DebugConf} from "./debug-conf";
 import {EndpointDataConstants, SystemVariablesConstants} from "../ExtensionConstants";

@@ -3,8 +3,8 @@ import {CiEvent} from "./dto/events/CiEvent";
 import {CiEventType, PhaseType, Result} from "./dto/events/CiTypes";
 import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
-import {TestResultsBuilder} from "./services/TestResultsBuilder";
-import {CiEventCauseBuilder} from "./dto/events/CiEventCauseBuilder";
+import {TestResultsBuilder} from "./services/test_results/TestResultsBuilder";
+import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
 import * as ba from "azure-devops-node-api/BuildApi";
 import {TaskResult} from "azure-devops-node-api/interfaces/BuildInterfaces";
 

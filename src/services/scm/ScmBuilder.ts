@@ -1,11 +1,11 @@
-import {ScmData} from './ScmData';
+import {ScmData} from '../../dto/scm/ScmData';
 import {WebApi} from 'azure-devops-node-api';
 import * as ba from 'azure-devops-node-api/BuildApi';
 import * as git from 'azure-devops-node-api/GitApi';
 import {IGitApi} from 'azure-devops-node-api/GitApi';
-import {ScmRepository} from './ScmRepository';
-import {ScmCommitFileChange} from './ScmCommitFileChange';
-import {ScmCommit} from './ScmCommit';
+import {ScmRepository} from '../../dto/scm/ScmRepository';
+import {ScmCommitFileChange} from '../../dto/scm/ScmCommitFileChange';
+import {ScmCommit} from '../../dto/scm/ScmCommit';
 import {VersionControlChangeType} from 'azure-devops-node-api/interfaces/GitInterfaces';
 import {LogUtils} from "../../LogUtils";
 import {GitHubAttributes, Utility} from "./Utils";
