@@ -5,7 +5,6 @@ import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
 import {ScmBuilder} from "./services/scm/ScmBuilder";
 import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
-import {LogUtils} from "./LogUtils";
 
 export class StartTask extends BaseTask {
     private constructor(tl: any) {
