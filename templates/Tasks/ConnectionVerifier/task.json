@@ -2,7 +2,7 @@
   "id": "c4fe5a36-45d1-4ecc-9ad5-6ec18a1ba0f8",
   "name": "octane-connection-verifier",
   "friendlyName": "ALM Octane Connection Verifier (private)",
-  "description": "ALM Octane Connection Verifier",
+  "description": "ALM Octane Connection Verifier (private)",
   "author": "Micro Focus",
   "category": "Build",
   "visibility": [

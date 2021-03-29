@@ -2,7 +2,7 @@
   "id": "6557a6d2-4caf-4247-99ea-5131286a8755",
   "name": "octane-start-task",
   "friendlyName": "ALM Octane Job Start (private)",
-  "description": "ALM Octane Start Task",
+  "description": "ALM Octane Start Task (private)",
   "author": "Micro Focus",
   "category": "Build",
   "visibility": [
