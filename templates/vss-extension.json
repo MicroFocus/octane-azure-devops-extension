@@ -2,7 +2,7 @@
   "manifestVersion": 1,
 
   "id": "alm-octane-integration",
-  "version": "0.3.4.9",
+  "version": "0.3.4.10",
   "name": "ALM Octane Integration Private Extension",
   "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "almoctane",
@@ -101,17 +101,6 @@
       ],
       "properties": {
         "name": "Tasks/EndTask"
-      }
-    },
-    {
-      "id": "octane-connection-verifier",
-      "description": "ALM Octane Connection Verifier (private)",
-      "type": "ms.vss-distributed-task.task",
-      "targets": [
-        "ms.vss-distributed-task.tasks"
-      ],
-      "properties": {
-        "name": "Tasks/ConnectionVerifier"
       }
     },
     {
