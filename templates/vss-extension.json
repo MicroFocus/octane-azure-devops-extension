@@ -1,11 +1,11 @@
 {
   "manifestVersion": 1,
-
-  "id": "alm-octane-integration",
-  "version": "0.3.4.11",
-  "name": "ALM Octane Integration Private Extension",
-  "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
+  "id": "alm-octane-integration-public",
+  "version": "0.2.1.0",
+  "name": "ALM Octane Integration Extension",
+  "description": "Tech Preview. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "almoctane",
+  "public": true,
   "categories": [
     "Azure Pipelines"
   ],
@@ -31,8 +31,8 @@
         "ms.vss-endpoint.endpoint-types"
       ],
       "properties": {
-        "name": "OctaneServiceConnection",
-        "displayName": "ALM Octane (private)",
+        "name": "OctaneServiceConnection2",
+        "displayName": "ALM Octane",
         "url": {
           "displayName": "Server Url",
           "helpText": "ALM Octane Workspace Url"
@@ -83,7 +83,7 @@
     },
     {
       "id": "octane-start-task",
-      "description": "ALM Octane Start Task (private)",
+      "description": "ALM Octane Start Task",
       "type": "ms.vss-distributed-task.task",
       "targets": [
         "ms.vss-distributed-task.tasks"
@@ -94,7 +94,7 @@
     },
     {
       "id": "octane-end-task",
-      "description": "ALM Octane End Task (private)",
+      "description": "ALM Octane End Task",
       "type": "ms.vss-distributed-task.task",
       "targets": [
         "ms.vss-distributed-task.tasks"
@@ -104,39 +104,20 @@
       }
     },
     {
-      "id": "octane-pipeline-start-decorator",
-      "type": "ms.azure-pipelines.pipeline-decorator",
+      "id": "octane-connection-verifier",
+      "description": "ALM Octane Connection Verifier",
+      "type": "ms.vss-distributed-task.task",
       "targets": [
-        "ms.azure-pipelines-agent-job.pre-job-tasks"
+        "ms.vss-distributed-task.tasks"
       ],
       "properties": {
-        "template": "Decorators/octane-pipeline-start-decorator.yml"
-      }
-    },
-    {
-      "id": "octane-pipeline-end-decorator",
-      "type": "ms.azure-pipelines.pipeline-decorator",
-      "targets": [
-        "ms.azure-pipelines-agent-job.post-job-tasks"
-      ],
-      "properties": {
-        "template": "Decorators/octane-pipeline-end-decorator.yml"
+        "name": "Tasks/ConnectionVerifier"
       }
     }
   ],
   "files": [
     {
       "path": "Tasks"
-    },
-    {
-      "path": "Decorators/octane-pipeline-start-decorator.yml",
-      "addressable": true,
-      "contentType": "text/plain"
-    },
-    {
-      "path": "Decorators/octane-pipeline-end-decorator.yml",
-      "addressable": true,
-      "contentType": "text/plain"
     }
   ]
 }
