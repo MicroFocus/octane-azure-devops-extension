@@ -3,9 +3,8 @@ import {CiEvent} from "./dto/events/CiEvent";
 import {CiEventType, PhaseType} from "./dto/events/CiTypes";
 import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
-import {ScmBuilder} from "./dto/scm/ScmBuilder";
-import {CiEventCauseBuilder} from "./dto/events/CiEventCauseBuilder";
-import {LogUtils} from "./LogUtils";
+import {ScmBuilder} from "./services/scm/ScmBuilder";
+import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
 
 export class StartTask extends BaseTask {
     private constructor(tl: any) {

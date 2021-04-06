@@ -1,9 +1,0 @@
-1. get Build:
-    https://dev.azure.com/evgenelokshin/evgenelokshin/_apis/build/builds/28?api-version=5.0
-        get BuildURI:
-            "uri":"vstfs:///Build/Build/28"
-2. get RunId:
-    https://dev.azure.com/evgenelokshin/evgenelokshin/_apis/test/runs?buildUri=vstfs:///Build/Build/28
-    value[0].id = 18
-3. get BuildResults:
-    https://dev.azure.com/evgenelokshin/evgenelokshin/_apis/test/Runs/18/results?api-version=5.0

@@ -1,4 +1,4 @@
-import {CiEventsList} from './CiEventsList';
+import {CiEventsList} from '../dto/events/CiEventsList';
 
 const jsonObject: object = {
     'server': {

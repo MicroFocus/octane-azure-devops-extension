@@ -1,7 +1,7 @@
 import {WebApi} from "azure-devops-node-api";
-import {CiEventCause} from "./CiEventCause";
+import {CiEventCause} from "../../dto/events/CiEventCause";
 import * as ba from "azure-devops-node-api/BuildApi";
-import {CiCausesType} from "./CiTypes";
+import {CiCausesType} from "../../dto/events/CiTypes";
 import {BuildReason} from "azure-devops-node-api/interfaces/BuildInterfaces";
 
 export class CiEventCauseBuilder {
@@ -46,7 +46,7 @@ export class CiEventCauseBuilder {
         let ciType: CiCausesType = convert_root_ci_causes_type(reason);
         let userName = build_info.requestedBy.displayName;
         let userId = build_info.requestedBy.uniqueName;
-        let root_cause : CiEventCause = new CiEventCause(ciType, userName, userId);
+        let root_cause : CiEventCause = new CiEventCause(ciType, userName, userId, projectName, buildId);
         return root_cause;
     }
 }

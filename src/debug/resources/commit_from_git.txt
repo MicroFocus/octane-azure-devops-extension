@@ -1,0 +1,84 @@
+{
+  "sha": "0d00000ea0ebb0be000bbfb000c0e000c0ce0fd0",
+  "node_id": "MDY0Q00tbW00MTU0NjkxNTQ0OjhkNjQzOTllYTVlYmI0YmUzOTViYmZiNDcwYzRlMTI0YzNjZTlmZDg=",
+  "commit": {
+    "author": {
+      "name": "some_user",
+      "email": "some_user@some_company.com",
+      "date": "2019-08-06T09:01:14Z"
+    },
+    "committer": {
+      "name": "some_user",
+      "email": "some_user@some_company.com",
+      "date": "2019-08-06T09:01:14Z"
+    },
+    "message": "Defect #3:  Testing framework support Abort/Cancel.",
+    "tree": {
+      "sha": "0d00000ea0ebb0be000bbfb000c0e000c0ce0fd0",
+      "url": "https://api.github.com/repos/"
+    },
+    "url": "https://api.github.com/repos/",
+    "comment_count": 0,
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null
+    }
+  },
+  "url": "https://api.github.com/repos/",
+  "html_url": "https://github.com/",
+  "comments_url": "https://api.github.com/repos/",
+  "author": null,
+  "committer": null,
+  "parents": [
+    {
+      "sha": "0d00000ea0ebb0be000bbfb000c0e000c0ce0fd0",
+      "url": "https://api.github.com/repos/",
+      "html_url": "https://github.com/"
+    }
+  ],
+  "stats": {
+    "total": 163,
+    "additions": 84,
+    "deletions": 79
+  },
+  "files": [
+    {
+      "sha": "0d00000ea0ebb0be000bbfb000c0e000c0ce0fd0",
+      "filename": "plugin/SomeFile.java",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 1,
+      "changes": 7,
+      "blob_url": "https://github.com/",
+      "raw_url": "https://github.com/",
+      "contents_url": "https://api.github.com/repos/",
+      "patch": "@@ -126,6 +126,11 @@ public void changesLoaded(@NotNull SRunningBuild build)"
+    },
+    {
+      "sha": "0d00000ea0ebb0be000bbfb000c0e000c0ce0fd0",
+      "filename": "plugin/SomeFile2.java",
+      "status": "modified",
+      "additions": 77,
+      "deletions": 77,
+      "changes": 154,
+      "blob_url": "https://github.com/",
+      "raw_url": "https://github.com/",
+      "contents_url": "https://api.github.com/repos/",
+      "patch": "@@ -37,90 +37,90 @@\n  */\n \n public class SomeFile2"
+    },
+    {
+      "sha": "0d00000ea0ebb0be000bbfb000c0e000c0ce0fd0",
+      "filename": "plugin/SomeFile3.java",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/",
+      "raw_url": "https://github.com/",
+      "contents_url": "https://api.github.com/repos/",
+      "patch": "@@ -213,7 +213,7 @@ private SnapshotNode createHistoryBuild(SBuildType build, String rootId)"
+    }
+  ]
+}
