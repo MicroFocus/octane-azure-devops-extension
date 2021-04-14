@@ -9,11 +9,10 @@
   "author": "Moshe Stekel (mstekel@gmail.com)",
   "license": "ISC",
   "dependencies": {
-    "@microfocus/alm-octane-js-rest-sdk": "^12.60.10",
+    "@microfocus/alm-octane-js-rest-sdk": "^15.0.2-0.1",
     "azure-devops-node-api": "^10.1.2",
     "azure-pipelines-task-lib": "^2.11.4",
     "util.promisify": "^1.0.0",
-    "whatwg-url": "^7.0.0",
     "xml-escape": "^1.1.0",
     "xml-js": "^1.6.11"
   },
