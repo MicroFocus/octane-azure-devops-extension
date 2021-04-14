@@ -4,20 +4,22 @@ import {CiEvent} from "./dto/events/CiEvent";
 import {Result} from "./dto/events/CiTypes";
 import {CI_SERVER_INFO} from "./ExtensionConstants";
 import {LogUtils} from "./LogUtils";
+import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
+import {URL} from "url";
 
-const Octane = require('@microfocus/alm-octane-js-rest-sdk');
-const getOctaneRoutes = require('./octane_routes.js');
-const {URL} = require('whatwg-url');
 const crypto = require('crypto');
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 const util = require('util');
 require('util.promisify').shim();
 
-
 export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
     public static ALM_OCTANE_PIPELINE_END = 'AlmOctanePipelineEnd';
 
+    private octaneServiceConnectionData: any;
+    private url: URL;
+    private sharedSpaceId: string;
+    private workspaces: any;
     protected octaneConnections: object;
     protected tl: any;
     protected instanceId: string;
@@ -38,7 +40,7 @@ export class BaseTask {
     protected pipelineFullName: string;
     protected rootJobFullName: string;
     protected sourceBranchName: string;
-    protected custWebContext: string;
+    protected customWebContext: string;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -52,17 +54,235 @@ export class BaseTask {
         return crypto.randomBytes(15).toString('hex').replace(/(.{5})/g, '-$1').substring(1);
     }
 
-    protected static escapeOctaneQueryValue(q) {
-        return q && q.replace(/\\/g, '\\\\')
-            .replace(/\(/g, '\\(')
-            .replace(/\)/g, '\\)');
+    protected async init(agentJobName: string) {
+        await new Promise<void>(async (resolve, reject) => {
+            try {
+                this.setAgentJobName(agentJobName);
+                this.outputGlobalNodeVersion();
+                this.prepareOctaneServiceConnectionData();
+                this.prepareOctaneUrlAndCustomWebContext();
+                this.prepareAzureToken();
+                this.prepareInstanceId();
+                this.validateOctaneUrlAndExtractSharedSpaceId();
+                this.prepareAzureVariables();
+                this.setProjectFullName();
+                this.setPipelineDetails();
+                this.setJobNames();
+                this.prepareWorkspaces();
+
+                this.createOctaneConnectionsAndRetrieveCiServersAndPipelines(this.getOctaneAuthentication());
+
+                resolve();
+            } catch (ex) {
+                reject(ex);
+            }
+        }).catch(ex => {
+            this.logger.error(ex);
+            this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
+            throw ex;
+        });
     }
 
+    public async sendEvent(octaneConnection, event: CiEvent) {
+        this.logger.debug('Sending event:\n' + JSON.stringify(event));
+        let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        let events = new CiEventsList(serverInfo, [event]);
+        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
+        let ret = await util.promisify(octaneConnection.requestor.put.bind(octaneConnection.requestor))({
+            url: '/analytics/ci/events',
+            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
+            json: events.toJSON()
+        });
+        this.logger.debug('sendEvent response:');
+        this.logger.debug(ret);
+    }
+
+    public async sendTestResult(octaneConnection, testResult: string) {
+        //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
+        let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
+        this.logger.debug('Sending results to:' + REST_API_SHAREDSPACE_BASE_URL + '/' + testResultsApiUrl);
+        this.logger.debug('The result string is: ' + testResult);
+        let ret = await util.promisify(octaneConnection.requestor.post.bind(octaneConnection.requestor))({
+            url: testResultsApiUrl,
+            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
+            headers: {'Content-Type': 'application/xml'},
+            json: false,
+            body: testResult
+        });
+        this.logger.debug('sendTestResult response:');
+        this.logger.debug(ret);
+    }
+
+    private buildEventBaseURL(octaneConnection): string {
+        if (!!octaneConnection.config.pathPrefix) {
+            return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
+                '/' + octaneConnection.config.pathPrefix + '/' +
+                'internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+        }
+        return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
+            '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+    }
+
+    private setAgentJobName(agentJobName: string) {
+        this.agentJobName = agentJobName;
+
+        this.logger.info('agentJobName = ' + this.agentJobName);
+        this.logger.info('agentJobNameInternalVar = ' + this.tl.getVariable('Agent.JobName'));
+    }
+
+    private outputGlobalNodeVersion() {
+        let result = this.tl.execSync(`node`, `--version`);
+        this.logger.info('node version = ' + result.stdout);
+    }
+
+    private prepareOctaneServiceConnectionData() {
+        this.octaneServiceConnectionData = this.tl.getInput('OctaneServiceConnection', true);
+        this.logger.info('OctaneService = ' + this.octaneServiceConnectionData);
+    }
+
+    private prepareOctaneUrlAndCustomWebContext() {
+        let endpointUrl = this.tl.getEndpointUrl(this.octaneServiceConnectionData, false);
+        this.url = new URL(endpointUrl);
+
+        this.logger.info('rawUrl = ' + endpointUrl + '; url.href = ' + this.url.href);
+
+        this.customWebContext = this.url.pathname.toString().split('/ui/')[0].substring(1);
+        this.logger.info('customWebContext = ' + this.customWebContext);
+    }
+
+    private prepareAzureToken() {
+        this.token = this.tl.getEndpointDataParameter(this.octaneServiceConnectionData,
+            'AZURE_PERSONAL_ACCESS_TOKEN', true);
+        this.logger.debug('token = ' + this.token);
+    }
+
+    private prepareInstanceId() {
+        this.instanceId = this.tl.getEndpointDataParameter(this.octaneServiceConnectionData,
+            'instance_id', false);
+        this.logger.info('instanceId = ' + this.instanceId);
+    }
+
+    private validateOctaneUrlAndExtractSharedSpaceId() {
+        let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';
+        let params = this.url.searchParams.get('p');
+        if (params === null) {
+            throw new Error(paramsError);
+        }
+
+        const spaces = params.match(/\d+/g);
+        if (!spaces || spaces.length < 1) {
+            throw new Error(paramsError);
+        }
+
+        this.sharedSpaceId = spaces[0];
+    }
+
+    private getObfuscatedSecretForLogger(str: string) {
+        return str.substr(0, 3) + '...' + str.substr(str.length - 3);
+    }
+
+    private prepareAzureVariables() {
+        this.collectionUri = this.tl.getVariable('System.TeamFoundationCollectionUri');
+        this.projectId = this.tl.getVariable('System.TeamProjectId');
+        this.projectName = this.tl.getVariable('System.TeamProject');
+        this.buildDefinitionName = this.tl.getVariable('Build.DefinitionName');
+        this.buildId = this.tl.getVariable('Build.BuildId');
+        this.sourceBranchName = this.tl.getVariable('Build.SourceBranchName');
+        this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
+
+        this.logger.info('collectionUri = ' + this.collectionUri);
+        this.logger.info('projectId = ' + this.projectId);
+        this.logger.info('projectName = ' + this.projectName);
+        this.logger.info('buildDefinitionName = ' + this.buildDefinitionName);
+        this.logger.info('sourceBranchName = ' + this.sourceBranchName);
+    }
+
+    protected convertJobStatus(nativeStatus: string): Result {
+        switch (nativeStatus) {
+            case 'Canceled':
+                return Result.ABORTED;
+            case 'Failed':
+                return Result.FAILURE;
+            case 'Succeeded':
+                return Result.SUCCESS;
+            case 'SucceededWithIssues':
+                return Result.UNSTABLE;
+            default:
+                return Result.UNAVAILABLE;
+        }
+    }
+
+    private setProjectFullName() {
+        this.projectFullName = 'AzureDevOps.' + this.instanceId + '.' + this.projectName;
+        this.logger.info('Project full name:' + this.projectFullName);
+    }
+
+    private setPipelineDetails() {
+        this.isPipelineStartJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
+        this.isPipelineEndJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
+        this.isPipelineJob = this.isPipelineStartJob || this.isPipelineEndJob;
+        this.pipelineFullName = this.projectFullName + '.' + this.buildDefinitionName + '@@@' + this.agentJobName;
+
+        this.logger.info('Pipeline full name:' + this.pipelineFullName);
+    }
+
+    private setJobNames() {
+        this.jobFullName = this.projectFullName + '.' + this.buildDefinitionName + (this.isPipelineJob ? '' : '.' + this.agentJobName);
+        this.rootJobFullName = this.projectFullName + '.' + this.buildDefinitionName;
+
+        this.logger.info('Job full name:' + this.jobFullName);
+        this.logger.info('Root job full name:' + this.rootJobFullName);
+    }
+
+    private prepareWorkspaces() {
+        this.workspaces = this.tl.getInput('WorkspaceList', true);
+
+        this.logger.info('workspaces = ' + this.workspaces);
+    }
+
+    private getOctaneAuthentication(): object {
+        let endpointAuth = this.tl.getEndpointAuthorization(this.octaneServiceConnectionData, false);
+        let clientId = endpointAuth.parameters['username'];
+        let clientSecret = endpointAuth.parameters['password'];
+
+        this.logger.debug('clientId = ' + clientId);
+        this.logger.debug('clientSecret = ' + this.getObfuscatedSecretForLogger(clientSecret));
+
+        return {
+            clientId,
+            clientSecret
+        }
+    }
+
+    private async createOctaneConnectionsAndRetrieveCiServersAndPipelines(octaneAuthenticationData: any) {
+        let workspaces = this.workspaces.split(',');
+        for (let i in workspaces) {
+            let ws = workspaces[i].trim();
+            await (async (ws) => {
+                let connectionCandidate = this.octaneConnections[ws];
+                if (!connectionCandidate) {
+                    connectionCandidate = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
+                        this.customWebContext, this.sharedSpaceId, ws, octaneAuthenticationData.clientId, octaneAuthenticationData.clientSecret);
+                }
+
+                let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName,
+                    this.collectionUri, this.projectId, this.octaneServiceConnectionData,
+                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+
+                await this.getPipeline(connectionCandidate, this.buildDefinitionName, this.pipelineFullName, ciServer,
+                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+
+                this.octaneConnections[ws] = connectionCandidate;
+            })(ws);
+        }
+    }
 
     protected async getCiServer(octaneConnection, instanceId, projectName, collectionUri, projectId, octaneService, createOnAbsence) {
         this.logger.debug('instanceId: ' + instanceId);
-        let ciServerQuery = Query.field('instance_id').equal(instanceId);
-        let ciServers = await util.promisify(octaneConnection.ciServers.getAll.bind(octaneConnection.ciServers))({query: ciServerQuery});
+        let ciServerQuery = Query.field('instance_id').equal(instanceId).build();
+
+        let ciServers = await octaneConnection.get('ci_servers').query(ciServerQuery).execute();
         this.logger.debug('ciServers: ');
         this.logger.debug(ciServers);
         let serverUrl = collectionUri + this.projectName;
@@ -115,158 +335,9 @@ export class BaseTask {
         return pipelines[0];
     }
 
-    public async sendEvent(octaneConnection, event: CiEvent) {
-        this.logger.debug('Sending event:\n' + JSON.stringify(event));
-        let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
-        let events = new CiEventsList(serverInfo, [event]);
-        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
-        let ret = await util.promisify(octaneConnection.requestor.put.bind(octaneConnection.requestor))({
-            url: '/analytics/ci/events',
-            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
-            json: events.toJSON()
-        });
-        this.logger.debug('sendEvent response:');
-        this.logger.debug(ret);
-    }
-
-    public async sendTestResult(octaneConnection, testResult: string) {
-        //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
-        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
-        let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
-        this.logger.debug('Sending results to:' + REST_API_SHAREDSPACE_BASE_URL + '/' + testResultsApiUrl);
-        this.logger.debug('The result string is: ' + testResult);
-        let ret = await util.promisify(octaneConnection.requestor.post.bind(octaneConnection.requestor))({
-            url: testResultsApiUrl,
-            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
-            headers: {'Content-Type': 'application/xml'},
-            json: false,
-            body: testResult
-        });
-        this.logger.debug('sendTestResult response:');
-        this.logger.debug(ret);
-    }
-
-    protected async init(agentJobName: string) {
-        await new Promise<void>(async (resolve, reject) => {
-            try {
-                let result = this.tl.execSync(`node`, `--version`);
-                this.logger.info('node version = ' + result.stdout);
-                let octaneService = this.tl.getInput('OctaneServiceConnection', true);
-                this.logger.info('OctaneService = ' + octaneService);
-                let endpointUrl = this.tl.getEndpointUrl(octaneService, false);
-                this.logger.debug('rawUrl = ' + endpointUrl);
-                let url = new URL(endpointUrl);
-                this.logger.info('url.href = ' + url.href);
-                this.instanceId = this.tl.getEndpointDataParameter(octaneService, 'instance_id', false);
-                this.token = this.tl.getEndpointDataParameter(octaneService, 'AZURE_PERSONAL_ACCESS_TOKEN', true);
-                this.logger.debug('token = ' + this.token);
-                this.logger.info('instanceId = ' + this.instanceId);
-                let endpointAuth = this.tl.getEndpointAuthorization(octaneService, false);
-                let clientId = endpointAuth.parameters['username'];
-                let clientSecret = endpointAuth.parameters['password'];
-                this.logger.debug('clientId = ' + clientId);
-                this.logger.debug('clientSecret = ' + clientSecret);
-                let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';
-                let pparam = url.searchParams.get('p');
-                if (pparam === null) {
-                    reject(paramsError);
-                    return;
-                }
-                const spaces = pparam.match(/\d+/g);
-                if (!spaces || spaces.length < 1) {
-                    reject(paramsError);
-                    return;
-                }
-                this.custWebContext = url.pathname.toString().split('/ui/')[0].substring(1);
-                this.logger.info('custWebContext = ' + this.custWebContext);
-                this.collectionUri = this.tl.getVariable('System.TeamFoundationCollectionUri');
-                this.projectId = this.tl.getVariable('System.TeamProjectId');
-                this.projectName = this.tl.getVariable('System.TeamProject');
-                this.buildDefinitionName = this.tl.getVariable('Build.DefinitionName');
-                this.buildId = this.tl.getVariable('Build.BuildId');
-                this.sourceBranchName = this.tl.getVariable('Build.SourceBranchName');
-                this.agentJobName = agentJobName;
-                this.logger.info('collectionUri = ' + this.collectionUri);
-                this.logger.info('projectId = ' + this.projectId);
-                this.logger.info('projectName = ' + this.projectName);
-                this.logger.info('buildDefinitionName = ' + this.buildDefinitionName);
-                this.logger.info('agentJobName = ' + this.agentJobName);
-                this.logger.info('agentJobNameInternalVar = ' + this.tl.getVariable('Agent.JobName'));
-                this.logger.info('sourceBranchName = ' + this.sourceBranchName);
-                this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
-                this.isPipelineStartJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase();
-                this.isPipelineEndJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
-                this.isPipelineJob = this.isPipelineStartJob || this.isPipelineEndJob;
-                this.projectFullName = 'AzureDevOps.' + this.instanceId + '.' + this.projectName;
-                this.logger.info('Project full name:' + this.projectFullName);
-                this.jobFullName = this.projectFullName + '.' + this.buildDefinitionName + (this.isPipelineJob ? '' : '.' + this.agentJobName);
-                this.logger.info('Job full name:' + this.jobFullName);
-                this.rootJobFullName = this.projectFullName + '.' + this.buildDefinitionName;
-                this.pipelineFullName = this.projectFullName + '.' + this.buildDefinitionName + '@@@' + this.agentJobName;
-                this.logger.info('Pipeline full name:' + this.pipelineFullName);
-                let workspaces = this.tl.getInput('WorkspaceList', true);
-                this.logger.info('workspaces = ' + workspaces);
-                workspaces = workspaces.split(',');
-                for (let i in workspaces) {
-                    let ws = workspaces[i].trim();
-                    await (async (ws) => {
-                        let connectionCandidate = this.octaneConnections[ws];
-                        if (!connectionCandidate) {
-                            connectionCandidate = new Octane({
-                                protocol: url.protocol.endsWith(':') ? url.protocol.slice(0, -1) : url.protocol,
-                                host: url.hostname,
-                                port: url.port,
-                                shared_space_id: spaces[0],
-                                workspace_id: ws,
-                                pathPrefix: !!this.custWebContext ? this.custWebContext : null,
-                                routesConfig: getOctaneRoutes(),
-                                tech_preview_API: true
-                            });
-                        }
-                        await util.promisify(connectionCandidate.authenticate.bind(connectionCandidate))({
-                            client_id: clientId,
-                            client_secret: clientSecret
-                        });
-                        connectionCandidate.requestor = connectionCandidate.requestor.defaults({headers: {'HPECLIENTTYPE': 'HPE_CI_CLIENT'}});
-                        this.logger.info('Workspace ' + ws + ': authentication passed');
-                        let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName, this.collectionUri, this.projectId, octaneService, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-                        await this.getPipeline(connectionCandidate, this.buildDefinitionName, this.pipelineFullName, ciServer, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-                        this.octaneConnections[ws] = connectionCandidate;
-                    })(ws);
-                }
-                resolve();
-            } catch (ex) {
-                reject(ex);
-            }
-        }).catch(ex => {
-            this.logger.error(ex);
-            this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
-            throw ex;
-        });
-    }
-
-    protected convertJobStatus(nativeStatus: string): Result {
-        switch (nativeStatus) {
-            case 'Canceled':
-                return Result.ABORTED;
-            case 'Failed':
-                return Result.FAILURE;
-            case 'Succeeded':
-                return Result.SUCCESS;
-            case 'SucceededWithIssues':
-                return Result.UNSTABLE;
-            default:
-                return Result.UNAVAILABLE;
-        }
-    }
-
-    private buildEventBaseURL(octaneConnection): string {
-        if (!!octaneConnection.config.pathPrefix) {
-            return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
-                '/' + octaneConnection.config.pathPrefix + '/' +
-                'internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
-        }
-        return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
-            '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+    protected static escapeOctaneQueryValue(q) {
+        return q && q.replace(/\\/g, '\\\\')
+            .replace(/\(/g, '\\(')
+            .replace(/\)/g, '\\)');
     }
 }
