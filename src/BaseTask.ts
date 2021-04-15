@@ -7,20 +7,15 @@ import {LogUtils} from "./LogUtils";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
 import {URL} from "url";
 
-const crypto = require('crypto');
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
-const util = require('util');
-require('util.promisify').shim();
 
 export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
     public static ALM_OCTANE_PIPELINE_END = 'AlmOctanePipelineEnd';
+    private static CI_SERVERS_ENTITY_TYPE = 'ci_servers';
+    private static PIPELINES_ENTITY_TYPE = 'pipelines';
 
-    private octaneServiceConnectionData: any;
-    private url: URL;
-    private sharedSpaceId: string;
-    private workspaces: any;
-    protected octaneConnections: object;
+    protected octaneSDKConnections: object;
     protected tl: any;
     protected instanceId: string;
     protected collectionUri: string;
@@ -42,16 +37,18 @@ export class BaseTask {
     protected sourceBranchName: string;
     protected customWebContext: string;
 
+    private octaneServiceConnectionData: any;
+    private url: URL;
+    private sharedSpaceId: string;
+    private workspaces: any;
+    private eventBaseUrl: string;
+
     protected constructor(tl: any) {
         this.tl = tl;
         let logLevel = this.tl.getVariable('ALMOctaneLogLevel');
         this.logger = new LogUtils(logLevel);
         this.logger.debug("ALMOctaneLogLevel: " + logLevel);
-        this.octaneConnections = {};
-    }
-
-    protected static generateUUID() {
-        return crypto.randomBytes(15).toString('hex').replace(/(.{5})/g, '-$1').substring(1);
+        this.octaneSDKConnections = {};
     }
 
     protected async init(agentJobName: string) {
@@ -61,6 +58,7 @@ export class BaseTask {
                 this.outputGlobalNodeVersion();
                 this.prepareOctaneServiceConnectionData();
                 this.prepareOctaneUrlAndCustomWebContext();
+                this.buildEventBaseURL();
                 this.prepareAzureToken();
                 this.prepareInstanceId();
                 this.validateOctaneUrlAndExtractSharedSpaceId();
@@ -70,7 +68,7 @@ export class BaseTask {
                 this.setJobNames();
                 this.prepareWorkspaces();
 
-                this.createOctaneConnectionsAndRetrieveCiServersAndPipelines(this.getOctaneAuthentication());
+                await this.createOctaneConnectionsAndRetrieveCiServersAndPipelines(this.getOctaneAuthentication());
 
                 resolve();
             } catch (ex) {
@@ -83,45 +81,53 @@ export class BaseTask {
         });
     }
 
-    public async sendEvent(octaneConnection, event: CiEvent) {
+    public async sendEvent(octaneSDKConnection, event: CiEvent) {
         this.logger.debug('Sending event:\n' + JSON.stringify(event));
-        let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION,
+            this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
-        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
-        let ret = await util.promisify(octaneConnection.requestor.put.bind(octaneConnection.requestor))({
-            url: '/analytics/ci/events',
-            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
+
+        let eventObj = {
+            url: this.eventBaseUrl + '/analytics/ci/events',
             json: events.toJSON()
-        });
+        };
+
+        let ret = await octaneSDKConnection._requestHandler.put(eventObj);
+
         this.logger.debug('sendEvent response:');
         this.logger.debug(ret);
     }
 
-    public async sendTestResult(octaneConnection, testResult: string) {
+    public async sendTestResult(octaneSDKConnection, testResult: string) {
         //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
-        const REST_API_SHAREDSPACE_BASE_URL = this.buildEventBaseURL(octaneConnection);
-        let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
-        this.logger.debug('Sending results to:' + REST_API_SHAREDSPACE_BASE_URL + '/' + testResultsApiUrl);
+        let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId +
+            '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
+
+        this.logger.debug('Sending results to:' + this.eventBaseUrl + '/' + testResultsApiUrl);
         this.logger.debug('The result string is: ' + testResult);
-        let ret = await util.promisify(octaneConnection.requestor.post.bind(octaneConnection.requestor))({
-            url: testResultsApiUrl,
-            baseUrl: REST_API_SHAREDSPACE_BASE_URL,
+
+        let testResultObj = {
+            url: this.eventBaseUrl + testResultsApiUrl,
             headers: {'Content-Type': 'application/xml'},
             json: false,
             body: testResult
-        });
+        };
+
+        let ret = await octaneSDKConnection._requestHandler.post(testResultObj);
+
         this.logger.debug('sendTestResult response:');
         this.logger.debug(ret);
     }
 
-    private buildEventBaseURL(octaneConnection): string {
-        if (!!octaneConnection.config.pathPrefix) {
-            return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
-                '/' + octaneConnection.config.pathPrefix + '/' +
-                'internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
+    private buildEventBaseURL() {
+        if (!!this.customWebContext) {
+            this.eventBaseUrl = this.url.protocol + '://' + this.url.host + ':' + this.url.port +
+                '/' + this.customWebContext + '/' +
+                'internal-api/shared_spaces/' + this.sharedSpaceId;
+        } else {
+            this.eventBaseUrl = this.url.protocol + '://' + this.url.host + ':' + this.url.port +
+                '/internal-api/shared_spaces/' + this.sharedSpaceId;
         }
-        return octaneConnection.config.protocol + '://' + octaneConnection.config.host + ':' + octaneConnection.config.port +
-            '/internal-api/shared_spaces/' + octaneConnection.config.shared_space_id;
     }
 
     private setAgentJobName(agentJobName: string) {
@@ -260,79 +266,110 @@ export class BaseTask {
         for (let i in workspaces) {
             let ws = workspaces[i].trim();
             await (async (ws) => {
-                let connectionCandidate = this.octaneConnections[ws];
-                if (!connectionCandidate) {
-                    connectionCandidate = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
+                let octaneSDKConnection = this.octaneSDKConnections[ws];
+                if (!octaneSDKConnection) {
+                    octaneSDKConnection = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
                         this.customWebContext, this.sharedSpaceId, ws, octaneAuthenticationData.clientId, octaneAuthenticationData.clientSecret);
                 }
 
-                let ciServer = await this.getCiServer(connectionCandidate, this.instanceId, this.projectName,
-                    this.collectionUri, this.projectId, this.octaneServiceConnectionData,
+                let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+
+                await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
                     this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
 
-                await this.getPipeline(connectionCandidate, this.buildDefinitionName, this.pipelineFullName, ciServer,
-                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-
-                this.octaneConnections[ws] = connectionCandidate;
+                this.octaneSDKConnections[ws] = octaneSDKConnection;
             })(ws);
         }
     }
 
-    protected async getCiServer(octaneConnection, instanceId, projectName, collectionUri, projectId, octaneService, createOnAbsence) {
-        this.logger.debug('instanceId: ' + instanceId);
-        let ciServerQuery = Query.field('instance_id').equal(instanceId).build();
+    protected async getCiServer(octaneSDKConnection, createOnAbsence) {
+        let ciServerQuery = Query.field('instance_id').equal(this.instanceId).build();
 
-        let ciServers = await octaneConnection.get('ci_servers').query(ciServerQuery).execute();
-        this.logger.debug('ciServers: ');
-        this.logger.debug(ciServers);
-        let serverUrl = collectionUri + this.projectName;
+        let ciServers = [];
+        try {
+            ciServers = await octaneSDKConnection.get(BaseTask.CI_SERVERS_ENTITY_TYPE).query(ciServerQuery).execute();
+        } catch(ex) {
+            this.logger.debug(ex);
+        }
+
+        this.logger.debug('ciServers: ' + ciServers);
+
+        let serverUrl = this.collectionUri + this.projectName;
 
         if (!ciServers || ciServers.length == 0) {
-            if (!createOnAbsence) throw new Error('CI Server \'' + this.projectFullName + '(instanceId=\'' + instanceId + '\')\' not found.');
-            ciServers = [
-                await util.promisify(octaneConnection.ciServers.create.bind(octaneConnection.ciServers))({
-                    'instance_id': instanceId,
-                    'name': this.projectFullName,
-                    'server_type': CI_SERVER_INFO.CI_SERVER_TYPE,
-                    'url': serverUrl
-                })
-            ];
-            if (ciServers.length === 1) {
-                this.logger.info('CI server ' + ciServers[0].id + ' created');
+            if (createOnAbsence) {
+                ciServers = await this.createCiServer(octaneSDKConnection, serverUrl);
             } else {
-                this.logger.error('CI server creation failed', this.logger.getCaller());
+                throw new Error('CI Server \'' + this.projectFullName + '(instanceId=\'' + this.instanceId + '\')\' not found.');
             }
-            this.tl.setVariable('ENDPOINT_DATA_' + octaneService + '_' + 'instance_id'.toUpperCase(), instanceId);
         } else {
             ciServers[0].name = this.projectFullName;
             ciServers[0].url = serverUrl;
-            await util.promisify(octaneConnection.ciServers.update.bind(octaneConnection.ciServers))(ciServers[0]);
+            await octaneSDKConnection.update(BaseTask.CI_SERVERS_ENTITY_TYPE, ciServers[0]);
         }
+
         return ciServers[0];
     }
 
-    protected async getPipeline(octaneConnection, pipelineName, rootJobName, ciServer, createOnAbsence) {
+    private async createCiServer(octaneSDKConnection, serverUrl) {
+        let ci_server = {
+            'name': this.projectFullName,
+            'instance_id': this.instanceId,
+            'server_type': CI_SERVER_INFO.CI_SERVER_TYPE,
+            'url': serverUrl
+        };
+
+        let ciServers = [
+            await octaneSDKConnection.create(BaseTask.CI_SERVERS_ENTITY_TYPE, ci_server).execute()
+        ];
+
+        if (ciServers.length === 1) {
+            this.logger.info('CI server ' + ciServers[0].id + ' created');
+        } else {
+            this.logger.error('CI server creation failed', this.logger.getCaller());
+        }
+
+        this.tl.setVariable('ENDPOINT_DATA_' + this.octaneServiceConnectionData + '_' + 'instance_id'.toUpperCase(), this.instanceId);
+
+        return ciServers;
+    }
+
+    protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, createOnAbsence) {
         let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName))
-            .and(Query.field('ci_server').equal(Query.field('id').equal(ciServer.id)));
-        let pipelines = await util.promisify(octaneConnection.pipelines.getAll.bind(octaneConnection.pipelines))({query: pipelineQuery});
+            .and(Query.field('ci_server').equal(Query.field('id').equal(ciServer.id))).build();
+
+        let pipelines = await octaneSDKConnection.get(BaseTask.PIPELINES_ENTITY_TYPE).query(pipelineQuery).execute();
         if (!pipelines || pipelines.length == 0) {
-            if (!createOnAbsence) throw new Error('Pipeline \'' + pipelineName + '\' not found.');
-            pipelines = [
-                await util.promisify(octaneConnection.pipelines.create.bind(octaneConnection.pipelines))({
-                    'name': pipelineName,
-                    'ci_server': {'type': 'ci_server', 'id': ciServer.id},
-                    'root_job_name': rootJobName,
-                    'notification_track': false,
-                    'notification_track_tester': false
-                })
-            ];
-            if (pipelines.length === 1) {
-                this.logger.info('Pipeline ' + pipelines[0].id + ' created');
+            if (createOnAbsence) {
+                pipelines = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
             } else {
-                this.logger.error('Pipeline creation failed', this.logger.getCaller());
+                throw new Error('Pipeline \'' + pipelineName + '\' not found.')
             }
         }
+
         return pipelines[0];
+    }
+
+    private async createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer) {
+        let pipeline = {
+            'name': pipelineName,
+            'ci_server': {'type': 'ci_server', 'id': ciServer.id},
+            'root_job_name': rootJobName,
+            'notification_track': false,
+            'notification_track_tester': false
+        };
+
+        let pipelines = [
+            await octaneSDKConnection.create(BaseTask.PIPELINES_ENTITY_TYPE, pipeline).execute()
+        ];
+
+        if (pipelines.length === 1) {
+            this.logger.info('Pipeline ' + pipelines[0].id + ' created');
+        } else {
+            this.logger.error('Pipeline creation failed', this.logger.getCaller());
+        }
+
+        return pipelines;
     }
 
     protected static escapeOctaneQueryValue(q) {
