@@ -19,20 +19,20 @@ export class StartTask extends BaseTask {
 
     public async run() {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
-        for (let ws in this.octaneConnections) {
+        for (let ws in this.octaneSDKConnections) {
             this.logger.debug("octaneConnection per ws: " + ws);
-            if (this.octaneConnections[ws]) {
+            if (this.octaneSDKConnections[ws]) {
                 if (!this.isPipelineEndJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let startEvent = new CiEvent(this.agentJobName, CiEventType.STARTED, this.buildId, this.buildId, this.jobFullName, null, new Date().getTime(), null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
-                    await this.sendEvent(this.octaneConnections[ws], startEvent);
+                    await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
                 }
 
                 if (this.isPipelineStartJob) {
                     let scmData = await ScmBuilder.buildScmData(api, this.projectName, parseInt(this.buildId), this.sourceBranchName, this.tl, this.logger);
                     this.logger.debug(scmData);
                     let scmEvent = new CiEvent(this.agentJobName, CiEventType.SCM, this.buildId, this.buildId, this.jobFullName, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
-                    await this.sendEvent(this.octaneConnections[ws], scmEvent);
+                    await this.sendEvent(this.octaneSDKConnections[ws], scmEvent);
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
             }

@@ -21,20 +21,20 @@ export class EndTask extends BaseTask {
 
     public async run() {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
-        for(let ws in this.octaneConnections) {
-            if(this.octaneConnections[ws]) {
+        for(let ws in this.octaneSDKConnections) {
+            if(this.octaneSDKConnections[ws]) {
                 if (!this.isPipelineStartJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
                     let endEvent = new CiEvent(this.agentJobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
-                    await this.sendEvent(this.octaneConnections[ws], endEvent);
+                    await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
                 }
 
                 if (this.isPipelineEndJob) {
                     let testResult = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, this.logger);
                     if (testResult) {
-                        await this.sendTestResult(this.octaneConnections[ws], testResult);
+                        await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
                     }
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
