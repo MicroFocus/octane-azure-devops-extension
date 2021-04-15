@@ -285,7 +285,7 @@ export class BaseTask {
     protected async getCiServer(octaneSDKConnection, createOnAbsence) {
         let ciServerQuery = Query.field('instance_id').equal(this.instanceId).build();
 
-        let ciServers = [];
+        let ciServers;
         try {
             ciServers = await octaneSDKConnection.get(BaseTask.CI_SERVERS_ENTITY_TYPE).query(ciServerQuery).execute();
         } catch(ex) {
@@ -296,19 +296,19 @@ export class BaseTask {
 
         let serverUrl = this.collectionUri + this.projectName;
 
-        if (!ciServers || ciServers.length == 0) {
+        if (!ciServers || ciServers.total_count == 0 || ciServers.data.length == 0) {
             if (createOnAbsence) {
                 ciServers = await this.createCiServer(octaneSDKConnection, serverUrl);
             } else {
                 throw new Error('CI Server \'' + this.projectFullName + '(instanceId=\'' + this.instanceId + '\')\' not found.');
             }
         } else {
-            ciServers[0].name = this.projectFullName;
-            ciServers[0].url = serverUrl;
-            await octaneSDKConnection.update(BaseTask.CI_SERVERS_ENTITY_TYPE, ciServers[0]);
+            ciServers.data[0].name = this.projectFullName;
+            ciServers.data[0].url = serverUrl;
+            await octaneSDKConnection.update(BaseTask.CI_SERVERS_ENTITY_TYPE, ciServers.data[0]);
         }
 
-        return ciServers[0];
+        return ciServers[0].data[0];
     }
 
     private async createCiServer(octaneSDKConnection, serverUrl) {
@@ -339,7 +339,7 @@ export class BaseTask {
             .and(Query.field('ci_server').equal(Query.field('id').equal(ciServer.id))).build();
 
         let pipelines = await octaneSDKConnection.get(BaseTask.PIPELINES_ENTITY_TYPE).query(pipelineQuery).execute();
-        if (!pipelines || pipelines.length == 0) {
+        if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
             if (createOnAbsence) {
                 pipelines = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
             } else {
@@ -347,7 +347,7 @@ export class BaseTask {
             }
         }
 
-        return pipelines[0];
+        return pipelines[0].data[0];
     }
 
     private async createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer) {
