@@ -305,7 +305,8 @@ export class BaseTask {
         } else {
             ciServers.data[0].name = this.projectFullName;
             ciServers.data[0].url = serverUrl;
-            await octaneSDKConnection.update(BaseTask.CI_SERVERS_ENTITY_TYPE, ciServers.data[0]);
+            let r = await octaneSDKConnection.update(BaseTask.CI_SERVERS_ENTITY_TYPE, ciServers.data[0]).execute();
+            this.logger.debug(r);
         }
 
         return ciServers[0].data[0];
