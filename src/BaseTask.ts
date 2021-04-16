@@ -2,18 +2,17 @@ import {CiEventsList} from './dto/events/CiEventsList';
 import {CiServerInfo} from './dto/general/CiServerInfo';
 import {CiEvent} from "./dto/events/CiEvent";
 import {Result} from "./dto/events/CiTypes";
-import {CI_SERVER_INFO} from "./ExtensionConstants";
+import {CI_SERVER_INFO, EntityTypeConstants, EntityTypeRestEndpointConstants} from "./ExtensionConstants";
 import {LogUtils} from "./LogUtils";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
 import {URL} from "url";
+import {MetadataUtils} from "./MetadataUtils";
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 
 export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
     public static ALM_OCTANE_PIPELINE_END = 'AlmOctanePipelineEnd';
-    private static CI_SERVERS_ENTITY_TYPE = 'ci_servers';
-    private static PIPELINES_ENTITY_TYPE = 'pipelines';
 
     protected octaneSDKConnections: object;
     protected tl: any;
@@ -245,6 +244,8 @@ export class BaseTask {
         this.workspaces = this.tl.getInput('WorkspaceList', true);
 
         this.logger.info('workspaces = ' + this.workspaces);
+
+        this.workspaces = this.workspaces.split(',').map(s => s.trim());
     }
 
     private getOctaneAuthentication(): object {
@@ -262,14 +263,16 @@ export class BaseTask {
     }
 
     private async createOctaneConnectionsAndRetrieveCiServersAndPipelines(octaneAuthenticationData: any) {
-        let workspaces = this.workspaces.split(',');
-        for (let i in workspaces) {
-            let ws = workspaces[i].trim();
+        for (let i in this.workspaces) {
+            let ws = this.workspaces[i];
             await (async (ws) => {
                 let octaneSDKConnection = this.octaneSDKConnections[ws];
                 if (!octaneSDKConnection) {
                     octaneSDKConnection = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
                         this.customWebContext, this.sharedSpaceId, ws, octaneAuthenticationData.clientId, octaneAuthenticationData.clientSecret);
+
+                    await MetadataUtils.enhanceOctaneSDKConnectionWithEntitiesMetadata(octaneSDKConnection);
+                    await MetadataUtils.enhanceOctaneSDKConnectionWithFieldsMetadata(octaneSDKConnection);
                 }
 
                 let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
@@ -287,12 +290,18 @@ export class BaseTask {
 
         let ciServers;
         try {
-            ciServers = await octaneSDKConnection.get(BaseTask.CI_SERVERS_ENTITY_TYPE).query(ciServerQuery).execute();
+            ciServers = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_SERVERS_REST_API_NAME).query(ciServerQuery).execute();
         } catch(ex) {
             this.logger.debug(ex);
         }
 
-        this.logger.debug('ciServers: ' + ciServers);
+        if(ciServers && ciServers.total_count > 0) {
+            ciServers.data.forEach((server) => {
+                this.logger.debug('CI Server: ' + JSON.stringify(server));
+            });
+        } else {
+            this.logger.debug('No CI Servers were returned');
+        }
 
         let serverUrl = this.collectionUri + this.projectName;
 
@@ -303,13 +312,18 @@ export class BaseTask {
                 throw new Error('CI Server \'' + this.projectFullName + '(instanceId=\'' + this.instanceId + '\')\' not found.');
             }
         } else {
-            ciServers.data[0].name = this.projectFullName;
-            ciServers.data[0].url = serverUrl;
-            let r = await octaneSDKConnection.update(BaseTask.CI_SERVERS_ENTITY_TYPE, ciServers.data[0]).execute();
-            this.logger.debug(r);
+            let ciServer = {
+                'name': this.projectFullName,
+                'url': serverUrl,
+                'id': ciServers.data[0].id
+            }
+
+            this.logger.debug('Updating ci server with id: ' + ciServer.id);
+
+            await octaneSDKConnection.update(EntityTypeRestEndpointConstants.CI_SERVERS_REST_API_NAME, ciServer).execute();
         }
 
-        return ciServers[0].data[0];
+        return ciServers.data[0];
     }
 
     private async createCiServer(octaneSDKConnection, serverUrl) {
@@ -321,7 +335,7 @@ export class BaseTask {
         };
 
         let ciServers = [
-            await octaneSDKConnection.create(BaseTask.CI_SERVERS_ENTITY_TYPE, ci_server).execute()
+            await octaneSDKConnection.create(EntityTypeRestEndpointConstants.CI_SERVERS_REST_API_NAME, ci_server).execute()
         ];
 
         if (ciServers.length === 1) {
@@ -337,9 +351,9 @@ export class BaseTask {
 
     protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, createOnAbsence) {
         let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName))
-            .and(Query.field('ci_server').equal(Query.field('id').equal(ciServer.id))).build();
+            .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
 
-        let pipelines = await octaneSDKConnection.get(BaseTask.PIPELINES_ENTITY_TYPE).query(pipelineQuery).execute();
+        let pipelines = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME).query(pipelineQuery).execute();
         if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
             if (createOnAbsence) {
                 pipelines = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
@@ -348,20 +362,20 @@ export class BaseTask {
             }
         }
 
-        return pipelines[0].data[0];
+        return pipelines.data[0];
     }
 
     private async createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer) {
         let pipeline = {
             'name': pipelineName,
-            'ci_server': {'type': 'ci_server', 'id': ciServer.id},
+            'ci_server': {'type': EntityTypeConstants.CI_SERVER_ENTITY_TYPE, 'id': ciServer.id},
             'root_job_name': rootJobName,
             'notification_track': false,
             'notification_track_tester': false
         };
 
         let pipelines = [
-            await octaneSDKConnection.create(BaseTask.PIPELINES_ENTITY_TYPE, pipeline).execute()
+            await octaneSDKConnection.create(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME, pipeline).execute()
         ];
 
         if (pipelines.length === 1) {
