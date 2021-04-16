@@ -26,3 +26,13 @@ export enum EndpointDataConstants {
     ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN = "ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN",
     ENDPOINT_URL = 'ENDPOINT_URL'
 }
+
+export enum EntityTypeConstants {
+    CI_SERVER_ENTITY_TYPE = 'ci_server',
+    PIPELINE_ENTITY_TYPE = 'pipeline'
+}
+
+export enum EntityTypeRestEndpointConstants {
+    CI_SERVERS_REST_API_NAME = EntityTypeConstants.CI_SERVER_ENTITY_TYPE + 's',
+    PIPELINES_REST_API_NAME = EntityTypeConstants.PIPELINE_ENTITY_TYPE + 's'
+}
