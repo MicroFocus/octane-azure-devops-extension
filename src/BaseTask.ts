@@ -40,7 +40,7 @@ export class BaseTask {
     private url: URL;
     private sharedSpaceId: string;
     private workspaces: any;
-    private eventBaseUrl: string;
+    private analyticsCiInternalApiUrlPart: string;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -57,10 +57,10 @@ export class BaseTask {
                 this.outputGlobalNodeVersion();
                 this.prepareOctaneServiceConnectionData();
                 this.prepareOctaneUrlAndCustomWebContext();
-                this.buildEventBaseURL();
                 this.prepareAzureToken();
                 this.prepareInstanceId();
                 this.validateOctaneUrlAndExtractSharedSpaceId();
+                this.buildAnalyticsCiInternalApiUrlPart();
                 this.prepareAzureVariables();
                 this.setProjectFullName();
                 this.setPipelineDetails();
@@ -82,51 +82,41 @@ export class BaseTask {
 
     public async sendEvent(octaneSDKConnection, event: CiEvent) {
         this.logger.debug('Sending event:\n' + JSON.stringify(event));
+
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION,
             this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
 
         let eventObj = {
-            url: this.eventBaseUrl + '/analytics/ci/events',
-            json: events.toJSON()
-        };
+            url: this.analyticsCiInternalApiUrlPart +'/events',
+            body: events.toJSON()
+        }
 
-        let ret = await octaneSDKConnection._requestHandler.put(eventObj);
+        let ret = await octaneSDKConnection._requestHandler._requestor.put(eventObj);
 
-        this.logger.debug('sendEvent response:');
-        this.logger.debug(ret);
+        this.logger.debug('sendEvent response:' + ret);
     }
 
     public async sendTestResult(octaneSDKConnection, testResult: string) {
-        //   let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION, this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
-        let testResultsApiUrl = '/analytics/ci/test-results?skip-errors=true&instance-id=' + this.instanceId +
-            '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
+        let testResultsApiUrl = this.analyticsCiInternalApiUrlPart + '/test-results?skip-errors=true&instance-id=' +
+            this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
 
-        this.logger.debug('Sending results to:' + this.eventBaseUrl + '/' + testResultsApiUrl);
-        this.logger.debug('The result string is: ' + testResult);
+        this.logger.debug('Sending results to:' + testResultsApiUrl + '\nThe result string is:\n' + testResult);
 
         let testResultObj = {
-            url: this.eventBaseUrl + testResultsApiUrl,
+            url: testResultsApiUrl,
             headers: {'Content-Type': 'application/xml'},
             json: false,
             body: testResult
         };
 
-        let ret = await octaneSDKConnection._requestHandler.post(testResultObj);
+        let ret = await octaneSDKConnection._requestHandler._requestor.post(testResultObj);
 
-        this.logger.debug('sendTestResult response:');
-        this.logger.debug(ret);
+        this.logger.debug('sendTestResult response:\n' + ret);
     }
 
-    private buildEventBaseURL() {
-        if (!!this.customWebContext) {
-            this.eventBaseUrl = this.url.protocol + '://' + this.url.host + ':' + this.url.port +
-                '/' + this.customWebContext + '/' +
-                'internal-api/shared_spaces/' + this.sharedSpaceId;
-        } else {
-            this.eventBaseUrl = this.url.protocol + '://' + this.url.host + ':' + this.url.port +
-                '/internal-api/shared_spaces/' + this.sharedSpaceId;
-        }
+    private buildAnalyticsCiInternalApiUrlPart() {
+        this.analyticsCiInternalApiUrlPart = '/internal-api/shared_spaces/' + this.sharedSpaceId + '/analytics/ci';
     }
 
     private setAgentJobName(agentJobName: string) {
@@ -356,7 +346,8 @@ export class BaseTask {
         let pipelines = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME).query(pipelineQuery).execute();
         if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
             if (createOnAbsence) {
-                pipelines = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                return result[0].data[0];
             } else {
                 throw new Error('Pipeline \'' + pipelineName + '\' not found.')
             }
