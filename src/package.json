@@ -1,6 +1,6 @@
 {
   "name": "alm-octane-pipeline-start",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Azure DevOps integration with ALM Octane",
   "main": "StartTask.js",
   "scripts": {
