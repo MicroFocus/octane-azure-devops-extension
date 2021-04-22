@@ -1,20 +1,17 @@
+echo OFF
+echo Building public extension
 if exist pkg (
    rmdir /S /Q pkg || goto :error
 )
 mkdir pkg || goto :error
-xcopy /S /Y templates\* pkg\ || goto :error
-xcopy /S /Y src\* pkg\Tasks\StartTask\ || goto :error
-xcopy /S /Y src\* pkg\Tasks\EndTask\ || goto :error
 
-pushd .
-echo.
-echo ======================================
-echo Building src
-cd src
-cmd /C "npm install && tsc || goto :build_error"
-echo src is ready
-echo ======================================
-popd
+echo Copying public extension template files
+xcopy /S /Y templates\public\* pkg\ || goto :error
+
+echo Copying source files
+xcopy /S /Y src\* pkg\Tasks\StartTask\ >NUL || goto :error
+xcopy /S /Y src\* pkg\Tasks\EndTask\ >NUL || goto :error
+echo Copying source files DONE
 
 pushd .
 echo.
@@ -41,10 +38,11 @@ echo.
 echo ======================================
 echo Packaging the extension
 cd pkg
-cmd /C tfx extension create --manifests vss-extension.json || goto :error
+cmd /C tfx extension create --manifests vss-extension.json --output-path ..\ || goto :error
 echo The extension is ready
 echo ======================================
 popd
+
 goto :eof
 
 :error

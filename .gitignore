@@ -10,3 +10,4 @@ debug_conf.toml
 *.taskkey
 .idea
 pkg
+*.vsix
