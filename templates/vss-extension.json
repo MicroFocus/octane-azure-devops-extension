@@ -102,41 +102,11 @@
       "properties": {
         "name": "Tasks/EndTask"
       }
-    },
-    {
-      "id": "octane-pipeline-start-decorator",
-      "type": "ms.azure-pipelines.pipeline-decorator",
-      "targets": [
-        "ms.azure-pipelines-agent-job.pre-job-tasks"
-      ],
-      "properties": {
-        "template": "Decorators/octane-pipeline-start-decorator.yml"
-      }
-    },
-    {
-      "id": "octane-pipeline-end-decorator",
-      "type": "ms.azure-pipelines.pipeline-decorator",
-      "targets": [
-        "ms.azure-pipelines-agent-job.post-job-tasks"
-      ],
-      "properties": {
-        "template": "Decorators/octane-pipeline-end-decorator.yml"
-      }
     }
   ],
   "files": [
     {
       "path": "Tasks"
-    },
-    {
-      "path": "Decorators/octane-pipeline-start-decorator.yml",
-      "addressable": true,
-      "contentType": "text/plain"
-    },
-    {
-      "path": "Decorators/octane-pipeline-end-decorator.yml",
-      "addressable": true,
-      "contentType": "text/plain"
     }
   ]
 }
