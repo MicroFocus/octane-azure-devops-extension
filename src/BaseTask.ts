@@ -297,7 +297,8 @@ export class BaseTask {
 
         if (!ciServers || ciServers.total_count == 0 || ciServers.data.length == 0) {
             if (createOnAbsence) {
-                ciServers = await this.createCiServer(octaneSDKConnection, serverUrl);
+                let result = await this.createCiServer(octaneSDKConnection, serverUrl);
+                return result[0].data[0];
             } else {
                 throw new Error('CI Server \'' + this.projectFullName + '(instanceId=\'' + this.instanceId + '\')\' not found.');
             }
