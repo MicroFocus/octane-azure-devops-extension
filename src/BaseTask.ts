@@ -330,7 +330,7 @@ export class BaseTask {
         ];
 
         if (ciServers.length === 1) {
-            this.logger.info('CI server ' + ciServers[0].id + ' created');
+            this.logger.info('CI server ' + ciServers[0].data[0].id + ' created');
         } else {
             this.logger.error('CI server creation failed', this.logger.getCaller());
         }
