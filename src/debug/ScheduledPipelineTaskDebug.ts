@@ -115,6 +115,18 @@ function buildGetAbridgedTaskAsyncQueryParams() {
     return result;
 }
 
+async function sendAckResponse(octaneSDKConnection: any, taskId: string) {
+    let ackResponseObj = {
+        url: analyticsCiInternalApiUrlPart +'/servers/' + selfIdentity + "/tasks/" + taskId + "/result",
+        headers: {ACCEPT_HEADER: 'application/json'},
+        json: true,
+        body: { status: 201 }
+    };
+
+    let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
+    console.log(ret);
+}
+
 async function runScheduledTask() {
     let clientId = conf.octaneAuthentication.parameters['username'];
     let clientSecret = conf.octaneAuthentication.parameters['password'];
@@ -134,8 +146,13 @@ async function runScheduledTask() {
 
         let ret;
         try {
+            // retrieving the job, if any, from Octane
             ret = await octaneSDKConnection._requestHandler._requestor.get(eventObj);
             console.log(ret);
+            // sending back ACK
+            if(ret != undefined) {
+                await sendAckResponse(octaneSDKConnection, ret[0].id);
+            }
         } catch(e) {
             console.log(e);
         } finally {
