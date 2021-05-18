@@ -1,12 +1,15 @@
 import {DebugConf} from "./debug-conf";
 import {AzurePipelineTaskLibMock} from "./task-mock-initializer";
-import {EndpointDataConstants, InputConstants} from "../ExtensionConstants";
+import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from "../ExtensionConstants";
 import {EndpointAuthorization} from "azure-pipelines-task-lib";
 import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";
 import {OctaneConnectionUtils} from "../OctaneConnectionUtils";
 import {URL} from "url";
 import { nanoid } from 'nanoid';
 import {MetadataUtils} from "../MetadataUtils";
+import {WebApi} from "azure-devops-node-api";
+import {ConnectionUtils} from "../ConnectionUtils";
+import {BuildApi} from "azure-devops-node-api/BuildApi";
 
 let azureTaskMock: AzurePipelineTaskLibMock = <AzurePipelineTaskLibMock>{};
 let conf: DebugConf;
@@ -16,6 +19,7 @@ let sharedSpaceId: string;
 let workspaces: any;
 let analyticsCiInternalApiUrlPart: string;
 let selfIdentity: string;
+let http = require('http');
 
 let SHARED_SPACE_INTERNAL_API_PATH_PART = "/internal-api/shared_spaces/";
 let SHARED_SPACE_API_PATH_PART = "/api/shared_spaces/";
@@ -127,6 +131,90 @@ async function sendAckResponse(octaneSDKConnection: any, taskId: string) {
     console.log(ret);
 }
 
+async function runPipeline(ret: any) {
+    let collectionUri = conf.systemVariables.get(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI);
+    let token = conf.systemVariables.get(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN);
+    let teamProjectId = conf.systemVariables.get(SystemVariablesConstants.SYSTEM_TEAM_PROJECT_ID);
+    let sourceBranchName = conf.systemVariables.get(SystemVariablesConstants.BUILD_SOURCE_BRANCH_NAME);
+    let pipelineName = conf.systemVariables.get(SystemVariablesConstants.BUILD_DEFINITION_NAME);
+
+    let url = new URL(collectionUri);
+
+    let p = new Promise(function(resolve, reject) {
+        const getPipelinesReq = http.get({
+            host: url.hostname,
+            path: url.pathname + teamProjectId + '/_apis/pipelines?api-version=6.0-preview',
+            headers: {
+                'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
+            }
+        }, function(response) {
+            if(response.statusCode == 200) {
+                response.on('data', d => {
+                    resolve(JSON.parse(d));
+                });
+            } else {
+                reject();
+            }
+        });
+
+        getPipelinesReq.on('error', error => {
+            reject(error);
+        });
+    });
+
+    let pipelineData: any = await p;
+
+    if(pipelineData != undefined && pipelineData['value'] != undefined && pipelineData['value'].length > 0) {
+        let pipelineId = -1;
+
+        for(let i = 0; i < pipelineData['value'].length; i++) {
+            if(pipelineData['value'][i].name === pipelineName) {
+                pipelineId = pipelineData['value'][i].id;
+                break;
+            }
+        }
+
+        if(pipelineId == -1) {
+            throw new Error('No such pipeline found');
+        }
+
+        let data = JSON.stringify({'stagesToSkip':[],'resources':{'repositories':{'self':{'refName':'refs/heads/' + sourceBranchName}}},'variables':{}});
+
+        p = new Promise(function(resolve, reject) {
+            const req = http.request({
+                host: url.hostname,
+                method: 'POST',
+                path: url.pathname + teamProjectId + '/_apis/pipelines/' + pipelineId + '/runs?api-version=6.0-preview',
+                headers: {
+                    'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
+                    'Content-Type': 'application/json',
+                    'Content-Length': data.length
+                }
+            }, function(response) {
+                console.log('statusCode:' + response.statusCode);
+                console.log(response);
+
+                response.on('data', d => {
+                    process.stdout.write(d)
+                });
+
+                resolve(response);
+            });
+
+            req.on('error', error => {
+                console.error(error);
+                reject(error);
+            });
+
+            req.write(data);
+            req.end();
+        });
+
+        let result = await p;
+        console.log(result);
+    }
+}
+
 async function runScheduledTask() {
     let clientId = conf.octaneAuthentication.parameters['username'];
     let clientSecret = conf.octaneAuthentication.parameters['password'];
@@ -145,6 +233,7 @@ async function runScheduledTask() {
         }
 
         let ret;
+
         try {
             // retrieving the job, if any, from Octane
             ret = await octaneSDKConnection._requestHandler._requestor.get(eventObj);
@@ -152,6 +241,7 @@ async function runScheduledTask() {
             // sending back ACK
             if(ret != undefined) {
                 await sendAckResponse(octaneSDKConnection, ret[0].id);
+                await runPipeline(ret);
             }
         } catch(e) {
             console.log(e);
