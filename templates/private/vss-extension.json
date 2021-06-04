@@ -2,7 +2,7 @@
   "manifestVersion": 1,
 
   "id": "alm-octane-integration",
-  "version": "0.3.6.3",
+  "version": "0.4.0.0",
   "name": "ALM Octane Integration Private Extension",
   "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "almoctane",
@@ -101,6 +101,17 @@
       ],
       "properties": {
         "name": "Tasks/EndTask"
+      }
+    },
+    {
+      "id": "octane-pipelines-orchestrator-task",
+      "description": "ALM Octane Pipelines Orchestrator Task (private)",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "Tasks/PipelinesOrchestrator"
       }
     }
   ],
