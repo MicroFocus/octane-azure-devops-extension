@@ -1,12 +1,12 @@
 {
   "name": "alm-octane-pipeline-start",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Azure DevOps integration with ALM Octane",
   "main": "StartTask.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Moshe Stekel (mstekel@gmail.com)",
+  "author": "Micro Focus",
   "license": "ISC",
   "dependencies": {
     "@microfocus/alm-octane-js-rest-sdk": "^15.0.2-0.1",

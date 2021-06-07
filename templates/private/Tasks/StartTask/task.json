@@ -13,9 +13,9 @@
   "version": {
     "Major": "1",
     "Minor": "17",
-    "Patch": "2"
+    "Patch": "3"
   },
-  "minimumAgentVersion": "1.95.0",
+  "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job Start",
   "inputs": [
     {
@@ -41,7 +41,7 @@
     }
   ],
   "execution": {
-    "Node": {
+    "Node10": {
       "target": "task.js",
       "argumentFormat": ""
     }
