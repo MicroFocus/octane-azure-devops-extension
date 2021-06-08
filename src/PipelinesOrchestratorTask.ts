@@ -1,9 +1,12 @@
 import {LogUtils} from "./LogUtils";
 import {URL} from "url";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
+import {EndpointDataConstants, SystemVariablesConstants} from "./ExtensionConstants";
+
+let http = require('http');
 
 export class PipelinesOrchestratorTask {
-    protected logger: LogUtils;
+    private logger: LogUtils;
 
     private tl: any;
     private url: URL;
@@ -12,7 +15,11 @@ export class PipelinesOrchestratorTask {
     private token: string;
     private sharedSpaceId: string;
     private analyticsCiInternalApiUrlPart: string;
-    protected octaneSDKConnection: any;
+    private octaneSDKConnection: any;
+    private selfIdentity: string;
+    private taskAsyncQueryParams: string;
+    private eventObj: any;
+    private maxRunTime: number;
 
     constructor(tl: any) {
         this.tl = tl;
@@ -29,9 +36,7 @@ export class PipelinesOrchestratorTask {
     }
 
     public async run() {
-        await new Promise<void>(((resolve, reject) => {
-            resolve();
-        }));
+        await this.runInternal();
     }
 
     protected async init() {
@@ -43,12 +48,16 @@ export class PipelinesOrchestratorTask {
                 this.prepareAzureToken();
                 this.validateOctaneUrlAndExtractSharedSpaceId();
                 this.buildAnalyticsCiInternalApiUrlPart();
+                this.prepareSelfIdentity();
+                this.buildGetAbridgedTaskAsyncQueryParams();
+                this.buildGetEventObject();
+                this.maxRunTime = 40 * 1000; // 40 seconds
 
                 let octaneAuthenticationData: any = this.getOctaneAuthentication();
                 await this.createOctaneConnection(octaneAuthenticationData);
 
                 resolve();
-            } catch(ex) {
+            } catch (ex) {
                 reject(ex);
             }
         }).catch(ex => {
@@ -116,7 +125,7 @@ export class PipelinesOrchestratorTask {
     }
 
     private getOctaneAuthentication(): object {
-        let endpointAuth = this.tl.getEndpointAuthorization(this.octaneServiceConnectionData, false);
+        let endpointAuth = this.tl.getEndpointAuthorization(this.octaneServiceConnectionData, true);
         let clientId = endpointAuth.parameters['username'];
         let clientSecret = endpointAuth.parameters['password'];
 
@@ -129,7 +138,161 @@ export class PipelinesOrchestratorTask {
         }
     }
 
+    private prepareSelfIdentity() {
+        this.selfIdentity = this.tl.getEndpointDataParameter(EndpointDataConstants.ENDPOINT_DATA_OCTANE_INSTANCE_ID, true);
+    }
+
     private getObfuscatedSecretForLogger(str: string) {
         return str.substr(0, 3) + '...' + str.substr(str.length - 3);
+    }
+
+    private buildGetAbridgedTaskAsyncQueryParams() {
+        this.taskAsyncQueryParams = "?";
+        this.taskAsyncQueryParams += "self-type=" + "azure_devops";
+        this.taskAsyncQueryParams += "&self-url=" + this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI);
+        this.taskAsyncQueryParams += "&api-version=" + "1";
+        this.taskAsyncQueryParams += "&sdk-version=" + "0";
+        this.taskAsyncQueryParams += "&plugin-version=" + "1";
+        this.taskAsyncQueryParams += "&client-id=" + "";
+        this.taskAsyncQueryParams += "&ci-server-user=" + "";
+    }
+
+    private buildGetEventObject() {
+        this.eventObj = {
+            url: this.analyticsCiInternalApiUrlPart + '/servers/' + this.selfIdentity + "/tasks" + this.buildGetAbridgedTaskAsyncQueryParams(),
+            headers: {ACCEPT_HEADER: 'application/json'},
+            json: true,
+            body: ""
+        };
+    }
+
+    private async runInternal() {
+        await new Promise<void>((async (resolve, reject) => {
+            const loopStartTime = Date.now();
+            let shouldRun = true;
+
+            while(shouldRun) {
+                let ret;
+
+                try {
+                    // retrieving the job, if any, from Octane
+                    ret = await this.octaneSDKConnection._requestHandler._requestor.get(this.eventObj);
+                    console.log(ret);
+
+                    // sending back ACK
+                    if (ret != undefined) {
+                        await this.sendAckResponse(this.octaneSDKConnection, ret[0].id);
+                        await this.runPipeline(ret);
+                    }
+                } catch (ex) {
+                    this.logger.error(ex);
+                    this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
+
+                    reject();
+                } finally {
+                    shouldRun = Date.now() - loopStartTime < this.maxRunTime;
+
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+
+            resolve();
+        }));
+    }
+
+    private async sendAckResponse(octaneSDKConnection: any, taskId: string) {
+        let ackResponseObj = {
+            url: this.analyticsCiInternalApiUrlPart + '/servers/' + this.selfIdentity + "/tasks/" + taskId + "/result",
+            headers: {ACCEPT_HEADER: 'application/json'},
+            json: true,
+            body: {status: 201}
+        };
+
+        let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
+        console.log(ret);
+    }
+
+    private async runPipeline(ret: any) {
+        let collectionUri = this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI);
+        let token = this.tl.getVariable(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN);
+        let teamProjectId = this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_PROJECT_ID);
+        let sourceBranchName = this.tl.getVariable(SystemVariablesConstants.BUILD_SOURCE_BRANCH_NAME);
+        let pipelineName = this.tl.getVariable(SystemVariablesConstants.BUILD_DEFINITION_NAME);
+
+        let url = new URL(collectionUri);
+
+        let p = new Promise(function(resolve, reject) {
+            const getPipelinesReq = http.get({
+                host: url.hostname,
+                path: url.pathname + teamProjectId + '/_apis/pipelines?api-version=6.0-preview',
+                headers: {
+                    'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
+                }
+            }, function(response) {
+                if(response.statusCode == 200) {
+                    response.on('data', d => {
+                        resolve(JSON.parse(d));
+                    });
+                } else {
+                    reject();
+                }
+            });
+
+            getPipelinesReq.on('error', error => {
+                reject(error);
+            });
+        });
+
+        let pipelineData: any = await p;
+
+        if(pipelineData != undefined && pipelineData['value'] != undefined && pipelineData['value'].length > 0) {
+            let pipelineId = -1;
+
+            for(let i = 0; i < pipelineData['value'].length; i++) {
+                if(pipelineData['value'][i].name === pipelineName) {
+                    pipelineId = pipelineData['value'][i].id;
+                    break;
+                }
+            }
+
+            if(pipelineId == -1) {
+                throw new Error('No such pipeline found');
+            }
+
+            let data = JSON.stringify({'stagesToSkip':[],'resources':{'repositories':{'self':{'refName':'refs/heads/' + sourceBranchName}}},'variables':{}});
+
+            p = new Promise(function(resolve, reject) {
+                const req = http.request({
+                    host: url.hostname,
+                    method: 'POST',
+                    path: url.pathname + teamProjectId + '/_apis/pipelines/' + pipelineId + '/runs?api-version=6.0-preview',
+                    headers: {
+                        'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
+                        'Content-Type': 'application/json',
+                        'Content-Length': data.length
+                    }
+                }, function(response) {
+                    console.log('statusCode:' + response.statusCode);
+                    console.log(response);
+
+                    response.on('data', d => {
+                        process.stdout.write(d)
+                    });
+
+                    resolve(response);
+                });
+
+                req.on('error', error => {
+                    console.error(error);
+                    reject(error);
+                });
+
+                req.write(data);
+                req.end();
+            });
+
+            let result = await p;
+            console.log(result);
+        }
     }
 }
