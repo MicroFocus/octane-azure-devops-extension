@@ -20,7 +20,7 @@ export class OctaneConnectionUtils {
             user: clientId,
             password: clientSecret,
             headers: {
-                ALM_OCTANE_TECH_PREVIEW: true
+                HPECLIENTTYPE: "HPE_CI_CLIENT"
             }
         });
     }
