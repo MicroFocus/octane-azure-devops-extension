@@ -10,8 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "@microfocus/alm-octane-js-rest-sdk": "^15.0.2-0.1",
-    "azure-devops-node-api": "^10.1.2",
-    "azure-pipelines-task-lib": "^2.11.4",
+    "azure-devops-node-api": "^11.0.0",
+    "azure-pipelines-task-lib": "^3.1.2",
     "xml-escape": "^1.1.0",
     "xml-js": "^1.6.11"
   },

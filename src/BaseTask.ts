@@ -371,7 +371,7 @@ export class BaseTask {
         ];
 
         if (pipelines.length === 1) {
-            this.logger.info('Pipeline ' + pipelines[0].id + ' created');
+            this.logger.info('Pipeline ' + pipelines[0].data[0].id + ' created');
         } else {
             this.logger.error('Pipeline creation failed', this.logger.getCaller());
         }
