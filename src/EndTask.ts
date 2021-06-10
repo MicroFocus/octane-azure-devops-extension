@@ -36,7 +36,7 @@ export class EndTask extends BaseTask {
                     const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH, true);
                     let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger);
                     for (const testResult of testResults) {
-                        if (testResult) {
+                        if (testResult && testResult.length > 0) {
                             await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
                         }
                     }

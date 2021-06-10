@@ -27,7 +27,7 @@ function initialize() {
 }
 
 initialize();
-TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'serverId', 'jobId', new LogUtils('debug')).then(res => {
+TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'serverId', 'jobId', "somePath", new LogUtils('debug')).then(res => {
     console.log('######################### finished ###############################');
     console.log(res);
 });
