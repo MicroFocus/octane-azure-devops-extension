@@ -1,4 +1,7 @@
 echo OFF
+call cleanup_src.bat
+call cleanup_templates.bat
+
 echo.
 echo Building public extension
 echo.
