@@ -12,7 +12,8 @@ export const enum Framework {
     JBEHAVE = 'jbehave',
     KARMA = 'karma',
     JASMINE = 'jasmine',
-    MOCHA = 'mocha'
+    MOCHA = 'mocha',
+    CUCUMBER = 'cucumber'
 }
 
 export const enum TestFieldNames {

@@ -1,7 +1,9 @@
 import {DtoObject} from '../DtoObject';
 import {TestResultBuildAttributes} from './TestResultBuildAttributes';
 import {TestResultTestField} from './TestResultTestField';
-import {TestResultTestRunElement} from './TestResultTestRunElement';
+import {TestResultUnitTestRunElement} from './TestResultUnitTestRunElement';
+import {TestResultGherkinTestRunElement} from "./TestResultGherkinTestRunElement";
+import {TestResultTestRunElement} from "./TestResultTestRunElement";
 
 export class TestResult extends DtoObject {
     build: any;

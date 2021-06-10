@@ -6,7 +6,8 @@ export const enum CI_SERVER_INFO {
 export enum InputConstants {
     OCTANE_SERVICE_CONNECTION = 'OctaneServiceConnection',
     GITHUB_REPOSITORY_CONNECTION = 'GithubRepositoryConnection',
-    WORKSPACES_LIST = 'WorkspaceList'
+    WORKSPACES_LIST = 'WorkspaceList',
+    CUCUMBER_REPORT_PATH = 'CucumberReportPath'
 }
 
 export enum SystemVariablesConstants {

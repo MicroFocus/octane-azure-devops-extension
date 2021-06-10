@@ -7,6 +7,7 @@ import {TestResultsBuilder} from "./services/test_results/TestResultsBuilder";
 import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
 import * as ba from "azure-devops-node-api/BuildApi";
 import {TaskResult} from "azure-devops-node-api/interfaces/BuildInterfaces";
+import {InputConstants} from "./ExtensionConstants";
 
 export class EndTask extends BaseTask {
     private constructor(tl: any) {
@@ -32,9 +33,12 @@ export class EndTask extends BaseTask {
                 }
 
                 if (this.isPipelineEndJob) {
-                    let testResult = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, this.logger);
-                    if (testResult) {
-                        await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
+                    const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH, true);
+                    let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger);
+                    for (const testResult of testResults) {
+                        if (testResult) {
+                            await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
+                        }
                     }
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
