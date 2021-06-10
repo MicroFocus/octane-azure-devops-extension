@@ -1,7 +1,7 @@
 import {DtoObject} from '../DtoObject';
 import {TestRunResults} from './TestResultEnums';
 
-export class TestResultTestRunAttributes extends DtoObject {
+export class TestResultUnitTestRunAttributes extends DtoObject {
     module: string;
     package: string;
     name: string;

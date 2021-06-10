@@ -33,6 +33,13 @@
       "helpMarkDown": "Comma separated list of target Octane workspaces"
     },
     {
+      "name": "CucumberReportPath",
+      "type": "string",
+      "label": "Cucumber report destination path",
+      "required": true,
+      "helpMarkDown": "Path to directory which contains the Cucumber generated reports for the Gherkin tests"
+    },
+    {
       "name": "GithubRepositoryConnection",
       "type": "connectedService:github:OAuth,OAuth2,PersonalAccessToken,Token",
       "label": "Github repository connection",
