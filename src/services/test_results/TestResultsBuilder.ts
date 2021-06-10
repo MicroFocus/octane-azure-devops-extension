@@ -22,6 +22,7 @@ const globby = require('globby');
 const {readFileSync} = require('fs-extra');
 
 export class TestResultsBuilder {
+    private static readonly CUCUMBER_TEST_TYPE = "Cucumber";
 
     public static buildUnitTestResult(testResults: any, server_id: string, job_id: string, logger: LogUtils): TestResult {
         if (!testResults || !testResults.length) {
@@ -40,31 +41,79 @@ export class TestResultsBuilder {
             return null;
         }
         let testResultTestRuns = this.buildGherkinTestResultTestRun(testResults, logger);
-        let testResultTestFields = this.buildTestResultTestFields("Cucumber");
+        let testResultTestFields = this.buildTestResultTestFields(this.CUCUMBER_TEST_TYPE);
         let testResultBuild = this.buildTestResultBuild(server_id, job_id, build_id);
         return new TestResult(testResultBuild, testResultTestFields, testResultTestRuns);
     }
 
-    public static getUnitTestResultXml(testResults: any, server_id: string, job_id: string, logger: LogUtils): any {
-        let result: TestResult = TestResultsBuilder.buildUnitTestResult(testResults, server_id, job_id, logger);
+    private static getTestResultXml(testResult: TestResult, logger: LogUtils): string {
         let options = {compact: true, ignoreComment: true, spaces: 4};
-        let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><test_result>' + convert.js2xml(result, options) + '</test_result>';
+        let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><test_result>' + convert.js2xml(testResult, options) + '</test_result>';
         logger.info('Test results converted for Octane');
         logger.debug(convertedXml);
         return convertedXml;
     }
 
-    public static getGherkinTestResultXml(testResults: GherkinTestResultData[], server_id: string, job_id: string, build_id: string, logger: LogUtils): any {
+    private static getUnitTestResultXml(testResults: TestCaseResult[], server_id: string, job_id: string, logger: LogUtils): string {
+        let result: TestResult = TestResultsBuilder.buildUnitTestResult(testResults, server_id, job_id, logger);
+        return this.getTestResultXml(result, logger);
+    }
+
+    private static getGherkinTestResultXml(testResults: GherkinTestResultData[], server_id: string, job_id: string, build_id: string, logger: LogUtils): string {
         let result: TestResult = TestResultsBuilder.buildGherkinTestResult(testResults, server_id, job_id, build_id, logger);
-        let options = {compact: true, ignoreComment: true, spaces: 4};
-        let convertedXml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?><test_result>' + convert.js2xml(result, options) + '</test_result>';
-        logger.info('Test results converted for Octane');
-        logger.debug(convertedXml);
-        return convertedXml;
+        return this.getTestResultXml(result, logger);
     }
 
     public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string, cucumberReportsPath: string, logger: LogUtils): Promise<string[]> {
         let xmlTestResults: string[] = [];
+        let gherkinResults = this.getCucumberReportsFromPath(cucumberReportsPath);
+        let buildApi: ba.IBuildApi = await connection.getBuildApi();
+        let build = await buildApi.getBuild(projectName, buildId);
+        let buildURI = build.uri;
+        let testApi: ta.ITestApi = await connection.getTestApi();
+
+        if (gherkinResults.length > 0) {
+            xmlTestResults.push(TestResultsBuilder.getGherkinTestResultXml(gherkinResults, serverId, jobId, buildId.toString(), logger))
+        }
+
+        let processedTests = this.getProcessedTestNames(gherkinResults);
+        let testRuns = await testApi.getTestRuns(projectName, buildURI);
+
+        if (testRuns.length > 0) {
+            let results: TestCaseResult[] = [];
+
+            for (let i = 0; i < testRuns.length; i++) {
+                let testRunId = testRuns[i].id;
+                results = results.concat(await testApi.getTestResults(projectName, testRunId));
+            }
+
+            results = results.filter(result => !processedTests.has(result.automatedTestName))
+
+            if (results.length > 0) {
+                xmlTestResults.push(TestResultsBuilder.getUnitTestResultXml(results, serverId, jobId, logger));
+            }
+        } else {
+            logger.info('No unit test results found');
+        }
+
+        return xmlTestResults;
+    }
+
+    private static getProcessedTestNames(gherkinResults: GherkinTestResultData[]): Set<string> {
+        let processedTests: Set<string> = new Set();
+
+        gherkinResults.forEach(gherkinRes => {
+            let scenarios = gherkinRes.feature.scenarios.scenario;
+            if (Array.isArray(scenarios)) {
+                scenarios.forEach(scenario => processedTests.add(scenario._attributes.name));
+            } else {
+                processedTests.add(scenarios._attributes.name);
+            }
+        });
+        return processedTests;
+    }
+
+    private static getCucumberReportsFromPath(cucumberReportsPath: string): GherkinTestResultData[] {
         let gherkinResults: GherkinTestResultData[] = [];
 
         const inputPath = cucumberReportsPath.replace(/\\/g, '/')
@@ -85,41 +134,7 @@ export class TestResultsBuilder {
             }
         });
 
-        if (gherkinResults.length > 0) {
-            xmlTestResults.push(TestResultsBuilder.getGherkinTestResultXml(gherkinResults, serverId, jobId, buildId.toString(), logger))
-        }
-
-        let processedTests: Set<string> = new Set();
-
-        gherkinResults.forEach(gherkinRes => {
-            let scenarios = gherkinRes.feature.scenarios.scenario;
-            if (Array.isArray(scenarios)) {
-                scenarios.forEach(scenario => processedTests.add(scenario._attributes.name));
-            } else {
-                processedTests.add(scenarios._attributes.name);
-            }
-        });
-
-        let buildApi: ba.IBuildApi = await connection.getBuildApi();
-        let build = await buildApi.getBuild(projectName, buildId);
-        let buildURI = build.uri;
-        let testApi: ta.ITestApi = await connection.getTestApi();
-        let testRuns = await testApi.getTestRuns(projectName, buildURI);
-        if (testRuns.length > 0) {
-            let results: TestCaseResult[] = [];
-            for (let i = 0; i < 1; i++) {
-                let testRunId = testRuns[i].id;
-                results = results.concat(await testApi.getTestResults(projectName, testRunId));
-            }
-            results = results.filter(result => !processedTests.has(result.automatedTestName))
-            if (results.length > 0) {
-                xmlTestResults.push(TestResultsBuilder.getUnitTestResultXml(results, serverId, jobId, logger));
-            }
-        } else {
-            logger.info('No unit test results found');
-        }
-
-        return xmlTestResults;
+        return gherkinResults;
     }
 
     private static buildUnitTestResultTestRun(testResults: any, logger: LogUtils): TestResultUnitTestRunElement[] {
@@ -173,36 +188,36 @@ export class TestResultsBuilder {
                 return;
             }
 
-            let scenarios = element.feature.scenarios.scenario;
-            let duration = 0;
-            let status = "Passed";
+            let scenarioElement = element.feature.scenarios.scenario;
 
-            let scenarioArray = [];
-            if (Array.isArray(scenarios)) {
-                scenarioArray = scenarios;
-            } else {
-                scenarioArray.push(scenarios);
-            }
+            let scenarios = Array.isArray(scenarioElement) ? scenarioElement : Array.of(scenarioElement);
 
-            scenarioArray.forEach(scenario => {
-                let steps: any[] = scenario.steps.step;
-                scenario._attributes.status = "Passed";
-                steps.forEach(step => {
-                    duration += parseInt(step._attributes.duration);
-                    if (step._attributes.status == "failed") {
-                        status = "Failed";
-                        scenario._attributes.status = "Failed"
-                    }
-                });
-            });
+            let {duration, status} = this.determineDurationAndStatusFromScenarios(scenarios);
 
-            const testFinalStatus: TestRunResults = this.getStatus(status);
-
-            let testResultElem = new TestResultGherkinTestRunElement(new TestResultGherkinTestRunAttributes(name, duration, testFinalStatus), element);
+            let testResultElem = new TestResultGherkinTestRunElement(new TestResultGherkinTestRunAttributes(name, duration, status), element);
             testResultTestRunList.push(testResultElem);
         });
 
         return testResultTestRunList;
+    }
+
+    private static determineDurationAndStatusFromScenarios(scenarios: any[]) {
+        let duration = 0;
+        let status: TestRunResults = TestRunResults.PASSED;
+
+        scenarios.forEach(scenario => {
+            let steps: any[] = scenario.steps.step;
+            scenario._attributes.status = "Passed";
+            steps.forEach(step => {
+                duration += parseInt(step._attributes.duration);
+                if (step._attributes.status == "failed") {
+                    status = TestRunResults.FAILED;
+                    scenario._attributes.status = "Failed"
+                }
+            });
+        });
+
+        return {duration, status};
     }
 
     private static buildReportUrl(element: any): string {

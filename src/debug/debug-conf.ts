@@ -60,13 +60,16 @@ interface Proxy {
     https: string;
 }
 
+interface Cucumber {
+    cucumberReportPath: string;
+}
+
 interface Node {
     proxy: Proxy;
 }
 
 export interface TomlDebugConf {
     title: string;
-    cucumberReportPath: string;
     system: System;
     logging: Logging;
     build: Build;
@@ -74,6 +77,7 @@ export interface TomlDebugConf {
     endpoint: Endpoint;
     repository: Repository;
     node: Node;
+    cucumber: Cucumber;
 }
 
 export class DebugConf {
@@ -104,7 +108,7 @@ export class DebugConfToDebugMapsConverter {
         map.set(InputConstants.OCTANE_SERVICE_CONNECTION, conf.octane.serviceConnectionName);
         map.set(InputConstants.WORKSPACES_LIST, conf.octane.workspaces);
         map.set(InputConstants.GITHUB_REPOSITORY_CONNECTION, conf.repository.repositoryConnection);
-        map.set(InputConstants.CUCUMBER_REPORT_PATH, conf.cucumberReportPath)
+        map.set(InputConstants.CUCUMBER_REPORT_PATH, conf.cucumber.cucumberReportPath)
     }
 
     private static populateSystemVariablesMap(conf: TomlDebugConf, map: Map<string, any>) {
