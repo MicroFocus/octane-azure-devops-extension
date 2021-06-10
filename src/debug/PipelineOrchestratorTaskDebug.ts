@@ -35,8 +35,25 @@ function initialize() {
 }
 
 async function runTasks() {
-    let pipelinesOrchestratorTask: PipelinesOrchestratorTask = await PipelinesOrchestratorTask.instance(azureTaskMock);
-    await pipelinesOrchestratorTask.run();
+    let counter = 0;
+
+    let fn = async () => {
+        try {
+            let pipelinesOrchestratorTask: PipelinesOrchestratorTask = await PipelinesOrchestratorTask.instance(azureTaskMock);
+            await pipelinesOrchestratorTask.run();
+        } catch(e) {
+            console.log(e);
+        } finally {
+            if (counter < 10) {
+                console.log('scheduling a new request');
+                setTimeout(fn, 5 * 1000);
+            }
+
+            counter++;
+        }
+    }
+
+    setTimeout(fn, 5 * 1000);
 }
 
 initialize();

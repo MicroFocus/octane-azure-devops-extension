@@ -139,11 +139,24 @@ export class PipelinesOrchestratorTask {
     }
 
     private prepareSelfIdentity() {
-        this.selfIdentity = this.tl.getEndpointDataParameter(EndpointDataConstants.ENDPOINT_DATA_OCTANE_INSTANCE_ID, true);
+        this.selfIdentity = this.tl.getEndpointDataParameter(this.octaneServiceConnectionData, 'instance_id', false);
     }
 
     private getObfuscatedSecretForLogger(str: string) {
         return str.substr(0, 3) + '...' + str.substr(str.length - 3);
+    }
+
+    private buildGetAbridgedTaskAsyncQueryParams2() {
+        let result = "?";
+        result = result + "self-type=" + "azure_devops";
+        result = result + "&self-url=" + "";// SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI when running from AzureDevOps should be
+        result = result + "&api-version=" + "1";
+        result = result + "&sdk-version=" + "0";
+        result = result + "&plugin-version=" + "1";
+        result = result + "&client-id=" + "";
+        result = result + "&ci-server-user=" + "";
+
+        return result;
     }
 
     private buildGetAbridgedTaskAsyncQueryParams() {
@@ -159,10 +172,8 @@ export class PipelinesOrchestratorTask {
 
     private buildGetEventObject() {
         this.eventObj = {
-            url: this.analyticsCiInternalApiUrlPart + '/servers/' + this.selfIdentity + "/tasks" + this.buildGetAbridgedTaskAsyncQueryParams(),
-            headers: {ACCEPT_HEADER: 'application/json'},
-            json: true,
-            body: ""
+            url: this.analyticsCiInternalApiUrlPart + '/servers/' + this.selfIdentity + "/tasks" + this.buildGetAbridgedTaskAsyncQueryParams2(),
+            headers: {ACCEPT_HEADER: 'application/json'}
         };
     }
 

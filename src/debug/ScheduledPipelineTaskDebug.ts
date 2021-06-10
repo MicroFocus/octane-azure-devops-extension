@@ -226,7 +226,7 @@ async function runScheduledTask() {
     let counter = 0;
     let fn = async () => {
         let eventObj = {
-            url: analyticsCiInternalApiUrlPart +'/servers/' + selfIdentity + "/tasks" + buildGetAbridgedTaskAsyncQueryParams(),
+            url: analyticsCiInternalApiUrlPart +'servers/' + selfIdentity + "/tasks" + buildGetAbridgedTaskAsyncQueryParams(),
             headers: {ACCEPT_HEADER: 'application/json'},
             json: true,
             body: ""
