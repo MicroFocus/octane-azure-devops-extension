@@ -183,17 +183,40 @@ export class PipelinesOrchestratorTask {
             let shouldRun = true;
 
             while(shouldRun) {
-                let ret;
+                let response;
 
                 try {
                     // retrieving the job, if any, from Octane
-                    ret = await this.octaneSDKConnection._requestHandler._requestor.get(this.eventObj);
-                    console.log(ret);
+                    this.logger.info("Requesting tasks from Octane through: " + this.eventObj.url);
+                    response = await this.octaneSDKConnection._requestHandler._requestor.get(this.eventObj);
 
-                    // sending back ACK
-                    if (ret != undefined) {
-                        await this.sendAckResponse(this.octaneSDKConnection, ret[0].id);
-                        await this.runPipeline(ret);
+                    if (response != undefined && response.length > 0) {
+                        this.logger.info("Received " + response.length + " tasks to process");
+
+                        for(let i = 0; i < response.length; i++) {
+                            let taskAsString: string = JSON.stringify(response[i]);
+
+                            this.logger.info("Processing task defined by: " + taskAsString);
+
+                            let task: Task = this.getTask(response[i]);
+
+                            if(task.type !== undefined) {
+                                let taskProcessResult = this.getTaskProcessor(task).process(task);
+                                this.logger.info("Task process result: " + taskProcessResult);
+
+                                this.logger.info("Sending result to Octane");
+
+                                await this.sendResponse(this.octaneSDKConnection, taskProcessResult.id, taskProcessResult.status);  // 201
+
+                                this.logger.info("Result sent!");
+                            } else {
+                                this.logger.info("Unsupported task: " + taskAsString + ". Sending 400 to Octane");
+
+                                await this.sendResponse(this.octaneSDKConnection, task.id, 400);
+                            }
+                        }
+                    } else {
+                        this.logger.info("No tasks received");
                     }
                 } catch (ex) {
                     this.logger.error(ex);
@@ -211,12 +234,12 @@ export class PipelinesOrchestratorTask {
         }));
     }
 
-    private async sendAckResponse(octaneSDKConnection: any, taskId: string) {
+    private async sendResponse(octaneSDKConnection: any, taskId: string, status: number) {
         let ackResponseObj = {
             url: this.analyticsCiInternalApiUrlPart + '/servers/' + this.selfIdentity + "/tasks/" + taskId + "/result",
             headers: {ACCEPT_HEADER: 'application/json'},
             json: true,
-            body: {status: 201}
+            body: {status: status}
         };
 
         let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
@@ -305,5 +328,33 @@ export class PipelinesOrchestratorTask {
             let result = await p;
             console.log(result);
         }
+    }
+
+    private getTask(taskData: any): Task {
+        return undefined;
+    }
+}
+
+enum TaskType {
+    UNDEFINED = "",
+    RUN = 'run'
+};
+
+class Task {
+    public method: string;
+    public id: string;
+    public serviceId: string;
+    public body: any;
+    public url: string;
+    public type: TaskType;
+
+    constructor(method: string, id: string, serviceId: string, body: any, url: string) {
+        this.method = method;
+        this.id = id;
+        this.serviceId = serviceId;
+        this.body = body;
+        this.url = url;
+
+
     }
 }

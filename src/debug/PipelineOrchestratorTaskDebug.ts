@@ -41,11 +41,11 @@ async function runTasks() {
         try {
             let pipelinesOrchestratorTask: PipelinesOrchestratorTask = await PipelinesOrchestratorTask.instance(azureTaskMock);
             await pipelinesOrchestratorTask.run();
-        } catch(e) {
-            console.log(e);
+        } catch(ex) {
+            console.log(ex);
         } finally {
             if (counter < 10) {
-                console.log('scheduling a new request');
+                console.log('Scheduling a new pipelines orchestrator task');
                 setTimeout(fn, 5 * 1000);
             }
 
