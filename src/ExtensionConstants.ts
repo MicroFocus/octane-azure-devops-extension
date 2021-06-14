@@ -36,3 +36,7 @@ export enum EntityTypeRestEndpointConstants {
     CI_SERVERS_REST_API_NAME = EntityTypeConstants.CI_SERVER_ENTITY_TYPE + 's',
     PIPELINES_REST_API_NAME = EntityTypeConstants.PIPELINE_ENTITY_TYPE + 's'
 }
+
+export enum OctaneTaskConstants {
+    NGA_API = "nga/api/v1"
+}
