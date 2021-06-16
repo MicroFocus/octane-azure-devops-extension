@@ -1,5 +1,4 @@
 title = "Template file containing all configuration for debug"
-cucumberReportPath = "" # Path to directory for the cucuber genereated gherkin test reports
 
 [system]
 teamFoundationCollectionUri = "" # URL of the Azure DevOps Server/Services. Example: http://192.168.1.32/DefaultCollection/
@@ -13,6 +12,9 @@ logLevel = "" # Example: "DEBUG", "INFO", "WARNING", "ERROR"
 sourceBranchName = "" # Example: main
 definitionName = "" # The name of the pipeline that will be created in Octane. Example: pipeline1
 buildId = "1" # While debugging, you need build with this id to exist in Azure for the required project. Example: "20"
+
+[cucumber]
+cucumberReportPath = "" # Path to directory for the cucuber genereated gherkin test reports
 
 [octane]
 serviceConnectionName = "Octane" # It should always be Octane for this case. See task-mock-initializer
