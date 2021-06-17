@@ -1,9 +1,12 @@
 import {LogUtils} from "./LogUtils";
 import {URL} from "url";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
-import {EndpointDataConstants, OctaneTaskConstants, SystemVariablesConstants} from "./ExtensionConstants";
-
-let http = require('http');
+import {SystemVariablesConstants} from "./ExtensionConstants";
+import {Task} from "./dto/tasks/Task";
+import {TaskProcessorResult} from "./dto/tasks/TaskProcessorResult";
+import {TaskProcessor} from "./dto/tasks/processors/TaskProcessor";
+import {TaskProcessorsFactory} from "./dto/tasks/TaskProcessorsFactory";
+import {TaskProcessorContext} from "./dto/tasks/TaskProcessorContext";
 
 export class PipelinesOrchestratorTask {
     private readonly logger: LogUtils;
@@ -190,7 +193,7 @@ export class PipelinesOrchestratorTask {
                     this.logger.info("Requesting tasks from Octane through: " + this.eventObj.url);
                     response = await this.octaneSDKConnection._requestHandler._requestor.get(this.eventObj);
 
-                    if (response != undefined && response.length > 0) {
+                    if (this.areThereAnyTasksToProcess(response)) {
                         this.logger.info("Received " + response.length + " tasks to process");
 
                         for(let i = 0; i < response.length; i++) {
@@ -198,9 +201,10 @@ export class PipelinesOrchestratorTask {
 
                             this.logger.info("Processing task defined by: " + taskAsString);
 
-                            let task: Task = this.getTask(response[i]);
+                            let task: Task = Task.from(response[i], this.logger);
 
-                            let processor: TaskProcessor = TaskProcessorFactory.getTaskProcessor(task, this.logger);
+                            let context = new TaskProcessorContext(this.tl, this.logger);
+                            let processor: TaskProcessor = TaskProcessorsFactory.getTaskProcessor(task, context);
                             let processorResult: TaskProcessorResult = await processor.process(task);
 
                             this.logger.info('Sending task:' + processorResult.task.id + ' status ' + processorResult.status + ' to Octane');
@@ -217,12 +221,16 @@ export class PipelinesOrchestratorTask {
                 } finally {
                     shouldRun = Date.now() - loopStartTime < this.maxRunTime;
 
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
 
             resolve();
         }));
+    }
+
+    private areThereAnyTasksToProcess(response) {
+        return response != undefined && response.length > 0;
     }
 
     private async sendResponse(octaneSDKConnection: any, taskId: string, status: number) {
@@ -234,202 +242,6 @@ export class PipelinesOrchestratorTask {
         };
 
         let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
-        console.log(ret);
-    }
-
-    private async runPipeline(ret: any) {
-        let collectionUri = this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI);
-        let token = this.tl.getVariable(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN);
-        let teamProjectId = this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_PROJECT_ID);
-        let sourceBranchName = this.tl.getVariable(SystemVariablesConstants.BUILD_SOURCE_BRANCH_NAME);
-        let pipelineName = this.tl.getVariable(SystemVariablesConstants.BUILD_DEFINITION_NAME);
-
-        let url = new URL(collectionUri);
-
-        let p = new Promise(function(resolve, reject) {
-            const getPipelinesReq = http.get({
-                host: url.hostname,
-                path: url.pathname + teamProjectId + '/_apis/pipelines?api-version=6.0-preview',
-                headers: {
-                    'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
-                }
-            }, function(response) {
-                if(response.statusCode == 200) {
-                    response.on('data', d => {
-                        resolve(JSON.parse(d));
-                    });
-                } else {
-                    reject();
-                }
-            });
-
-            getPipelinesReq.on('error', error => {
-                reject(error);
-            });
-        });
-
-        let pipelineData: any = await p;
-
-        if(pipelineData != undefined && pipelineData['value'] != undefined && pipelineData['value'].length > 0) {
-            let pipelineId = -1;
-
-            for(let i = 0; i < pipelineData['value'].length; i++) {
-                if(pipelineData['value'][i].name === pipelineName) {
-                    pipelineId = pipelineData['value'][i].id;
-                    break;
-                }
-            }
-
-            if(pipelineId == -1) {
-                throw new Error('No such pipeline found');
-            }
-
-            let data = JSON.stringify({'stagesToSkip':[],'resources':{'repositories':{'self':{'refName':'refs/heads/' + sourceBranchName}}},'variables':{}});
-
-            p = new Promise(function(resolve, reject) {
-                const req = http.request({
-                    host: url.hostname,
-                    method: 'POST',
-                    path: url.pathname + teamProjectId + '/_apis/pipelines/' + pipelineId + '/runs?api-version=6.0-preview',
-                    headers: {
-                        'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
-                        'Content-Type': 'application/json',
-                        'Content-Length': data.length
-                    }
-                }, function(response) {
-                    console.log('statusCode:' + response.statusCode);
-                    console.log(response);
-
-                    response.on('data', d => {
-                        process.stdout.write(d)
-                    });
-
-                    resolve(response);
-                });
-
-                req.on('error', error => {
-                    console.error(error);
-                    reject(error);
-                });
-
-                req.write(data);
-                req.end();
-            });
-
-            let result = await p;
-            console.log(result);
-        }
-    }
-
-    private getTask(taskData: any): Task {
-        let task: Task = new Task(taskData);
-
-        if(!task.url.includes(OctaneTaskConstants.NGA_API)) {
-            this.logger.error('task \'URL\' expected to contain \'' + OctaneTaskConstants.NGA_API + '\'; wrong handler call?');
-        } else {
-            let ngaApiParts = task.url.split(OctaneTaskConstants.NGA_API);
-            if(ngaApiParts.length == 2) {
-                let taskParts = ngaApiParts[1].split('/');
-                if(taskParts.length == 3) {
-                    // Currently this is the only functionality we support
-                    if(taskParts[0].toUpperCase() == TaskType.JOBS && taskParts[2].toUpperCase() == JobType.RUN) {
-                        task.taskType = TaskType.JOBS;
-                        task.jobCiId = taskParts[1];
-                        task.jobType = JobType.RUN;
-                    }
-                }
-            }
-        }
-
-        return task;
-    }
-}
-
-enum JobType {
-    UNDEFINED = "",
-    RUN = 'RUN'
-}
-
-enum TaskType {
-    UNDEFINED = "",
-    JOBS = 'JOBS'
-};
-
-class Task {
-    public headers: any;
-    public method: string;
-    public id: string;
-    public serviceId: string;
-    public body: any;
-    public url: string;
-    public jobCiId: string;
-    public taskType: TaskType;
-    public jobType: JobType;
-
-    constructor(taskData: any) {
-        this.headers = taskData.headers;
-        this.method = taskData.method;
-        this.id = taskData.id;
-        this.serviceId = taskData.serviceId;
-        this.body = taskData.body;
-        this.url = taskData.url;
-        this.taskType = TaskType.UNDEFINED;
-        this.jobType = JobType.UNDEFINED;
-        this.jobCiId = '';
-    }
-}
-
-class TaskProcessorResult {
-    public task: Task;
-    public status: number;
-    public result: any;
-
-    constructor(task: Task, status: number, result: any) {
-        this.task = task;
-        this.status = status;
-        this.result = result;
-    }
-}
-
-abstract class TaskProcessor {
-    protected logger: LogUtils;
-
-    protected constructor(logger: LogUtils) {
-        this.logger = logger;
-    }
-
-    public async abstract process(task: Task): Promise<TaskProcessorResult>;
-}
-
-class NotSupportedTaskTaskProcessor extends TaskProcessor {
-    constructor(logger: LogUtils) {
-        super(logger);
-    }
-
-    public async process(task: Task): Promise<TaskProcessorResult> {
-        let status: number = 400;
-        this.logger.info('Unsupported task. Responding with ' + status);
-
-        return Promise.resolve(new TaskProcessorResult(task, status, null));
-    }
-}
-
-class JobRunTaskTaskProcessor extends TaskProcessor {
-    constructor(logger: LogUtils) {
-        super(logger);
-    }
-
-    public async process(task: Task): Promise<TaskProcessorResult> {
-        return undefined;
-    }
-}
-
-class TaskProcessorFactory {
-    public static getTaskProcessor(task: Task, logger: LogUtils) {
-        if(task.taskType == TaskType.JOBS && task.jobType == JobType.RUN) {
-            return new JobRunTaskTaskProcessor(logger);
-        }
-
-        return new NotSupportedTaskTaskProcessor(logger);
+        this.logger.info('Octane response from receiving task status: ' + ret);
     }
 }
