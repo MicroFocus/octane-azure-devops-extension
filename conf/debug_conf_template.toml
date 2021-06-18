@@ -13,7 +13,8 @@ sourceBranchName = "" # Example: main
 definitionName = "" # The name of the pipeline that will be created in Octane. Example: pipeline1
 buildId = "1" # While debugging, you need build with this id to exist in Azure for the required project. Example: "20"
 
-[cucumber]
+[testInjection]
+[testInjection.gherkin.cucumber]
 cucumberReportPath = "" # Path to directory for the cucuber genereated gherkin test reports
 
 [octane]

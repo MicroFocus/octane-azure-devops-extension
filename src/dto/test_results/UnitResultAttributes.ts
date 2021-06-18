@@ -1,18 +1,18 @@
 import {DtoObject} from '../DtoObject';
-import {TestRunResults} from './TestResultEnums';
+import {TestRunStatus} from './TestResultEnums';
 
-export class TestResultUnitTestRunAttributes extends DtoObject {
+export class UnitResultAttributes extends DtoObject {
     module: string;
     package: string;
     name: string;
     class: string;
     duration: number;
-    status: TestRunResults;
+    status: TestRunStatus;
     started: number;
     external_report_url: string;
 
     constructor(module: string, package_: string, name: string, class_: string, duration: number,
-                status: TestRunResults, started: number, external_report_url: string) {
+                status: TestRunStatus, started: number, external_report_url: string) {
         super();
         this.module = module;
         this.package = package_;

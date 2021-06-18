@@ -33,7 +33,8 @@ export class EndTask extends BaseTask {
                 }
 
                 if (this.isPipelineEndJob) {
-                    const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH, true);
+                    const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH);
+
                     let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger);
                     for (const testResult of testResults) {
                         if (testResult && testResult.length > 0) {
