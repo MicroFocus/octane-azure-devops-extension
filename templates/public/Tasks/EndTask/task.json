@@ -36,7 +36,7 @@
       "name": "CucumberReportPath",
       "type": "string",
       "label": "Cucumber report destination path",
-      "required": true,
+      "required": false,
       "helpMarkDown": "Path to directory which contains the Cucumber generated reports for the Gherkin tests"
     },
     {
