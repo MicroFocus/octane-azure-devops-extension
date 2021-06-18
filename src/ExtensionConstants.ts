@@ -38,5 +38,9 @@ export enum EntityTypeRestEndpointConstants {
 }
 
 export enum OctaneTaskConstants {
-    NGA_API = "nga/api/v1"
+    NGA_API = '/nga/api/v1/'
+}
+
+export enum AzureDevOpsApiVersions {
+    API_VERSION_6_0_PREVIEW = 'api-version=6.0-preview'
 }

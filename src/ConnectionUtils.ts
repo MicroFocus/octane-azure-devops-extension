@@ -1,9 +1,10 @@
 import * as azdev from 'azure-devops-node-api';
 import {IRequestOptions} from 'azure-devops-node-api/interfaces/common/VsoBaseInterfaces';
 import * as tl from 'azure-pipelines-task-lib/task';
+import {EndpointDataConstants} from "./ExtensionConstants";
 
 export class ConnectionUtils {
-    public static async getAzureDevopsConnection(token: string, orgUrl: string): Promise<azdev.WebApi> {
+    public static async getAzureDevOpsConnection(token: string, orgUrl: string): Promise<azdev.WebApi> {
         let authHandler = await azdev.getPersonalAccessTokenHandler(token);
         let connection = await new azdev.WebApi(orgUrl, authHandler);
         return connection;
@@ -32,5 +33,14 @@ export class ConnectionUtils {
         } else {
             tl.warning('Could not determine credentials to use');
         }
+    }
+
+    public static getAccessToken(tl: any): string {
+         let accessToken = tl.getVariable(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN);
+         if(!accessToken) {
+             accessToken = this.getSystemAccessToken();
+         }
+
+         return accessToken;
     }
 }

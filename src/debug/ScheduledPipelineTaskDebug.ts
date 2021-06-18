@@ -1,6 +1,11 @@
 import {DebugConf} from "./debug-conf";
 import {AzurePipelineTaskLibMock} from "./task-mock-initializer";
-import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from "../ExtensionConstants";
+import {
+    AzureDevOpsApiVersions,
+    EndpointDataConstants,
+    InputConstants,
+    SystemVariablesConstants
+} from "../ExtensionConstants";
 import {EndpointAuthorization} from "azure-pipelines-task-lib";
 import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";
 import {OctaneConnectionUtils} from "../OctaneConnectionUtils";
@@ -143,7 +148,7 @@ async function runPipeline(ret: any) {
     let p = new Promise(function(resolve, reject) {
         const getPipelinesReq = http.get({
             host: url.hostname,
-            path: url.pathname + teamProjectId + '/_apis/pipelines?api-version=6.0-preview',
+            path: url.pathname + teamProjectId + '/_apis/pipelines?' + AzureDevOpsApiVersions.API_VERSION_6_0_PREVIEW,
             headers: {
                 'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
             }
@@ -184,7 +189,7 @@ async function runPipeline(ret: any) {
             const req = http.request({
                 host: url.hostname,
                 method: 'POST',
-                path: url.pathname + teamProjectId + '/_apis/pipelines/' + pipelineId + '/runs?api-version=6.0-preview',
+                path: url.pathname + teamProjectId + '/_apis/pipelines/' + pipelineId + '/runs?' + AzureDevOpsApiVersions.API_VERSION_6_0_PREVIEW,
                 headers: {
                     'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
                     'Content-Type': 'application/json',
