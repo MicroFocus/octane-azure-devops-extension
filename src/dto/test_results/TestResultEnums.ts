@@ -1,4 +1,4 @@
-export const enum TestRunResults {
+export const enum TestRunStatus {
     PASSED = 'Passed',
     FAILED = 'Failed',
     SKIPPED = 'Skipped'

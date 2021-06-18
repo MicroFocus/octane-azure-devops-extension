@@ -60,6 +60,23 @@ interface Proxy {
     https: string;
 }
 
+interface TestInjection {
+    unit: Unit;
+    gherkin: Gherkin;
+}
+
+interface Unit {
+    junit: JUnit;
+}
+
+interface JUnit {
+    jUnitProp: string;
+}
+
+interface Gherkin {
+    cucumber: Cucumber;
+}
+
 interface Cucumber {
     cucumberReportPath: string;
 }
@@ -77,7 +94,7 @@ export interface TomlDebugConf {
     endpoint: Endpoint;
     repository: Repository;
     node: Node;
-    cucumber: Cucumber;
+    testInjection: TestInjection;
 }
 
 export class DebugConf {
@@ -108,7 +125,7 @@ export class DebugConfToDebugMapsConverter {
         map.set(InputConstants.OCTANE_SERVICE_CONNECTION, conf.octane.serviceConnectionName);
         map.set(InputConstants.WORKSPACES_LIST, conf.octane.workspaces);
         map.set(InputConstants.GITHUB_REPOSITORY_CONNECTION, conf.repository.repositoryConnection);
-        map.set(InputConstants.CUCUMBER_REPORT_PATH, conf.cucumber.cucumberReportPath)
+        map.set(InputConstants.CUCUMBER_REPORT_PATH, conf.testInjection.gherkin.cucumber.cucumberReportPath)
     }
 
     private static populateSystemVariablesMap(conf: TomlDebugConf, map: Map<string, any>) {
