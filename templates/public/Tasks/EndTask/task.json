@@ -37,7 +37,7 @@
       "type": "string",
       "label": "Cucumber report destination path",
       "required": false,
-      "helpMarkDown": "Path to directory which contains the Cucumber generated reports for the Gherkin tests"
+      "helpMarkDown": "Output folder of the gherkin tests, containing the actual reports"
     },
     {
       "name": "GithubRepositoryConnection",

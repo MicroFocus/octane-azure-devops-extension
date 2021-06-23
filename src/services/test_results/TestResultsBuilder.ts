@@ -15,6 +15,7 @@ import {LogUtils} from "../../LogUtils";
 import {GherkinResultElement} from "../../dto/test_results/GherkinResultElement";
 import {GherkinResultData} from "../../dto/test_results/GherkinResultData";
 import {GherkinScenarioData} from "../../dto/test_results/GherkinScenarioData";
+import {EmptyTestResult} from "../../dto/test_results/EmptyTestResult";
 
 let convert = require('xml-js');
 let xmlescape = require('xml-escape');
@@ -29,7 +30,7 @@ export class TestResultsBuilder {
     public static buildUnitTestResult(testResults: any, server_id: string, job_id: string, logger: LogUtils): TestResult {
         if (!testResults || !testResults.length) {
             logger.info('No unit test results were retrieved/found');
-            return null;
+            return new EmptyTestResult();
         }
 
         let testResultTestRuns = this.buildUnitResultElement(testResults, logger);
@@ -42,7 +43,7 @@ export class TestResultsBuilder {
     public static buildGherkinTestResult(testResults: GherkinResultData[], server_id: string, job_id: string, build_id: string, logger: LogUtils): TestResult {
         if (!testResults || !testResults.length) {
             logger.info('No gherkin test results were retrieved/found');
-            return null;
+            return new EmptyTestResult();
         }
 
         let testResultTestRuns = this.buildGherkinResultElement(testResults);
@@ -62,11 +63,21 @@ export class TestResultsBuilder {
 
     private static getUnitTestResultXml(testResults: TestCaseResult[], server_id: string, job_id: string, logger: LogUtils): string {
         let result: TestResult = TestResultsBuilder.buildUnitTestResult(testResults, server_id, job_id, logger);
+
+        if (result instanceof EmptyTestResult) {
+            return "";
+        }
+
         return this.getTestResultXml(result, logger);
     }
 
     private static getGherkinTestResultXml(testResults: GherkinResultData[], server_id: string, job_id: string, build_id: string, logger: LogUtils): string {
         let result: TestResult = TestResultsBuilder.buildGherkinTestResult(testResults, server_id, job_id, build_id, logger);
+
+        if (result instanceof EmptyTestResult) {
+            return "";
+        }
+
         return this.getTestResultXml(result, logger);
     }
 
@@ -79,27 +90,24 @@ export class TestResultsBuilder {
         let testApi: ta.ITestApi = await connection.getTestApi();
 
         if (gherkinResults.length > 0) {
-            xmlTestResults.push(TestResultsBuilder.getGherkinTestResultXml(gherkinResults, serverId, jobId, buildId.toString(), logger))
-        }
-
-        let processedTests = this.getProcessedTestNames(gherkinResults);
-        let testRuns = await testApi.getTestRuns(projectName, buildURI);
-
-        if (testRuns.length > 0) {
-            let results: TestCaseResult[] = [];
-
-            for (let i = 0; i < testRuns.length; i++) {
-                let testRunId = testRuns[i].id;
-                results = results.concat(await testApi.getTestResults(projectName, testRunId));
-            }
-
-            results = results.filter(result => !processedTests.has(result.automatedTestName))
-
-            if (results.length > 0) {
-                xmlTestResults.push(TestResultsBuilder.getUnitTestResultXml(results, serverId, jobId, logger));
+            const generatedXml: string = TestResultsBuilder.getGherkinTestResultXml(gherkinResults, serverId, jobId, buildId.toString(), logger);
+            if (generatedXml !== "") {
+                xmlTestResults.push(generatedXml)
             }
         } else {
-            logger.info('No unit test results found');
+            logger.info("No gherkin test results found.")
+        }
+
+        let processedTests: Set<string> = this.getProcessedTestNames(gherkinResults);
+        let unitTestResults: TestCaseResult[] = await this.getUnitReports(processedTests, testApi, buildURI, projectName);
+
+        if (unitTestResults.length > 0) {
+            const generatedXml: string = TestResultsBuilder.getUnitTestResultXml(unitTestResults, serverId, jobId, logger);
+            if (generatedXml !== "") {
+                xmlTestResults.push(generatedXml)
+            }
+        } else {
+            logger.info("No unit test results found.")
         }
 
         return xmlTestResults;
@@ -116,6 +124,20 @@ export class TestResultsBuilder {
         });
 
         return processedTests;
+    }
+
+    private static async getUnitReports(processedTests: Set<string>, testApi: ta.ITestApi, buildURI: string, projectName: string): Promise<TestCaseResult[]> {
+        let results: TestCaseResult[] = [];
+        let testRuns = await testApi.getTestRuns(projectName, buildURI);
+
+        for (let i = 0; i < testRuns.length; i++) {
+            let testRunId = testRuns[i].id;
+            results = results.concat(await testApi.getTestResults(projectName, testRunId));
+        }
+
+        results = results.filter(result => !processedTests.has(result.automatedTestName));
+
+        return results;
     }
 
     private static getCucumberReportsFromPath(cucumberReportsPath: string, logger: LogUtils): GherkinResultData[] {
