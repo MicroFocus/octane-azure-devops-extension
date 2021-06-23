@@ -157,13 +157,12 @@ export class TestResultsBuilder {
             logger.info(`Processing ${filePath}`)
             const rawContent = readFileSync(filePath, 'utf-8')
             const featuresAsJson = convert.xml2js(rawContent, options);
-            const features = featuresAsJson.features.feature;
 
-            if (Array.isArray(features)) {
-                features.forEach(feat => gherkinResults.push(new GherkinResultData(feat)));
-            } else {
-                gherkinResults.push(new GherkinResultData(features));
-            }
+            const features = Array.isArray(featuresAsJson.features.feature)
+                ? featuresAsJson.features.feature
+                : Array.of(featuresAsJson.features.feature);
+
+            features.forEach(feat => gherkinResults.push(new GherkinResultData(feat)));
         });
 
         return gherkinResults;
