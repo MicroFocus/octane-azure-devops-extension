@@ -199,11 +199,13 @@ async function runPipeline(ret: any) {
                 console.log('statusCode:' + response.statusCode);
                 console.log(response);
 
-                response.on('data', d => {
-                    process.stdout.write(d)
-                });
-
-                resolve(response);
+                if(response.statusCode == 200) {
+                    response.on('data', d => {
+                        resolve(JSON.parse(d));
+                    });
+                } else {
+                    reject();
+                }
             });
 
             req.on('error', error => {
@@ -215,8 +217,12 @@ async function runPipeline(ret: any) {
             req.end();
         });
 
-        let result = await p;
-        console.log(result);
+        await p.then(response => {
+            console.log(response);
+        }).catch(reject => {
+            console.log(reject);
+        });
+        //console.log(result);
     }
 }
 

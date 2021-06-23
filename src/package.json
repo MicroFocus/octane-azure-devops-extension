@@ -9,16 +9,16 @@
   "author": "Micro Focus",
   "license": "ISC",
   "dependencies": {
-    "@microfocus/alm-octane-js-rest-sdk": "^15.0.2-0.1",
-    "azure-devops-node-api": "^11.0.0",
-    "azure-pipelines-task-lib": "^3.1.2",
-    "xml-escape": "^1.1.0",
-    "xml-js": "^1.6.11",
-    "nanoid": "^3.1.23"
+    "@microfocus/alm-octane-js-rest-sdk": "15.0.2-0.1",
+    "azure-devops-node-api": "11.0.0",
+    "azure-pipelines-task-lib": "3.1.2",
+    "xml-escape": "1.1.0",
+    "xml-js": "1.6.11",
+    "nanoid": "3.1.23"
   },
   "devDependencies": {
-    "@types/node": "^12.0.12",
-    "@types/q": "^1.5.2",
-    "@ltd/j-toml": "^1.6.0"
+    "@types/node": "12.0.12",
+    "@types/q": "1.5.2",
+    "@ltd/j-toml": "1.6.0"
   }
 }
