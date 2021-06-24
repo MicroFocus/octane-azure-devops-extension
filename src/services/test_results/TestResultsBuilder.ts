@@ -64,7 +64,8 @@ export class TestResultsBuilder {
     private static getUnitTestResultXml(testResults: TestCaseResult[], server_id: string, job_id: string, logger: LogUtils): string {
         let result: TestResult = TestResultsBuilder.buildUnitTestResult(testResults, server_id, job_id, logger);
 
-        if (result instanceof EmptyTestResult) {
+        const {'': testRuns} = result.test_runs;
+        if (testRuns.length === 0) {
             return '';
         }
 
@@ -74,7 +75,8 @@ export class TestResultsBuilder {
     private static getGherkinTestResultXml(testResults: GherkinResultData[], server_id: string, job_id: string, build_id: string, logger: LogUtils): string {
         let result: TestResult = TestResultsBuilder.buildGherkinTestResult(testResults, server_id, job_id, build_id, logger);
 
-        if (result instanceof EmptyTestResult) {
+        const {'': testRuns} = result.test_runs;
+        if (testRuns.length === 0) {
             return '';
         }
 
