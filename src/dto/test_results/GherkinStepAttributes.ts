@@ -1,4 +1,4 @@
-import {DtoObject} from "../DtoObject";
+import {DtoObject} from '../DtoObject';
 
 export class GherkinStepAttributes extends DtoObject {
     duration: number;

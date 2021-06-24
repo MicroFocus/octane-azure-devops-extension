@@ -1,5 +1,5 @@
-import {DtoObject} from "../DtoObject";
-import {GherkinStepData} from "./GherkinStepData";
+import {DtoObject} from '../DtoObject';
+import {GherkinStepData} from './GherkinStepData';
 
 export class GherkinStepsWrapper extends DtoObject {
     step: GherkinStepData[] | GherkinStepData;

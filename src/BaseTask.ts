@@ -1,12 +1,12 @@
 import {CiEventsList} from './dto/events/CiEventsList';
 import {CiServerInfo} from './dto/general/CiServerInfo';
-import {CiEvent} from "./dto/events/CiEvent";
-import {Result} from "./dto/events/CiTypes";
-import {CI_SERVER_INFO, EntityTypeConstants, EntityTypeRestEndpointConstants} from "./ExtensionConstants";
-import {LogUtils} from "./LogUtils";
-import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
-import {URL} from "url";
-import {MetadataUtils} from "./MetadataUtils";
+import {CiEvent} from './dto/events/CiEvent';
+import {Result} from './dto/events/CiTypes';
+import {CI_SERVER_INFO, EntityTypeConstants, EntityTypeRestEndpointConstants} from './ExtensionConstants';
+import {LogUtils} from './LogUtils';
+import {OctaneConnectionUtils} from './OctaneConnectionUtils';
+import {URL} from 'url';
+import {MetadataUtils} from './MetadataUtils';
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 
@@ -46,7 +46,7 @@ export class BaseTask {
         this.tl = tl;
         let logLevel = this.tl.getVariable('ALMOctaneLogLevel');
         this.logger = new LogUtils(logLevel);
-        this.logger.debug("ALMOctaneLogLevel: " + logLevel);
+        this.logger.debug('ALMOctaneLogLevel: ' + logLevel);
         this.octaneSDKConnections = {};
     }
 

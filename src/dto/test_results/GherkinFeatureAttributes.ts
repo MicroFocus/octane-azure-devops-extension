@@ -1,4 +1,4 @@
-import {DtoObject} from "../DtoObject";
+import {DtoObject} from '../DtoObject';
 
 export class GherkinFeatureAttributes extends DtoObject {
     name: string;

@@ -1,9 +1,9 @@
-import {DtoObject} from "../DtoObject";
-import {GherkinFeatureData} from "./GherkinFeatureData";
-import {GherkinResultAttributes} from "./GherkinResultAttributes";
-import {GherkinScenarioData} from "./GherkinScenarioData";
-import {TestRunStatus} from "./TestResultEnums";
-import {GherkinStepData} from "./GherkinStepData";
+import {DtoObject} from '../DtoObject';
+import {GherkinFeatureData} from './GherkinFeatureData';
+import {GherkinResultAttributes} from './GherkinResultAttributes';
+import {GherkinScenarioData} from './GherkinScenarioData';
+import {TestRunStatus} from './TestResultEnums';
+import {GherkinStepData} from './GherkinStepData';
 
 export class GherkinResultData extends DtoObject {
     _attributes: GherkinResultAttributes
@@ -30,12 +30,12 @@ export class GherkinResultData extends DtoObject {
             let steps: GherkinStepData[] = Array.isArray(scenario.steps.step)
                 ? scenario.steps.step
                 : Array.of(scenario.steps.step);
-            scenario._attributes.status = "Passed";
+            scenario._attributes.status = 'Passed';
             steps.forEach(step => {
                 duration += step._attributes.duration;
-                if (step._attributes.status == "failed") {
+                if (step._attributes.status == 'failed') {
                     status = TestRunStatus.FAILED;
-                    scenario._attributes.status = "Failed"
+                    scenario._attributes.status = 'Failed'
                 }
             });
         });

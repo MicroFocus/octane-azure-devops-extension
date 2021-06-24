@@ -1,5 +1,5 @@
-import {DtoObject} from "../DtoObject";
-import {TestRunStatus} from "./TestResultEnums";
+import {DtoObject} from '../DtoObject';
+import {TestRunStatus} from './TestResultEnums';
 
 export class GherkinResultAttributes extends DtoObject {
     name: string;

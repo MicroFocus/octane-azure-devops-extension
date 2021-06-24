@@ -1,6 +1,6 @@
-import {DtoObject} from "../DtoObject";
-import {GherkinScenarioAttributes} from "./GherkinScenarioAttributes";
-import {GherkinStepsWrapper} from "./GherkinStepsWrapper";
+import {DtoObject} from '../DtoObject';
+import {GherkinScenarioAttributes} from './GherkinScenarioAttributes';
+import {GherkinStepsWrapper} from './GherkinStepsWrapper';
 
 export class GherkinScenarioData extends DtoObject {
     _attributes: GherkinScenarioAttributes;

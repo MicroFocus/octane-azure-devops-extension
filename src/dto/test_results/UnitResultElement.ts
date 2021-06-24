@@ -1,6 +1,6 @@
 import {UnitResultAttributes} from './UnitResultAttributes';
 import {TestResultError} from './TestResultError';
-import {TestResultElement} from "./TestResultElement";
+import {TestResultElement} from './TestResultElement';
 
 export class UnitResultElement extends TestResultElement {
     test_run: any;

@@ -39,6 +39,6 @@ export class LogUtils {
     }
 
     public getCaller() {
-        return ((new Error().stack).split("at ")[2]).trim();
+        return ((new Error().stack).split('at ')[2]).trim();
     }
 }

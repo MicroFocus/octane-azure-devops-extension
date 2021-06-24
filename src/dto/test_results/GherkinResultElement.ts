@@ -1,7 +1,5 @@
-import {DtoObject} from "../DtoObject";
-import {GherkinResultAttributes} from "./GherkinResultAttributes";
-import {TestResultElement} from "./TestResultElement";
-import {GherkinResultData} from "./GherkinResultData";
+import {TestResultElement} from './TestResultElement';
+import {GherkinResultData} from './GherkinResultData';
 
 export class GherkinResultElement extends TestResultElement {
     gherkin_test_run: GherkinResultData;

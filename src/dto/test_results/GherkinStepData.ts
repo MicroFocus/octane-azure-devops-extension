@@ -1,6 +1,6 @@
-import {DtoObject} from "../DtoObject";
-import {GherkinStepAttributes} from "./GherkinStepAttributes";
-import {GherkinStepErrorMessage} from "./GherkinStepErrorMessage";
+import {DtoObject} from '../DtoObject';
+import {GherkinStepAttributes} from './GherkinStepAttributes';
+import {GherkinStepErrorMessage} from './GherkinStepErrorMessage';
 
 export class GherkinStepData extends DtoObject {
     _attributes: GherkinStepAttributes;

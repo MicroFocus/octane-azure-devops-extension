@@ -1,10 +1,10 @@
 import {BaseTask} from './BaseTask';
-import {CiEvent} from "./dto/events/CiEvent";
-import {CiEventType, PhaseType} from "./dto/events/CiTypes";
-import {WebApi} from "azure-devops-node-api";
-import {ConnectionUtils} from "./ConnectionUtils";
-import {ScmBuilder} from "./services/scm/ScmBuilder";
-import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
+import {CiEvent} from './dto/events/CiEvent';
+import {CiEventType, PhaseType} from './dto/events/CiTypes';
+import {WebApi} from 'azure-devops-node-api';
+import {ConnectionUtils} from './ConnectionUtils';
+import {ScmBuilder} from './services/scm/ScmBuilder';
+import {CiEventCauseBuilder} from './services/events/CiEventCauseBuilder';
 
 export class StartTask extends BaseTask {
     private constructor(tl: any) {
@@ -20,7 +20,7 @@ export class StartTask extends BaseTask {
     public async run() {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
         for (let ws in this.octaneSDKConnections) {
-            this.logger.debug("octaneConnection per ws: " + ws);
+            this.logger.debug('octaneConnection per ws: ' + ws);
             if (this.octaneSDKConnections[ws]) {
                 if (!this.isPipelineEndJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));

@@ -1,4 +1,4 @@
-import {DtoObject} from "../DtoObject";
+import {DtoObject} from '../DtoObject';
 
 export class GherkinStepErrorMessage extends DtoObject {
     _cdata: string;
