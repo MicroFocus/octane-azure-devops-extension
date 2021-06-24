@@ -22,8 +22,8 @@ export class EndTask extends BaseTask {
 
     public async run() {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
-        for(let ws in this.octaneSDKConnections) {
-            if(this.octaneSDKConnections[ws]) {
+        for (let ws in this.octaneSDKConnections) {
+            if (this.octaneSDKConnections[ws]) {
                 if (!this.isPipelineStartJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
@@ -65,7 +65,7 @@ export class EndTask extends BaseTask {
         let buildApi: ba.IBuildApi = await api.getBuildApi();
         let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
         let job = timeline.records.filter(r => r.name.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase())[0];
-        if(!job){
+        if (!job) {
             return 0;
         }
         return new Date().getTime() - job.startTime.getTime();
