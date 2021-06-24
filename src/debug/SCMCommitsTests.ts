@@ -1,5 +1,5 @@
-import {ScmCommitFileChange} from "../dto/scm/ScmCommitFileChange";
-import {GitHubAttributes} from "../services/scm/Utils";
+import {ScmCommitFileChange} from '../dto/scm/ScmCommitFileChange';
+import {GitHubAttributes} from '../services/scm/Utils';
 
 const fs = require('fs');
 
@@ -16,7 +16,7 @@ for (let file of commit[GitHubAttributes.files]) {
 
     let type: string = convertGitType(file[GitHubAttributes.status]);
     fileChanges.push(new ScmCommitFileChange(type, file[GitHubAttributes.filename]));
-    console.log("wait .... and check ...");
+    console.log('wait .... and check ...');
 }
 
 console.log(commit);

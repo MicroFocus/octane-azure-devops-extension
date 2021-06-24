@@ -1,5 +1,5 @@
-import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from "../ExtensionConstants";
-import {EndpointAuthorization} from "azure-pipelines-task-lib";
+import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from '../ExtensionConstants';
+import {EndpointAuthorization} from 'azure-pipelines-task-lib';
 
 enum AuthScheme {
     UNDEFINED,

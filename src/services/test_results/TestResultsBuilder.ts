@@ -10,12 +10,12 @@ import {TestResultError} from '../../dto/test_results/TestResultError';
 import {WebApi} from 'azure-devops-node-api';
 import * as ba from 'azure-devops-node-api/BuildApi';
 import * as ta from 'azure-devops-node-api/TestApi';
-import {TestCaseResult} from "azure-devops-node-api/interfaces/TestInterfaces";
-import {LogUtils} from "../../LogUtils";
-import {GherkinResultElement} from "../../dto/test_results/GherkinResultElement";
-import {GherkinResultData} from "../../dto/test_results/GherkinResultData";
-import {GherkinScenarioData} from "../../dto/test_results/GherkinScenarioData";
-import {EmptyTestResult} from "../../dto/test_results/EmptyTestResult";
+import {TestCaseResult} from 'azure-devops-node-api/interfaces/TestInterfaces';
+import {LogUtils} from '../../LogUtils';
+import {GherkinResultElement} from '../../dto/test_results/GherkinResultElement';
+import {GherkinResultData} from '../../dto/test_results/GherkinResultData';
+import {GherkinScenarioData} from '../../dto/test_results/GherkinScenarioData';
+import {EmptyTestResult} from '../../dto/test_results/EmptyTestResult';
 
 let convert = require('xml-js');
 let xmlescape = require('xml-escape');
@@ -23,9 +23,9 @@ const globby = require('globby');
 const {readFileSync} = require('fs-extra');
 
 export class TestResultsBuilder {
-    private static readonly CUCUMBER_TEST_TYPE = "Cucumber";
-    private static readonly GHERKIN_OCTANE_TEST_LEVEL_DISPLAY_VALUE = "Gherkin Test";
-    private static readonly UNIT_OCTANE_TEST_LEVEL_DISPLAY_VALUE = "Unit Test";
+    private static readonly CUCUMBER_TEST_TYPE = 'Cucumber';
+    private static readonly GHERKIN_OCTANE_TEST_LEVEL_DISPLAY_VALUE = 'Gherkin Test';
+    private static readonly UNIT_OCTANE_TEST_LEVEL_DISPLAY_VALUE = 'Unit Test';
 
     public static buildUnitTestResult(testResults: any, server_id: string, job_id: string, logger: LogUtils): TestResult {
         if (!testResults || !testResults.length) {
@@ -65,7 +65,7 @@ export class TestResultsBuilder {
         let result: TestResult = TestResultsBuilder.buildUnitTestResult(testResults, server_id, job_id, logger);
 
         if (result instanceof EmptyTestResult) {
-            return "";
+            return '';
         }
 
         return this.getTestResultXml(result, logger);
@@ -75,7 +75,7 @@ export class TestResultsBuilder {
         let result: TestResult = TestResultsBuilder.buildGherkinTestResult(testResults, server_id, job_id, build_id, logger);
 
         if (result instanceof EmptyTestResult) {
-            return "";
+            return '';
         }
 
         return this.getTestResultXml(result, logger);
@@ -91,11 +91,11 @@ export class TestResultsBuilder {
 
         if (gherkinResults.length > 0) {
             const generatedXml: string = TestResultsBuilder.getGherkinTestResultXml(gherkinResults, serverId, jobId, buildId.toString(), logger);
-            if (generatedXml !== "") {
+            if (!(generatedXml === '')) {
                 xmlTestResults.push(generatedXml)
             }
         } else {
-            logger.info("No gherkin test results found.")
+            logger.info('No gherkin test results found.')
         }
 
         let processedTests: Set<string> = this.getProcessedTestNames(gherkinResults);
@@ -103,11 +103,11 @@ export class TestResultsBuilder {
 
         if (unitTestResults.length > 0) {
             const generatedXml: string = TestResultsBuilder.getUnitTestResultXml(unitTestResults, serverId, jobId, logger);
-            if (generatedXml !== "") {
+            if (!(generatedXml === '')) {
                 xmlTestResults.push(generatedXml)
             }
         } else {
-            logger.info("No unit test results found.")
+            logger.info('No unit test results found.')
         }
 
         return xmlTestResults;
@@ -173,17 +173,17 @@ export class TestResultsBuilder {
         testResults.forEach(element => {
             let packagename = element.automatedTestStorage;
             if (packagename.length > 255) {
-                logger.error("Package name is longer than 255 chars: " + packagename);
+                logger.error('Package name is longer than 255 chars: ' + packagename);
                 return;
             }
             let name = element.automatedTestName;
             if (name.length > 255) {
-                logger.error("Test name is longer than 255 chars: " + name);
+                logger.error('Test name is longer than 255 chars: ' + name);
                 return;
             }
             let classname = packagename + '.' + name;
             if (classname.length > 255) {
-                logger.error("Classname name is longer than 255 chars: " + classname);
+                logger.error('Classname name is longer than 255 chars: ' + classname);
                 return;
             }
             let duration = element.durationInMs || 0;
