@@ -1,4 +1,4 @@
-import {EntityTypeConstants} from './ExtensionConstants';
+import {EntityTypeConstants} from "./ExtensionConstants";
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 const OctaneSDK = require('@microfocus/alm-octane-js-rest-sdk').Octane;

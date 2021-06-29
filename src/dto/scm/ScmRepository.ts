@@ -8,7 +8,7 @@ export class ScmRepository extends DtoObject {
 
     constructor(type: string, url: string, branch: string) {
         super();
-        this.type = 'git';
+        this.type = "git";
         this.branch = branch;
         this.url = url;
     }

@@ -1,8 +1,8 @@
-import {WebApi} from 'azure-devops-node-api';
-import {CiEventCause} from '../../dto/events/CiEventCause';
-import * as ba from 'azure-devops-node-api/BuildApi';
-import {CiCausesType} from '../../dto/events/CiTypes';
-import {BuildReason} from 'azure-devops-node-api/interfaces/BuildInterfaces';
+import {WebApi} from "azure-devops-node-api";
+import {CiEventCause} from "../../dto/events/CiEventCause";
+import * as ba from "azure-devops-node-api/BuildApi";
+import {CiCausesType} from "../../dto/events/CiTypes";
+import {BuildReason} from "azure-devops-node-api/interfaces/BuildInterfaces";
 
 export class CiEventCauseBuilder {
     public static async buildCiEventCauses(isRoot, connection: WebApi, projectName: string, pipelineFullName: string, buildId: number): Promise<CiEventCause[]> {

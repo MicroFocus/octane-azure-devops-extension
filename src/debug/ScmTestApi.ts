@@ -1,10 +1,10 @@
 import {ConnectionUtils} from '../ConnectionUtils';
 import {ScmBuilder} from '../services/scm/ScmBuilder';
 import {WebApi} from 'azure-devops-node-api';
-import {LogUtils} from '../LogUtils';
-import {initDebugConfFromInputParametersFile} from './debug-conf-file-initializer';
-import {EndpointDataConstants, SystemVariablesConstants} from '../ExtensionConstants';
-import {DebugConf} from './debug-conf';
+import {LogUtils} from "../LogUtils";
+import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";
+import {EndpointDataConstants, SystemVariablesConstants} from "../ExtensionConstants";
+import {DebugConf} from "./debug-conf";
 
 let api: WebApi;
 let conf: DebugConf;
