@@ -1,12 +1,12 @@
-import * as fs from 'fs';
+import * as fs from "fs";
 const TOML = require('@ltd/j-toml');
-import {DebugConf, DebugConfToDebugMapsConverter} from './debug-conf';
+import {DebugConf, DebugConfToDebugMapsConverter} from "./debug-conf";
 
 export function initDebugConfFromInputParametersFile(): DebugConf {
     let confFilePath: string = '';
 
     for(let arg in process.argv) {
-        if(process.argv[arg].includes('debugConf')) {
+        if(process.argv[arg].includes("debugConf")) {
             confFilePath = process.argv[arg];
         }
     }

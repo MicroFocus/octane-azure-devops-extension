@@ -1,11 +1,11 @@
 import {StartTask} from '../StartTask';
-import {EndTask} from '../EndTask';
-import {BaseTask} from '../BaseTask';
-import {DebugConf} from './debug-conf';
-import {AzurePipelineTaskLibMock, initAzureTaskMock} from './task-mock-initializer';
-import {InputConstants, SystemVariablesConstants} from '../ExtensionConstants';
-import {EndpointAuthorization} from 'azure-pipelines-task-lib';
-import {initDebugConfFromInputParametersFile} from './debug-conf-file-initializer';
+import {EndTask} from "../EndTask";
+import {BaseTask} from "../BaseTask";
+import {DebugConf} from "./debug-conf";
+import {AzurePipelineTaskLibMock, initAzureTaskMock} from "./task-mock-initializer";
+import {InputConstants, SystemVariablesConstants} from "../ExtensionConstants";
+import {EndpointAuthorization} from "azure-pipelines-task-lib";
+import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";
 
 let azureTaskMock: AzurePipelineTaskLibMock = <AzurePipelineTaskLibMock>{};
 let conf: DebugConf;
@@ -15,7 +15,7 @@ function printNodeVersion() {
     console.log('Env node version: ' + envNodeVersion.stdout);
 
     let processArgNodeVersion = process.argv[0];
-    if (processArgNodeVersion.includes('node.exe')) {
+    if (processArgNodeVersion.includes("node.exe")) {
         console.log('Process argv node version: ' + processArgNodeVersion);
     }
 }

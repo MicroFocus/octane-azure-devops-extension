@@ -1,8 +1,8 @@
 import azurePipelinesTaskLibTask = require('azure-pipelines-task-lib/task');
 import azurePipelinesTaskLibToolRunner = require('azure-pipelines-task-lib/toolrunner');
-import {LogUtils} from '../LogUtils';
-import {EndpointDataConstants, SystemVariablesConstants} from '../ExtensionConstants';
-import {DebugConf} from './debug-conf';
+import {LogUtils} from "../LogUtils";
+import {EndpointDataConstants, SystemVariablesConstants} from "../ExtensionConstants";
+import {DebugConf} from "./debug-conf";
 
 export interface AzurePipelineTaskLibMock {
     execSync(tool: string, args: string | string[], options?: azurePipelinesTaskLibToolRunner.IExecSyncOptions): azurePipelinesTaskLibToolRunner.IExecSyncResult;
@@ -24,7 +24,7 @@ export interface AzurePipelineTaskLibMock {
 
 export function initAzureTaskMock(azureTaskMock: AzurePipelineTaskLibMock, conf: DebugConf): AzurePipelineTaskLibMock {
     let logger = new LogUtils(conf.systemVariables.get(SystemVariablesConstants.ALM_OCTANE_LOG_LEVEL));
-    logger.debug('Initialization of Azure DevOps task mock', logger.getCaller());
+    logger.debug("Initialization of Azure DevOps task mock", logger.getCaller());
 
     azureTaskMock.execSync = (tool: string, args: string | string[], options?: azurePipelinesTaskLibToolRunner.IExecSyncOptions) => {
         return azurePipelinesTaskLibTask.execSync(tool, args, options);
