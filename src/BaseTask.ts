@@ -46,7 +46,7 @@ export class BaseTask {
         this.tl = tl;
         let logLevel = this.tl.getVariable('ALMOctaneLogLevel');
         this.logger = new LogUtils(logLevel);
-        this.logger.debug('ALMOctaneLogLevel: ' + logLevel);
+        this.logger.debug("ALMOctaneLogLevel: " + logLevel);
         this.octaneSDKConnections = {};
     }
 
