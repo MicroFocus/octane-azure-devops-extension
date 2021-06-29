@@ -7,6 +7,7 @@ import {TaskProcessorResult} from "./dto/tasks/TaskProcessorResult";
 import {TaskProcessor} from "./dto/tasks/processors/TaskProcessor";
 import {TaskProcessorsFactory} from "./dto/tasks/TaskProcessorsFactory";
 import {TaskProcessorContext} from "./dto/tasks/TaskProcessorContext";
+import * as OrchestratorJson from "./orchestrator.json"
 
 export class PipelinesOrchestratorTask {
     private readonly logger: LogUtils;
@@ -149,33 +150,20 @@ export class PipelinesOrchestratorTask {
         return str.substr(0, 3) + '...' + str.substr(str.length - 3);
     }
 
-    private buildGetAbridgedTaskAsyncQueryParams2() {
-        let result = "?";
-        result = result + "self-type=" + "azure_devops";
-        result = result + "&self-url=" + "";// SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI when running from AzureDevOps should be
-        result = result + "&api-version=" + "1";
-        result = result + "&sdk-version=" + "0";
-        result = result + "&plugin-version=" + "1";
-        result = result + "&client-id=" + "";
-        result = result + "&ci-server-user=" + "";
-
-        return result;
-    }
-
     private buildGetAbridgedTaskAsyncQueryParams() {
         this.taskAsyncQueryParams = "?";
         this.taskAsyncQueryParams += "self-type=" + "azure_devops";
-        this.taskAsyncQueryParams += "&self-url=" + this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI);
-        this.taskAsyncQueryParams += "&api-version=" + "1";
-        this.taskAsyncQueryParams += "&sdk-version=" + "0";
-        this.taskAsyncQueryParams += "&plugin-version=" + "1";
+        this.taskAsyncQueryParams += "&self-url=" + encodeURIComponent(this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI));
+        this.taskAsyncQueryParams += "&api-version=" + OrchestratorJson["api-version"];
+        this.taskAsyncQueryParams += "&sdk-version=" + OrchestratorJson["sdk-version"];
+        this.taskAsyncQueryParams += "&plugin-version=" + OrchestratorJson["plugin-version"];   // Plugin version must be same as in task.json
         this.taskAsyncQueryParams += "&client-id=" + "";
         this.taskAsyncQueryParams += "&ci-server-user=" + "";
     }
 
     private buildGetEventObject() {
         this.eventObj = {
-            url: this.analyticsCiInternalApiUrlPart + '/servers/' + this.selfIdentity + "/tasks" + this.buildGetAbridgedTaskAsyncQueryParams2(),
+            url: this.analyticsCiInternalApiUrlPart + '/servers/' + this.selfIdentity + "/tasks" + this.taskAsyncQueryParams,
             headers: {ACCEPT_HEADER: 'application/json'}
         };
     }
