@@ -9,5 +9,5 @@ export abstract class TaskProcessor {
         this.context = context;
     }
 
-    public async abstract process(task: Task): Promise<TaskProcessorResult>;
+    public abstract process(task: Task): Promise<TaskProcessorResult>;
 }
