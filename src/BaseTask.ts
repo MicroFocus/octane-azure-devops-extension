@@ -7,6 +7,7 @@ import {LogUtils} from "./LogUtils";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
 import {URL} from "url";
 import {AuthenticationService} from "./services/security/AuthenticationService";
+import {NodeUtils} from "./NodeUtils";
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 
@@ -54,7 +55,7 @@ export class BaseTask {
         await new Promise<void>(async (resolve, reject) => {
             try {
                 this.setAgentJobName(agentJobName);
-                this.outputGlobalNodeVersion();
+                NodeUtils.outputNodeVersion(this.tl, this.logger);
                 this.prepareOctaneServiceConnectionData();
                 this.prepareAuthenticationService();
                 this.prepareOctaneUrlAndCustomWebContext();
@@ -124,11 +125,6 @@ export class BaseTask {
 
         this.logger.info('agentJobName = ' + this.agentJobName);
         this.logger.info('agentJobNameInternalVar = ' + this.tl.getVariable('Agent.JobName'));
-    }
-
-    private outputGlobalNodeVersion() {
-        let result = this.tl.execSync(`node`, `--version`);
-        this.logger.info('node version = ' + result.stdout);
     }
 
     private prepareOctaneServiceConnectionData() {

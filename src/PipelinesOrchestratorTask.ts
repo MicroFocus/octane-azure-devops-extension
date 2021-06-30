@@ -9,6 +9,7 @@ import {TaskProcessorsFactory} from "./dto/tasks/TaskProcessorsFactory";
 import {TaskProcessorContext} from "./dto/tasks/TaskProcessorContext";
 import * as OrchestratorJson from "./orchestrator.json"
 import {AuthenticationService} from "./services/security/AuthenticationService";
+import {NodeUtils} from "./NodeUtils";
 
 export class PipelinesOrchestratorTask {
     private readonly logger: LogUtils;
@@ -57,7 +58,7 @@ export class PipelinesOrchestratorTask {
     protected async init() {
         await new Promise<void>(async (resolve, reject) => {
             try {
-                this.outputGlobalNodeVersion();
+                NodeUtils.outputNodeVersion(this.tl, this.logger);
                 this.prepareOctaneServiceConnectionData();
                 this.prepareAuthenticationService();
                 this.prepareOctaneUrlAndCustomWebContext();
@@ -88,11 +89,6 @@ export class PipelinesOrchestratorTask {
 
         this.octaneSDKConnection = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
             this.customWebContext, this.sharedSpaceId, '500', clientId, clientSecret);
-    }
-
-    private outputGlobalNodeVersion() {
-        let result = this.tl.execSync(`node`, `--version`);
-        this.logger.info('node version = ' + result.stdout);
     }
 
     private prepareOctaneServiceConnectionData() {
