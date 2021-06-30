@@ -25,7 +25,7 @@
   "contributions": [
     {
       "id": "service-endpoint",
-      "description": "Service endpoint type for ALM Octane connections",
+      "description": "Service endpoint type for ALM Octane Public Extension connections",
       "type": "ms.vss-endpoint.service-endpoint-type",
       "targets": [
         "ms.vss-endpoint.endpoint-types"

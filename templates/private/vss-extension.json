@@ -25,13 +25,13 @@
   "contributions": [
     {
       "id": "service-endpoint",
-      "description": "Service endpoint type for ALM Octane connections",
+      "description": "Service endpoint type for ALM Octane Private Extension connections",
       "type": "ms.vss-endpoint.service-endpoint-type",
       "targets": [
         "ms.vss-endpoint.endpoint-types"
       ],
       "properties": {
-        "name": "OctaneServiceConnection",
+        "name": "OctaneServiceConnectionPrivate",
         "displayName": "ALM Octane (private)",
         "url": {
           "displayName": "Server Url",
