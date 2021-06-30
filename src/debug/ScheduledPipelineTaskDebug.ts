@@ -6,15 +6,10 @@ import {
     InputConstants,
     SystemVariablesConstants
 } from "../ExtensionConstants";
-import {EndpointAuthorization} from "azure-pipelines-task-lib";
 import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";
 import {OctaneConnectionUtils} from "../OctaneConnectionUtils";
 import {URL} from "url";
-import { nanoid } from 'nanoid';
 import {MetadataUtils} from "../MetadataUtils";
-import {WebApi} from "azure-devops-node-api";
-import {ConnectionUtils} from "../ConnectionUtils";
-import {BuildApi} from "azure-devops-node-api/BuildApi";
 
 let azureTaskMock: AzurePipelineTaskLibMock = <AzurePipelineTaskLibMock>{};
 let conf: DebugConf;
@@ -126,10 +121,10 @@ function buildGetAbridgedTaskAsyncQueryParams() {
 
 async function sendAckResponse(octaneSDKConnection: any, taskId: string) {
     let ackResponseObj = {
-        url: analyticsCiInternalApiUrlPart +'/servers/' + selfIdentity + "/tasks/" + taskId + "/result",
+        url: analyticsCiInternalApiUrlPart + '/servers/' + selfIdentity + "/tasks/" + taskId + "/result",
         headers: {ACCEPT_HEADER: 'application/json'},
         json: true,
-        body: { status: 201 }
+        body: {status: 201}
     };
 
     let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
@@ -145,15 +140,15 @@ async function runPipeline(ret: any) {
 
     let url = new URL(collectionUri);
 
-    let p = new Promise(function(resolve, reject) {
+    let p = new Promise(function (resolve, reject) {
         const getPipelinesReq = http.get({
             host: url.hostname,
             path: url.pathname + teamProjectId + '/_apis/pipelines?' + AzureDevOpsApiVersions.API_VERSION_6_0_PREVIEW,
             headers: {
                 'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
             }
-        }, function(response) {
-            if(response.statusCode == 200) {
+        }, function (response) {
+            if (response.statusCode == 200) {
                 response.on('data', d => {
                     resolve(JSON.parse(d));
                 });
@@ -169,23 +164,27 @@ async function runPipeline(ret: any) {
 
     let pipelineData: any = await p;
 
-    if(pipelineData != undefined && pipelineData['value'] != undefined && pipelineData['value'].length > 0) {
+    if (pipelineData != undefined && pipelineData['value'] != undefined && pipelineData['value'].length > 0) {
         let pipelineId = -1;
 
-        for(let i = 0; i < pipelineData['value'].length; i++) {
-            if(pipelineData['value'][i].name === pipelineName) {
+        for (let i = 0; i < pipelineData['value'].length; i++) {
+            if (pipelineData['value'][i].name === pipelineName) {
                 pipelineId = pipelineData['value'][i].id;
                 break;
             }
         }
 
-        if(pipelineId == -1) {
+        if (pipelineId == -1) {
             throw new Error('No such pipeline found');
         }
 
-        let data = JSON.stringify({'stagesToSkip':[],'resources':{'repositories':{'self':{'refName':'refs/heads/' + sourceBranchName}}},'variables':{}});
+        let data = JSON.stringify({
+            'stagesToSkip': [],
+            'resources': {'repositories': {'self': {'refName': 'refs/heads/' + sourceBranchName}}},
+            'variables': {}
+        });
 
-        p = new Promise(function(resolve, reject) {
+        p = new Promise(function (resolve, reject) {
             const req = http.request({
                 host: url.hostname,
                 method: 'POST',
@@ -195,11 +194,11 @@ async function runPipeline(ret: any) {
                     'Content-Type': 'application/json',
                     'Content-Length': data.length
                 }
-            }, function(response) {
+            }, function (response) {
                 console.log('statusCode:' + response.statusCode);
                 console.log(response);
 
-                if(response.statusCode == 200) {
+                if (response.statusCode == 200) {
                     response.on('data', d => {
                         resolve(JSON.parse(d));
                     });
@@ -237,7 +236,7 @@ async function runScheduledTask() {
     let counter = 0;
     let fn = async () => {
         let eventObj = {
-            url: analyticsCiInternalApiUrlPart +'servers/' + selfIdentity + "/tasks" + buildGetAbridgedTaskAsyncQueryParams(),
+            url: analyticsCiInternalApiUrlPart + 'servers/' + selfIdentity + "/tasks" + buildGetAbridgedTaskAsyncQueryParams(),
             headers: {ACCEPT_HEADER: 'application/json'},
             json: true,
             body: ""
@@ -250,11 +249,11 @@ async function runScheduledTask() {
             ret = await octaneSDKConnection._requestHandler._requestor.get(eventObj);
             console.log(ret);
             // sending back ACK
-            if(ret != undefined) {
+            if (ret != undefined) {
                 await sendAckResponse(octaneSDKConnection, ret[0].id);
                 await runPipeline(ret);
             }
-        } catch(e) {
+        } catch (e) {
             console.log(e);
         } finally {
             if (counter < 10) {

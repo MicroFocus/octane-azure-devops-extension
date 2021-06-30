@@ -13,14 +13,14 @@
   "version": {
     "Major": "1",
     "Minor": "7",
-    "Patch": "4"
+    "Patch": "6"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job End",
   "inputs": [
     {
       "name": "OctaneServiceConnection",
-      "type": "connectedService:OctaneServiceConnection2",
+      "type": "connectedService:OctaneServiceConnection",
       "label": "ALM Octane service/server end point",
       "required": true,
       "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"
