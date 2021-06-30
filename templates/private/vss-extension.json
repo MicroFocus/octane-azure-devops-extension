@@ -2,7 +2,7 @@
   "manifestVersion": 1,
 
   "id": "alm-octane-integration",
-  "version": "0.3.6.3",
+  "version": "0.3.7.0",
   "name": "ALM Octane Integration Private Extension",
   "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "almoctane",
