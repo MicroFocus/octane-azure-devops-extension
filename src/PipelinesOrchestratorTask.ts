@@ -8,6 +8,7 @@ import {TaskProcessor} from "./dto/tasks/processors/TaskProcessor";
 import {TaskProcessorsFactory} from "./dto/tasks/TaskProcessorsFactory";
 import {TaskProcessorContext} from "./dto/tasks/TaskProcessorContext";
 import * as OrchestratorJson from "./orchestrator.json"
+import {AuthenticationService} from "./services/security/AuthenticationService";
 
 export class PipelinesOrchestratorTask {
     private readonly logger: LogUtils;
@@ -16,14 +17,14 @@ export class PipelinesOrchestratorTask {
     private url: URL;
     private octaneServiceConnectionData: any;
     private customWebContext: string;
-    private token: string;
     private sharedSpaceId: string;
     private analyticsCiInternalApiUrlPart: string;
     private octaneSDKConnection: any;
     private selfIdentity: string;
     private taskAsyncQueryParams: string;
     private eventObj: any;
-    private maxRunTime: number;
+    private elapsedSecondsAutoShutdown: number;
+    private authenticationService: AuthenticationService;
 
     constructor(tl: any) {
         this.tl = tl;
@@ -40,7 +41,17 @@ export class PipelinesOrchestratorTask {
     }
 
     public async run() {
+        let startTime: Date = new Date();
+        this.logger.info('Run start time: ' + startTime.toTimeString());
+        this.logger.info('Auto shutdown after: ' + this.elapsedSecondsAutoShutdown + ' seconds');
+
         await this.runInternal();
+
+        let endTime: Date = new Date();
+
+        this.logger.info('Run end time: ' + endTime.toTimeString());
+        this.logger.info('Total duration: ' + (endTime.getTime() - startTime.getTime()));
+        this.logger.info('Shutting down...');
     }
 
     protected async init() {
@@ -48,17 +59,16 @@ export class PipelinesOrchestratorTask {
             try {
                 this.outputGlobalNodeVersion();
                 this.prepareOctaneServiceConnectionData();
+                this.prepareAuthenticationService();
                 this.prepareOctaneUrlAndCustomWebContext();
-                this.prepareAzureToken();
                 this.validateOctaneUrlAndExtractSharedSpaceId();
                 this.buildAnalyticsCiInternalApiUrlPart();
                 this.prepareSelfIdentity();
                 this.buildGetAbridgedTaskAsyncQueryParams();
                 this.buildGetEventObject();
-                this.maxRunTime = 40 * 1000; // 40 seconds
+                this.elapsedSecondsAutoShutdown = OrchestratorJson["elapsed-seconds-auto-shutdown"];
 
-                let octaneAuthenticationData: any = this.getOctaneAuthentication();
-                await this.createOctaneConnection(octaneAuthenticationData);
+                await this.createOctaneConnection();
 
                 resolve();
             } catch (ex) {
@@ -72,15 +82,12 @@ export class PipelinesOrchestratorTask {
         });
     }
 
-    private async createOctaneConnection(octaneAuthenticationData: any) {
+    private async createOctaneConnection() {
+        let clientId: string = this.authenticationService.getOctaneClientId();
+        let clientSecret: string = this.authenticationService.getOctaneClientSecret();
+
         this.octaneSDKConnection = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
-            this.customWebContext, this.sharedSpaceId, '500', octaneAuthenticationData.clientId, octaneAuthenticationData.clientSecret);
-
-        await this.octaneSDKConnection._requestHandler.authenticate();
-
-        let serverConnectivityStatusObj = await this.octaneSDKConnection._requestHandler._requestor.get(this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status');
-
-        this.logger.info('Server connectivity status:' + JSON.stringify(serverConnectivityStatusObj));
+            this.customWebContext, this.sharedSpaceId, '500', clientId, clientSecret);
     }
 
     private outputGlobalNodeVersion() {
@@ -93,6 +100,10 @@ export class PipelinesOrchestratorTask {
         this.logger.info('OctaneService = ' + this.octaneServiceConnectionData);
     }
 
+    private prepareAuthenticationService() {
+        this.authenticationService = new AuthenticationService(this.tl, this.octaneServiceConnectionData, this.logger);
+    }
+
     private prepareOctaneUrlAndCustomWebContext() {
         let endpointUrl = this.tl.getEndpointUrl(this.octaneServiceConnectionData, false);
         this.url = new URL(endpointUrl);
@@ -101,12 +112,6 @@ export class PipelinesOrchestratorTask {
 
         this.customWebContext = this.url.pathname.toString().split('/ui/')[0].substring(1);
         this.logger.info('customWebContext = ' + this.customWebContext);
-    }
-
-    private prepareAzureToken() {
-        this.token = this.tl.getEndpointDataParameter(this.octaneServiceConnectionData,
-            'AZURE_PERSONAL_ACCESS_TOKEN', true);
-        this.logger.debug('token = ' + this.token);
     }
 
     private validateOctaneUrlAndExtractSharedSpaceId() {
@@ -128,37 +133,19 @@ export class PipelinesOrchestratorTask {
         this.analyticsCiInternalApiUrlPart = '/internal-api/shared_spaces/' + this.sharedSpaceId + '/analytics/ci';
     }
 
-    private getOctaneAuthentication(): object {
-        let endpointAuth = this.tl.getEndpointAuthorization(this.octaneServiceConnectionData, true);
-        let clientId = endpointAuth.parameters['username'];
-        let clientSecret = endpointAuth.parameters['password'];
-
-        this.logger.debug('clientId = ' + clientId);
-        this.logger.debug('clientSecret = ' + this.getObfuscatedSecretForLogger(clientSecret));
-
-        return {
-            clientId,
-            clientSecret
-        }
-    }
-
     private prepareSelfIdentity() {
         this.selfIdentity = this.tl.getEndpointDataParameter(this.octaneServiceConnectionData, 'instance_id', false);
     }
 
-    private getObfuscatedSecretForLogger(str: string) {
-        return str.substr(0, 3) + '...' + str.substr(str.length - 3);
-    }
-
     private buildGetAbridgedTaskAsyncQueryParams() {
         this.taskAsyncQueryParams = "?";
-        this.taskAsyncQueryParams += "self-type=" + "azure_devops";
+        this.taskAsyncQueryParams += "self-type=" + OrchestratorJson["server-type"];
         this.taskAsyncQueryParams += "&self-url=" + encodeURIComponent(this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI));
         this.taskAsyncQueryParams += "&api-version=" + OrchestratorJson["api-version"];
         this.taskAsyncQueryParams += "&sdk-version=" + OrchestratorJson["sdk-version"];
         this.taskAsyncQueryParams += "&plugin-version=" + OrchestratorJson["plugin-version"];   // Plugin version must be same as in task.json
-        this.taskAsyncQueryParams += "&client-id=" + "";
-        this.taskAsyncQueryParams += "&ci-server-user=" + "";
+        this.taskAsyncQueryParams += "&client-id=" + this.authenticationService.getOctaneClientId();
+        this.taskAsyncQueryParams += "&ci-server-user=" + this.authenticationService.getAzureSchemeAndAccessToken();
     }
 
     private buildGetEventObject() {
@@ -169,6 +156,13 @@ export class PipelinesOrchestratorTask {
     }
 
     private async runInternal() {
+        await this.octaneSDKConnection._requestHandler.authenticate();
+
+        let serverConnectivityStatusObj = await this.octaneSDKConnection._requestHandler._requestor.get(
+            this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status');
+
+        this.logger.info('Server connectivity status:' + JSON.stringify(serverConnectivityStatusObj));
+
         await new Promise<void>((async (resolve, reject) => {
             const loopStartTime = Date.now();
             let shouldRun = true;
@@ -191,7 +185,7 @@ export class PipelinesOrchestratorTask {
 
                             let task: Task = Task.from(response[i], this.logger);
 
-                            let context = new TaskProcessorContext(this.tl, this.logger);
+                            let context = new TaskProcessorContext(this.tl, this.logger, this.authenticationService);
                             let processor: TaskProcessor = TaskProcessorsFactory.getTaskProcessor(task, context);
                             let processorResult: TaskProcessorResult = await processor.process(task);
 
@@ -207,7 +201,7 @@ export class PipelinesOrchestratorTask {
 
                     reject();
                 } finally {
-                    shouldRun = Date.now() - loopStartTime < this.maxRunTime;
+                    shouldRun = Date.now() - loopStartTime < (this.elapsedSecondsAutoShutdown * 1000);
 
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }

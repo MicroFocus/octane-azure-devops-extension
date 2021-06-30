@@ -24,7 +24,7 @@ function printOctaneServiceConnectionDetails() {
 
     console.log('Octane service connection: ' + octaneServiceConnection);
     console.log('Authentication scheme: ' + endpointAuth.scheme);
-    console.log('Parameters: ' + endpointAuth.parameters);
+    console.log('Parameters: ' + JSON.stringify(endpointAuth.parameters));
 }
 
 function initialize() {

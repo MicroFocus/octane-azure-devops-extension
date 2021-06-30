@@ -4,12 +4,10 @@ import {Task} from "../../dto/tasks/Task";
 import * as http from "http";
 import {LogUtils} from "../../LogUtils";
 import {TaskProcessorResult} from "../../dto/tasks/TaskProcessorResult";
-import {ConnectionUtils} from "../../ConnectionUtils";
 
 export class AzurePipelinesService {
-    public static async run(task: Task, tl: any, logger: LogUtils): Promise<any> {
+    public static async run(task: Task, tl: any, token: string, logger: LogUtils): Promise<any> {
         let collectionUri = tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI);
-        let token = ConnectionUtils.getAccessToken(tl);
         let teamProject = tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_PROJECT);
         let teamProjectId = tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_PROJECT_ID);
         let pipelineName = tl.getVariable(SystemVariablesConstants.BUILD_DEFINITION_NAME);

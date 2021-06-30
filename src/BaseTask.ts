@@ -6,7 +6,7 @@ import {CI_SERVER_INFO, EntityTypeConstants, EntityTypeRestEndpointConstants} fr
 import {LogUtils} from "./LogUtils";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
 import {URL} from "url";
-import {MetadataUtils} from "./MetadataUtils";
+import {AuthenticationService} from "./services/security/AuthenticationService";
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 
@@ -23,7 +23,6 @@ export class BaseTask {
     protected jobFullName: string;
     protected buildDefinitionName: string;
     protected buildId: string;
-    protected token: string;
     protected agentJobName: string;
     protected isPipelineStartJob: boolean;
     protected isPipelineEndJob: boolean;
@@ -41,6 +40,7 @@ export class BaseTask {
     private sharedSpaceId: string;
     private workspaces: any;
     private analyticsCiInternalApiUrlPart: string;
+    private authenticationService: AuthenticationService;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -56,8 +56,8 @@ export class BaseTask {
                 this.setAgentJobName(agentJobName);
                 this.outputGlobalNodeVersion();
                 this.prepareOctaneServiceConnectionData();
+                this.prepareAuthenticationService();
                 this.prepareOctaneUrlAndCustomWebContext();
-                this.prepareAzureToken();
                 this.prepareInstanceId();
                 this.validateOctaneUrlAndExtractSharedSpaceId();
                 this.buildAnalyticsCiInternalApiUrlPart();
@@ -67,7 +67,7 @@ export class BaseTask {
                 this.setJobNames();
                 this.prepareWorkspaces();
 
-                await this.createOctaneConnectionsAndRetrieveCiServersAndPipelines(this.getOctaneAuthentication());
+                await this.createOctaneConnectionsAndRetrieveCiServersAndPipelines();
 
                 resolve();
             } catch (ex) {
@@ -136,6 +136,10 @@ export class BaseTask {
         this.logger.info('OctaneService = ' + this.octaneServiceConnectionData);
     }
 
+    private prepareAuthenticationService() {
+        this.authenticationService = new AuthenticationService(this.tl, this.octaneServiceConnectionData, this.logger);
+    }
+
     private prepareOctaneUrlAndCustomWebContext() {
         let endpointUrl = this.tl.getEndpointUrl(this.octaneServiceConnectionData, false);
         this.url = new URL(endpointUrl);
@@ -144,12 +148,6 @@ export class BaseTask {
 
         this.customWebContext = this.url.pathname.toString().split('/ui/')[0].substring(1);
         this.logger.info('customWebContext = ' + this.customWebContext);
-    }
-
-    private prepareAzureToken() {
-        this.token = this.tl.getEndpointDataParameter(this.octaneServiceConnectionData,
-            'AZURE_PERSONAL_ACCESS_TOKEN', true);
-        this.logger.debug('token = ' + this.token);
     }
 
     private prepareInstanceId() {
@@ -171,10 +169,6 @@ export class BaseTask {
         }
 
         this.sharedSpaceId = spaces[0];
-    }
-
-    private getObfuscatedSecretForLogger(str: string) {
-        return str.substr(0, 3) + '...' + str.substr(str.length - 3);
     }
 
     private prepareAzureVariables() {
@@ -238,31 +232,19 @@ export class BaseTask {
         this.workspaces = this.workspaces.split(',').map(s => s.trim());
     }
 
-    private getOctaneAuthentication(): object {
-        let endpointAuth = this.tl.getEndpointAuthorization(this.octaneServiceConnectionData, false);
-        let clientId = endpointAuth.parameters['username'];
-        let clientSecret = endpointAuth.parameters['password'];
+    private async createOctaneConnectionsAndRetrieveCiServersAndPipelines() {
+        let clientId: string = this.authenticationService.getOctaneClientId();
+        let clientSecret: string = this.authenticationService.getOctaneClientSecret();
 
-        this.logger.debug('clientId = ' + clientId);
-        this.logger.debug('clientSecret = ' + this.getObfuscatedSecretForLogger(clientSecret));
-
-        return {
-            clientId,
-            clientSecret
-        }
-    }
-
-    private async createOctaneConnectionsAndRetrieveCiServersAndPipelines(octaneAuthenticationData: any) {
         for (let i in this.workspaces) {
             let ws = this.workspaces[i];
             await (async (ws) => {
                 let octaneSDKConnection = this.octaneSDKConnections[ws];
                 if (!octaneSDKConnection) {
                     octaneSDKConnection = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
-                        this.customWebContext, this.sharedSpaceId, ws, octaneAuthenticationData.clientId, octaneAuthenticationData.clientSecret);
+                        this.customWebContext, this.sharedSpaceId, ws, clientId, clientSecret);
 
-                    await MetadataUtils.enhanceOctaneSDKConnectionWithEntitiesMetadata(octaneSDKConnection);
-                    await MetadataUtils.enhanceOctaneSDKConnectionWithFieldsMetadata(octaneSDKConnection);
+                    await octaneSDKConnection._requestHandler.authenticate();
                 }
 
                 let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);

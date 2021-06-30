@@ -11,6 +11,7 @@ export class JobRunTaskTaskProcessor extends TaskProcessor {
 
     public async process(task: Task): Promise<TaskProcessorResult> {
 
-        return await AzurePipelinesService.run(task, this.context.getTL(), this.context.getLogger());
+        return await AzurePipelinesService.run(task, this.context.getTL(),
+            this.context.getAuthenticationService().getAzureAccessToken(), this.context.getLogger());
     }
 }
