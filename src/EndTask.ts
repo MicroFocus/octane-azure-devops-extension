@@ -20,7 +20,7 @@ export class EndTask extends BaseTask {
     }
 
     public async run() {
-        let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
+        let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         for(let ws in this.octaneSDKConnections) {
             if(this.octaneSDKConnections[ws]) {
                 if (!this.isPipelineStartJob) {

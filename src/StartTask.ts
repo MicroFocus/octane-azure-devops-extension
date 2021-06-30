@@ -18,7 +18,7 @@ export class StartTask extends BaseTask {
     }
 
     public async run() {
-        let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
+        let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         for (let ws in this.octaneSDKConnections) {
             this.logger.debug("octaneConnection per ws: " + ws);
             if (this.octaneSDKConnections[ws]) {

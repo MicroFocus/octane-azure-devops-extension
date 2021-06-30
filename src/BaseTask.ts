@@ -34,13 +34,13 @@ export class BaseTask {
     protected rootJobFullName: string;
     protected sourceBranchName: string;
     protected customWebContext: string;
+    protected authenticationService: AuthenticationService;
 
     private octaneServiceConnectionData: any;
     private url: URL;
     private sharedSpaceId: string;
     private workspaces: any;
     private analyticsCiInternalApiUrlPart: string;
-    private authenticationService: AuthenticationService;
 
     protected constructor(tl: any) {
         this.tl = tl;
