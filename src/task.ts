@@ -5,11 +5,11 @@ import {StartTask} from "./StartTask";
 import * as TaskJson from "./task.json"
 
 async function runTask() : Promise<void> {
-    if(TaskJson.name === 'octane-start-task') {
+    if(TaskJson.name.includes('octane-start-task')) {
         await runStartTask();
-    } else if(TaskJson.name === 'octane-end-task') {
+    } else if(TaskJson.name.includes('octane-end-task')) {
         await runEndTask();
-    } else if(TaskJson.name === 'octane-pipelines-orchestrator-task') {
+    } else if(TaskJson.name.includes('octane-pipelines-orchestrator-task')) {
         await runPipelinesOrchestrator();
     } else {
         throw Error('Wrong task.json file!');

@@ -76,6 +76,18 @@ echo The extension is ready
 echo ======================================
 popd
 
+echo.
+echo ======================================
+echo Removing pkg folder and dist folder, if they exist, to avoid IDE indexing and hanging after build
+if exist pkg (
+   rmdir /S /Q pkg || goto :error
+)
+if exist dist (
+   rmdir /S /Q dist || goto :error
+)
+echo Removal DONE
+echo ======================================
+
 goto :eof
 
 :error
