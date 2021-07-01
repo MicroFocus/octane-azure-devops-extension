@@ -10,6 +10,7 @@ import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initialize
 import {OctaneConnectionUtils} from "../OctaneConnectionUtils";
 import {URL} from "url";
 import {MetadataUtils} from "../MetadataUtils";
+import {SharedSpaceUtils} from "../SharedSpaceUtils";
 
 let azureTaskMock: AzurePipelineTaskLibMock = <AzurePipelineTaskLibMock>{};
 let conf: DebugConf;
@@ -54,18 +55,7 @@ function printOctaneServiceConnectionDetails() {
 }
 
 function validateOctaneUrlAndExtractSharedSpaceId() {
-    let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';
-    let params = url.searchParams.get('p');
-    if (params === null) {
-        throw new Error(paramsError);
-    }
-
-    const spaces = params.match(/\d+/g);
-    if (!spaces || spaces.length < 1) {
-        throw new Error(paramsError);
-    }
-
-    sharedSpaceId = spaces[0];
+    sharedSpaceId = SharedSpaceUtils.validateOctaneUrlAndExtractSharedSpaceId(url);
 }
 
 function prepareOctaneUrlAndCustomWebContext() {

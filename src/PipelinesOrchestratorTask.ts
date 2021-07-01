@@ -1,7 +1,7 @@
 import {LogUtils} from "./LogUtils";
 import {URL} from "url";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
-import {SystemVariablesConstants} from "./ExtensionConstants";
+import {InputConstants, SystemVariablesConstants} from "./ExtensionConstants";
 import {Task} from "./dto/tasks/Task";
 import {TaskProcessorResult} from "./dto/tasks/TaskProcessorResult";
 import {TaskProcessor} from "./dto/tasks/processors/TaskProcessor";
@@ -10,6 +10,8 @@ import {TaskProcessorContext} from "./dto/tasks/TaskProcessorContext";
 import * as OrchestratorJson from "./orchestrator.json"
 import {AuthenticationService} from "./services/security/AuthenticationService";
 import {NodeUtils} from "./NodeUtils";
+import {SharedSpaceUtils} from "./SharedSpaceUtils";
+import {UrlUtils} from "./UrlUtils";
 
 export class PipelinesOrchestratorTask {
     private readonly logger: LogUtils;
@@ -92,7 +94,7 @@ export class PipelinesOrchestratorTask {
     }
 
     private prepareOctaneServiceConnectionData() {
-        this.octaneServiceConnectionData = this.tl.getInput('OctaneServiceConnection', true);
+        this.octaneServiceConnectionData = this.tl.getInput(InputConstants.OCTANE_SERVICE_CONNECTION, true);
         this.logger.info('OctaneService = ' + this.octaneServiceConnectionData);
     }
 
@@ -101,28 +103,13 @@ export class PipelinesOrchestratorTask {
     }
 
     private prepareOctaneUrlAndCustomWebContext() {
-        let endpointUrl = this.tl.getEndpointUrl(this.octaneServiceConnectionData, false);
-        this.url = new URL(endpointUrl);
-
-        this.logger.info('rawUrl = ' + endpointUrl + '; url.href = ' + this.url.href);
-
-        this.customWebContext = this.url.pathname.toString().split('/ui/')[0].substring(1);
-        this.logger.info('customWebContext = ' + this.customWebContext);
+        let u = UrlUtils.getUrlAndCustomWebContext(this.octaneServiceConnectionData, this.tl, this.logger);
+        this.url = u.url;
+        this.customWebContext = u.customWebContext;
     }
 
     private validateOctaneUrlAndExtractSharedSpaceId() {
-        let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';
-        let params = this.url.searchParams.get('p');
-        if (params === null) {
-            throw new Error(paramsError);
-        }
-
-        const spaces = params.match(/\d+/g);
-        if (!spaces || spaces.length < 1) {
-            throw new Error(paramsError);
-        }
-
-        this.sharedSpaceId = spaces[0];
+        this.sharedSpaceId = SharedSpaceUtils.validateOctaneUrlAndExtractSharedSpaceId(this.url);
     }
 
     private buildAnalyticsCiInternalApiUrlPart() {
