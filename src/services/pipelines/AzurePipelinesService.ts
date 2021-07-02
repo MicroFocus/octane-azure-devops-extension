@@ -59,7 +59,7 @@ export class AzurePipelinesService {
 
                 result = await this.runPipeline(url, teamProjectId, token, pipelineId, defaultBranch, logger);
 
-                if(result.state && result.state === 'inProgress') {
+                if (result.state && result.state === 'inProgress') {
                     statusCode = 201;
                 } else {
                     statusCode = 500;

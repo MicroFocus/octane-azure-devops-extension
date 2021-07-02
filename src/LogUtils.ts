@@ -26,8 +26,15 @@ export class LogUtils {
 
     private logMessage(msgType: 'DEBUG' | 'ERROR' | 'WARN' | 'INFO', msg: any, caller?: any, ...optionalParams: any[]): void {
         if (typeof msg !== 'string') {
-            msg = JSON.stringify(msg);
+            try {
+                msg = JSON.stringify(msg);
+            } catch(ex) {
+                console.info('Could not stringify object, calling console.log instead');
+                console.log(msg);
+                return;
+            }
         }
+
         msg = caller ? caller + '| ' + msg : msg;
         msg = '[' + msgType + ']' + msg;
         let logFunction = (console[msgType.toLowerCase()] || console.log).bind(console);

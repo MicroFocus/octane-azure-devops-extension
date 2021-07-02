@@ -20,6 +20,9 @@ export class AuthenticationService {
 
         this.octaneAuth = this.getOctaneAuthentication(this.tl, this.octaneServiceConnectionData, this.logger);
         this.azureAuth = ConnectionUtils.getAccessToken(this.tl);
+
+        logger.info(this.getAzureSchemeAndObfuscatedAccessTokenString());
+
         if(this.azureAuth.scheme === AuthScheme.SYSTEM_ACCESS_TOKEN) {
             this.logger.warn('In order to avoid using system access token, ' +
                 'please define Personal Access Token(PAT) with key: AZURE_PERSONAL_ACCESS_TOKEN');
@@ -45,6 +48,8 @@ export class AuthenticationService {
     public getAzureAccessToken(): string {
         if(this.azureAuth.scheme === AuthScheme.PERSONAL_ACCESS_TOKEN) {
             return (this.azureAuth.parameters as AccessToken).accessToken;
+        } else if(this.azureAuth.scheme == AuthScheme.SYSTEM_ACCESS_TOKEN) {
+            return (this.azureAuth.parameters as AccessToken).accessToken;
         }
 
         return '';
@@ -55,6 +60,16 @@ export class AuthenticationService {
             return AuthScheme.SYSTEM_ACCESS_TOKEN;
         } else if(this.azureAuth.scheme === AuthScheme.PERSONAL_ACCESS_TOKEN) {
             return AuthScheme.PERSONAL_ACCESS_TOKEN + ': ' + (this.azureAuth.parameters as AccessToken).accessToken;
+        }
+
+        return AuthScheme.UNDEFINED + '';
+    }
+
+    public getAzureSchemeAndObfuscatedAccessTokenString() {
+        if(this.azureAuth.scheme === AuthScheme.SYSTEM_ACCESS_TOKEN) {
+            return AuthScheme.SYSTEM_ACCESS_TOKEN;
+        } else if(this.azureAuth.scheme === AuthScheme.PERSONAL_ACCESS_TOKEN) {
+            return AuthScheme.PERSONAL_ACCESS_TOKEN + ': ' + CryptoUtils.obfuscate((this.azureAuth.parameters as AccessToken).accessToken);
         }
 
         return AuthScheme.UNDEFINED + '';
