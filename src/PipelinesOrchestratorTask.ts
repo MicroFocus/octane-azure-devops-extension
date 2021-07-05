@@ -48,12 +48,17 @@ export class PipelinesOrchestratorTask {
         this.logger.info('Run start time: ' + startTime.toTimeString());
         this.logger.info('Auto shutdown after: ' + this.elapsedSecondsAutoShutdown + ' seconds');
 
-        await this.runInternal();
+        try {
+            await this.runInternal();
+        } catch(ex) {
+            this.logger.error('Orchestrator failed to properly execute: ' + ex);
+        }
 
         let endTime: Date = new Date();
 
         this.logger.info('Run end time: ' + endTime.toTimeString());
-        this.logger.info('Total duration: ' + (endTime.getTime() - startTime.getTime()));
+        let diff = endTime.getTime() - startTime.getTime();
+        this.logger.info('Total duration: ' + (Math.floor(diff / 1000.0)) + ' seconds, ' + (diff % 1000.0) + ' millis');
         this.logger.info('Shutting down...');
     }
 
@@ -121,14 +126,14 @@ export class PipelinesOrchestratorTask {
     }
 
     private buildGetAbridgedTaskAsyncQueryParams() {
-        this.taskAsyncQueryParams = "?";
-        this.taskAsyncQueryParams += "self-type=" + OrchestratorJson["server-type"];
-        this.taskAsyncQueryParams += "&self-url=" + encodeURIComponent(this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI));
-        this.taskAsyncQueryParams += "&api-version=" + OrchestratorJson["api-version"];
-        this.taskAsyncQueryParams += "&sdk-version=" + OrchestratorJson["sdk-version"];
-        this.taskAsyncQueryParams += "&plugin-version=" + OrchestratorJson["plugin-version"];   // Plugin version must be same as in task.json
-        this.taskAsyncQueryParams += "&client-id=" + this.authenticationService.getOctaneClientId();
-        this.taskAsyncQueryParams += "&ci-server-user=" + this.authenticationService.getAzureSchemeAndAccessToken();
+        this.taskAsyncQueryParams = '?';
+        this.taskAsyncQueryParams += 'self-type=' + OrchestratorJson['server-type'];
+        this.taskAsyncQueryParams += '&self-url=' + encodeURIComponent(this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI));
+        this.taskAsyncQueryParams += '&api-version=' + OrchestratorJson['api-version'];
+        this.taskAsyncQueryParams += '&sdk-version=' + OrchestratorJson['sdk-version'];
+        this.taskAsyncQueryParams += '&plugin-version=' + OrchestratorJson['plugin-version'];   // Plugin version must be same as in task.json
+        this.taskAsyncQueryParams += '&client-id=' + this.authenticationService.getOctaneClientId();
+        this.taskAsyncQueryParams += '&ci-server-user=' + this.authenticationService.getAzureSchemeAndAccessToken();
     }
 
     private buildGetEventObject() {
@@ -154,17 +159,16 @@ export class PipelinesOrchestratorTask {
                 let response;
 
                 try {
-                    // retrieving the job, if any, from Octane
-                    this.logger.info("Requesting tasks from Octane through: " + this.eventObj.url);
+                    this.logger.info((new Date()).toTimeString() + ': Requesting tasks from Octane through: ' + this.eventObj.url);
                     response = await this.octaneSDKConnection._requestHandler._requestor.get(this.eventObj);
 
                     if (this.areThereAnyTasksToProcess(response)) {
-                        this.logger.info("Received " + response.length + " tasks to process");
+                        this.logger.info((new Date()).toTimeString() + ': Received ' + response.length + ' tasks to process');
 
                         for(let i = 0; i < response.length; i++) {
                             let taskAsString: string = JSON.stringify(response[i]);
 
-                            this.logger.info("Processing task defined by: " + taskAsString);
+                            this.logger.info('Processing task defined by: ' + taskAsString);
 
                             let task: Task = Task.from(response[i], this.logger);
 
@@ -176,13 +180,14 @@ export class PipelinesOrchestratorTask {
                             await this.sendResponse(this.octaneSDKConnection, processorResult.task.id, processorResult.status);
                         }
                     } else {
-                        this.logger.info("No tasks received");
+                        this.logger.info((new Date()).toTimeString() + ': No tasks received');
                     }
                 } catch (ex) {
                     this.logger.error(ex);
-                    this.tl.setResult(this.tl.TaskResult.Failed, 'PipelineInitTask should have passed but failed.');
+                    this.tl.setResult(this.tl.TaskResult.Failed, (new Date()).toTimeString()
+                        + ': Orchestrator iteration failed: ' + ex);
 
-                    reject();
+                    reject(ex);
                 } finally {
                     shouldRun = Date.now() - loopStartTime < (this.elapsedSecondsAutoShutdown * 1000);
 
