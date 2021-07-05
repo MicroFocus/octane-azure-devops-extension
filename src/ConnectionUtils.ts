@@ -1,7 +1,7 @@
 import * as azdev from 'azure-devops-node-api';
 import {IRequestOptions} from 'azure-devops-node-api/interfaces/common/VsoBaseInterfaces';
 import * as tl from 'azure-pipelines-task-lib/task';
-import {EndpointDataConstants} from "./ExtensionConstants";
+import {EndpointDataConstants, InputConstants} from "./ExtensionConstants";
 import {Auth} from "./services/security/Auth";
 import {AuthScheme} from "./services/security/AuthScheme";
 
@@ -40,12 +40,17 @@ export class ConnectionUtils {
     public static getAccessToken(tl: any): Auth {
         let scheme: AuthScheme;
 
-        let accessToken = tl.getVariable(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN);
+        let accessToken = this.getDebugAccessToken(tl);
         if (accessToken) {
             scheme = AuthScheme.PERSONAL_ACCESS_TOKEN;
         } else {
-            accessToken = this.getSystemAccessToken();
-            scheme = AuthScheme.SYSTEM_ACCESS_TOKEN;
+            accessToken = this.getAzurePAT(tl);
+            if(accessToken) {
+                scheme = AuthScheme.PERSONAL_ACCESS_TOKEN;
+            } else {
+                accessToken = this.getSystemAccessToken();
+                scheme = AuthScheme.SYSTEM_ACCESS_TOKEN;
+            }
         }
 
         return {
@@ -54,5 +59,13 @@ export class ConnectionUtils {
                 accessToken: accessToken
             }
         };
+    }
+
+    private static getDebugAccessToken(tl: any) {
+        return tl.getVariable(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN);
+    }
+
+    private static getAzurePAT(tl:any) {
+        return tl.getInput(InputConstants.AZURE_PAT, false);
     }
 }

@@ -6,7 +6,8 @@ export const enum CI_SERVER_INFO {
 export enum InputConstants {
     OCTANE_SERVICE_CONNECTION = 'OctaneServiceConnection',
     GITHUB_REPOSITORY_CONNECTION = 'GithubRepositoryConnection',
-    WORKSPACES_LIST = 'WorkspaceList'
+    WORKSPACES_LIST = 'WorkspaceList',
+    AZURE_PAT = 'PAT'
 }
 
 export enum SystemVariablesConstants {
@@ -23,7 +24,7 @@ export enum SystemVariablesConstants {
 
 export enum EndpointDataConstants {
     ENDPOINT_DATA_OCTANE_INSTANCE_ID = 'ENDPOINT_DATA_Octane_INSTANCE_ID',
-    ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN = "ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN",
+    ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN = 'ENDPOINT_DATA_Octane_AZURE_PERSONAL_ACCESS_TOKEN',
     ENDPOINT_URL = 'ENDPOINT_URL'
 }
 

@@ -13,7 +13,7 @@
   "version": {
     "Major": "1",
     "Minor": "7",
-    "Patch": "9"
+    "Patch": "10"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job End",

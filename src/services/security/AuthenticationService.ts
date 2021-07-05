@@ -24,8 +24,8 @@ export class AuthenticationService {
         logger.info(this.getAzureSchemeAndObfuscatedAccessTokenString());
 
         if(this.azureAuth.scheme === AuthScheme.SYSTEM_ACCESS_TOKEN) {
-            this.logger.warn('In order to avoid using system access token, ' +
-                'please define Personal Access Token(PAT) with key: AZURE_PERSONAL_ACCESS_TOKEN');
+            this.logger.warn('System access token is usable only in current repository/pipeline. ' +
+                'Please define Personal Access Token(PAT) for access to all pipelines and repositories');
         }
     }
 

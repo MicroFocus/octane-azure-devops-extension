@@ -13,7 +13,7 @@
   "version": {
     "Major": "0",
     "Minor": "1",
-    "Patch": "6"
+    "Patch": "7"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Pipelines Orchestrator",
@@ -31,6 +31,13 @@
       "label": "Target ALM Octane workspaces",
       "required": true,
       "helpMarkDown": "Comma separated list of target Octane workspaces"
+    },
+    {
+      "name": "PAT",
+      "type": "string",
+      "label": "Azure Personal Access Token",
+      "required": true,
+      "helpMarkDown": "The Personal Access Token with access to all pipelines"
     },
     {
       "name": "GithubRepositoryConnection",
