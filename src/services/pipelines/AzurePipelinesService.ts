@@ -13,7 +13,7 @@ export class AzurePipelinesService {
         let pipelineName = tl.getVariable(SystemVariablesConstants.BUILD_DEFINITION_NAME);
 
         logger.info('The pipeline name where the orchestrator task is running: ' + pipelineName);
-        logger.warn('Please make sure that in this pipeline, the orchestrator job/task is the only one running!');
+        logger.info('Please make sure that in this pipeline, the orchestrator job/task is the only one running!');
 
         let result: any;
         let statusCode: number = 400;
@@ -30,7 +30,12 @@ export class AzurePipelinesService {
 
         let url = new URL(collectionUri);
 
+        logger.info('Requesting pipelines from: ' + url + ' and teamProjectId: ' + teamProjectId);
+
         let pipelinesData: any = await this.getPipelines(url, teamProjectId, token);
+
+        logger.info('Received pipelines: ');
+        logger.info(pipelinesData);
 
         if (this.didWeGetAnyPipelines(pipelinesData)) {
             let pipelineId: number = this.extractPipelineId(pipelinesData, jobCiIdParts.pipelineName, logger);
@@ -42,12 +47,26 @@ export class AzurePipelinesService {
             let repositoryId = -1;
             let defaultBranch = '';
 
+            logger.info('Requesting pipeline with id: ' + pipelineId + ' from: ' + url + ', teamProjectId: ' + teamProjectId);
+
             let pipeline = await this.getPipeline(url, teamProjectId, token, pipelineId);
+
+            logger.info('Received pipeline: ');
+            logger.info(pipeline);
+
             if (pipeline) {
                 repositoryId = this.extractRepositoryId(pipeline);
 
                 if (repositoryId) {
+
+                    logger.info('Requesting repository with id: ' + repositoryId
+                        + ' from: ' + url + ', teamProjectId: ' + teamProjectId);
+
                     let repository = await this.getRepository(url, teamProjectId, token, repositoryId);
+
+                    logger.info('Received repository: ');
+                    logger.info(repository);
+
                     if (repository) {
                         defaultBranch = repository['defaultBranch'];
                     }
@@ -55,7 +74,8 @@ export class AzurePipelinesService {
             }
 
             if (defaultBranch) {
-                logger.info('The pipeline will be executed against: repository ID: ' + repositoryId + ', default branch: ' + defaultBranch);
+                logger.info('The pipeline will be executed against: repository ID: '
+                    + repositoryId + ', default branch: ' + defaultBranch);
 
                 result = await this.runPipeline(url, teamProjectId, token, pipelineId, defaultBranch, logger);
 
@@ -77,7 +97,7 @@ export class AzurePipelinesService {
         return this.getTaskProcessorResult(task, statusCode, result);
     }
 
-    private static getPipelines(url: URL, teamProjectId: string, token: string): Promise<any> {
+    private static async getPipelines(url: URL, teamProjectId: string, token: string): Promise<any> {
         return new Promise(function (resolve, reject) {
             const getPipelinesReq = http.get({
                 host: url.hostname,
@@ -86,17 +106,15 @@ export class AzurePipelinesService {
                     'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
                 }
             }, function (response) {
-                if (response.statusCode == 200) {
-                    response.on('data', d => {
-                        resolve(JSON.parse(d));
-                    });
-                } else {
-                    reject(response);
-                }
-            });
-
-            getPipelinesReq.on('error', error => {
-                reject(error);
+                let body = [];
+                response.on('data', (chunk) => {
+                    body.push(chunk);
+                }).on('end', () => {
+                    let stringBuff = Buffer.concat(body).toString();
+                    resolve(JSON.parse(stringBuff));
+                });
+            }).on('error', (err) => {
+                reject(err);
             });
         });
     }
@@ -137,17 +155,15 @@ export class AzurePipelinesService {
                     'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
                 }
             }, response => {
-                if (response.statusCode == 200) {
-                    response.on('data', d => {
-                        resolve(JSON.parse(d));
-                    });
-                } else {
-                    reject(response);
-                }
-            });
-
-            getPipelineReq.on('error', error => {
-                reject(error);
+                let body = [];
+                response.on('data', (chunk) => {
+                    body.push(chunk);
+                }).on('end', () => {
+                    let stringBuff = Buffer.concat(body).toString();
+                    resolve(JSON.parse(stringBuff));
+                });
+            }).on('error', (err) => {
+                reject(err);
             });
         });
     }
@@ -165,17 +181,15 @@ export class AzurePipelinesService {
                     'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
                 }
             }, response => {
-                if (response.statusCode == 200) {
-                    response.on('data', d => {
-                        resolve(JSON.parse(d));
-                    });
-                } else {
-                    reject(response);
-                }
-            });
-
-            getPipelineReq.on('error', error => {
-                reject(error);
+                let body = [];
+                response.on('data', (chunk) => {
+                    body.push(chunk);
+                }).on('end', () => {
+                    let stringBuff = Buffer.concat(body).toString();
+                    resolve(JSON.parse(stringBuff));
+                });
+            }).on('error', (err) => {
+                reject(err);
             });
         });
     }
@@ -189,35 +203,35 @@ export class AzurePipelinesService {
             'variables': {}
         });
 
-        result = await new Promise(function (resolve, reject) {
-            const req = http.request({
-                host: url.hostname,
-                method: 'POST',
-                path: url.pathname + teamProjectId + '/_apis/pipelines/' + pipelineId + '/runs?' + AzureDevOpsApiVersions.API_VERSION_6_0_PREVIEW,
-                headers: {
-                    'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
-                    'Content-Type': 'application/json',
-                    'Content-Length': data.length
-                }
-            }, function (response) {
-                if (response.statusCode == 200) {
-                    response.on('data', d => {
-                        resolve(d);
+        try {
+            result = await new Promise(function (resolve, reject) {
+                const req = http.request({
+                    host: url.hostname,
+                    method: 'POST',
+                    path: url.pathname + teamProjectId + '/_apis/pipelines/' + pipelineId + '/runs?' + AzureDevOpsApiVersions.API_VERSION_6_0_PREVIEW,
+                    headers: {
+                        'Authorization': 'Basic ' + Buffer.from(token + ':', 'utf8').toString('base64'),
+                        'Content-Type': 'application/json',
+                        'Content-Length': data.length
+                    }
+                }, function (response) {
+                    let body = [];
+                    response.on('data', (chunk) => {
+                        body.push(chunk);
+                    }).on('end', () => {
+                        let stringBuff = Buffer.concat(body).toString();
+                        resolve(JSON.parse(stringBuff));
                     });
-                } else {
-                    reject(response);
-                }
+                }).on('error', (err) => {
+                    reject(err);
+                });
+
+                req.write(data);
+                req.end();
             });
-
-            req.on('error', error => {
-                reject(error);
-            });
-
-            req.write(data);
-            req.end();
-        });
-
-        result = JSON.parse(result);
+        } catch (ex) {
+            result = ex;
+        }
 
         return result;
     }
