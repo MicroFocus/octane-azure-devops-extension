@@ -12,8 +12,8 @@
   "demands": [],
   "version": {
     "Major": "1",
-    "Minor": "17",
-    "Patch": "14"
+    "Minor": "18",
+    "Patch": "1"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job End",
@@ -31,6 +31,13 @@
       "label": "Target ALM Octane workspaces",
       "required": true,
       "helpMarkDown": "Comma separated list of target Octane workspaces"
+    },
+    {
+      "name": "CucumberReportPath",
+      "type": "string",
+      "label": "Cucumber report destination path",
+      "required": false,
+      "helpMarkDown": "Output folder of the gherkin tests, containing the actual reports"
     },
     {
       "name": "GithubRepositoryConnection",

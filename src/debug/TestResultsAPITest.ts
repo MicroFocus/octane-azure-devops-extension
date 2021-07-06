@@ -1,10 +1,10 @@
 import {TestResultsBuilder} from '../services/test_results/TestResultsBuilder';
 import {ConnectionUtils} from '../ConnectionUtils';
 import {WebApi} from 'azure-devops-node-api';
-import {LogUtils} from "../LogUtils";
-import {DebugConf} from "./debug-conf";
-import {initDebugConfFromInputParametersFile} from "./debug-conf-file-initializer";
-import {EndpointDataConstants, SystemVariablesConstants} from "../ExtensionConstants";
+import {LogUtils} from '../LogUtils';
+import {DebugConf} from './debug-conf';
+import {initDebugConfFromInputParametersFile} from './debug-conf-file-initializer';
+import {EndpointDataConstants, SystemVariablesConstants} from '../ExtensionConstants';
 
 let api: WebApi;
 let conf: DebugConf;
@@ -27,7 +27,7 @@ function initialize() {
 }
 
 initialize();
-TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'serverId', 'jobId', new LogUtils('debug')).then(res => {
+TestResultsBuilder.getTestsResultsByBuildId(api, projectName, buildId, 'serverId', 'jobId', '../reports', new LogUtils('debug')).then(res => {
     console.log('######################### finished ###############################');
     console.log(res);
 });

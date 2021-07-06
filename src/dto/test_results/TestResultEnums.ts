@@ -1,4 +1,4 @@
-export const enum TestRunResults {
+export const enum TestRunStatus {
     PASSED = 'Passed',
     FAILED = 'Failed',
     SKIPPED = 'Skipped'
@@ -12,7 +12,8 @@ export const enum Framework {
     JBEHAVE = 'jbehave',
     KARMA = 'karma',
     JASMINE = 'jasmine',
-    MOCHA = 'mocha'
+    MOCHA = 'mocha',
+    CUCUMBER = 'cucumber'
 }
 
 export const enum TestFieldNames {

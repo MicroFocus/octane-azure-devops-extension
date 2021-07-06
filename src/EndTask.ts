@@ -1,12 +1,13 @@
 import {BaseTask} from './BaseTask';
-import {CiEvent} from "./dto/events/CiEvent";
-import {CiEventType, PhaseType, Result} from "./dto/events/CiTypes";
-import {WebApi} from "azure-devops-node-api";
-import {ConnectionUtils} from "./ConnectionUtils";
-import {TestResultsBuilder} from "./services/test_results/TestResultsBuilder";
-import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
-import * as ba from "azure-devops-node-api/BuildApi";
-import {TaskResult} from "azure-devops-node-api/interfaces/BuildInterfaces";
+import {CiEvent} from './dto/events/CiEvent';
+import {CiEventType, PhaseType, Result} from './dto/events/CiTypes';
+import {WebApi} from 'azure-devops-node-api';
+import {ConnectionUtils} from './ConnectionUtils';
+import {TestResultsBuilder} from './services/test_results/TestResultsBuilder';
+import {CiEventCauseBuilder} from './services/events/CiEventCauseBuilder';
+import * as ba from 'azure-devops-node-api/BuildApi';
+import {TaskResult} from 'azure-devops-node-api/interfaces/BuildInterfaces';
+import {InputConstants} from './ExtensionConstants';
 
 export class EndTask extends BaseTask {
     private constructor(tl: any) {
@@ -20,9 +21,15 @@ export class EndTask extends BaseTask {
     }
 
     public async run() {
+<<<<<<< HEAD
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         for(let ws in this.octaneSDKConnections) {
             if(this.octaneSDKConnections[ws]) {
+=======
+        let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.token);
+        for (let ws in this.octaneSDKConnections) {
+            if (this.octaneSDKConnections[ws]) {
+>>>>>>> main
                 if (!this.isPipelineStartJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
@@ -32,9 +39,13 @@ export class EndTask extends BaseTask {
                 }
 
                 if (this.isPipelineEndJob) {
-                    let testResult = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, this.logger);
-                    if (testResult) {
-                        await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
+                    const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH);
+
+                    let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger);
+                    for (const testResult of testResults) {
+                        if (testResult && testResult.length > 0) {
+                            await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
+                        }
                     }
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
@@ -60,7 +71,7 @@ export class EndTask extends BaseTask {
         let buildApi: ba.IBuildApi = await api.getBuildApi();
         let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
         let job = timeline.records.filter(r => r.name.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase())[0];
-        if(!job){
+        if (!job) {
             return 0;
         }
         return new Date().getTime() - job.startTime.getTime();

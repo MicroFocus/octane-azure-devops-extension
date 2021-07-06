@@ -13,6 +13,10 @@ sourceBranchName = "" # Example: main
 definitionName = "" # The name of the pipeline that will be created in Octane. Example: pipeline1
 buildId = "1" # While debugging, you need build with this id to exist in Azure for the required project. Example: "20"
 
+[testInjection]
+[testInjection.gherkin.cucumber]
+cucumberReportPath = "" # Path to directory for the cucuber genereated gherkin test reports
+
 [octane]
 serviceConnectionName = "Octane" # It should always be Octane for this case. See task-mock-initializer
 workspaces = "" # The list of workspaces, comma separated, as string. Example: "1002" or "1002,1003"
