@@ -11,3 +11,4 @@ debug_conf.toml
 .idea
 pkg
 *.vsix
+dist

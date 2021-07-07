@@ -145,7 +145,7 @@ export class TestResultsBuilder {
     private static getCucumberReportsFromPath(cucumberReportsPath: string, logger: LogUtils): GherkinResultData[] {
         let gherkinResults: GherkinResultData[] = [];
 
-        if (cucumberReportsPath == undefined) {
+        if (!cucumberReportsPath) {
             return gherkinResults;
         }
 

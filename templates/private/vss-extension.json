@@ -2,7 +2,7 @@
   "manifestVersion": 1,
 
   "id": "alm-octane-integration",
-  "version": "0.3.7.0",
+  "version": "0.4.1.1",
   "name": "ALM Octane Integration Private Extension",
   "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "almoctane",
@@ -25,13 +25,13 @@
   "contributions": [
     {
       "id": "service-endpoint",
-      "description": "Service endpoint type for ALM Octane connections",
+      "description": "Service endpoint type for ALM Octane Private Extension connections",
       "type": "ms.vss-endpoint.service-endpoint-type",
       "targets": [
         "ms.vss-endpoint.endpoint-types"
       ],
       "properties": {
-        "name": "OctaneServiceConnection",
+        "name": "OctaneServiceConnectionPrivate",
         "displayName": "ALM Octane (private)",
         "url": {
           "displayName": "Server Url",
@@ -82,7 +82,7 @@
       }
     },
     {
-      "id": "octane-start-task",
+      "id": "octane-start-task-private",
       "description": "ALM Octane Start Task (private)",
       "type": "ms.vss-distributed-task.task",
       "targets": [
@@ -93,7 +93,7 @@
       }
     },
     {
-      "id": "octane-end-task",
+      "id": "octane-end-task-private",
       "description": "ALM Octane End Task (private)",
       "type": "ms.vss-distributed-task.task",
       "targets": [
@@ -101,6 +101,17 @@
       ],
       "properties": {
         "name": "Tasks/EndTask"
+      }
+    },
+    {
+      "id": "octane-pipelines-orchestrator-task-private",
+      "description": "ALM Octane Pipelines Orchestrator Task (private)",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "Tasks/PipelinesOrchestrator"
       }
     }
   ],

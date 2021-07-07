@@ -1,8 +1,8 @@
 {
-  "id": "9742c956-6801-4642-bc49-fd331320bf9a",
-  "name": "octane-end-task",
-  "friendlyName": "ALM Octane Job End",
-  "description": "ALM Octane End Task",
+  "id": "94739582-53aa-4491-8b5e-5f04771abe53",
+  "name": "octane-pipelines-orchestrator-task-private",
+  "friendlyName": "ALM Octane Pipelines Orchestrator (private)",
+  "description": "ALM Octane Pipelines Orchestrator Task (private)",
   "author": "Micro Focus",
   "category": "Build",
   "visibility": [
@@ -11,16 +11,16 @@
   ],
   "demands": [],
   "version": {
-    "Major": "1",
-    "Minor": "8",
-    "Patch": "2"
+    "Major": "0",
+    "Minor": "1",
+    "Patch": "8"
   },
   "minimumAgentVersion": "2.170.1",
-  "instanceNameFormat": "ALM Octane Job End",
+  "instanceNameFormat": "ALM Octane Pipelines Orchestrator",
   "inputs": [
     {
       "name": "OctaneServiceConnection",
-      "type": "connectedService:OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnectionPrivate",
       "label": "ALM Octane service/server end point",
       "required": true,
       "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"
@@ -33,11 +33,11 @@
       "helpMarkDown": "Comma separated list of target Octane workspaces"
     },
     {
-      "name": "CucumberReportPath",
+      "name": "PAT",
       "type": "string",
-      "label": "Cucumber report destination path",
-      "required": false,
-      "helpMarkDown": "Output folder of the gherkin tests, containing the actual reports"
+      "label": "Azure Personal Access Token",
+      "required": true,
+      "helpMarkDown": "The Personal Access Token with access to all pipelines"
     },
     {
       "name": "GithubRepositoryConnection",

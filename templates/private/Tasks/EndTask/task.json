@@ -1,7 +1,7 @@
 {
-  "id": "444a4f87-70b6-4f07-aa4a-6a892ca38c8e",
-  "name": "octane-end-task",
-  "friendlyName": "ALM Octane Job End (private)",
+  "id": "d04f2db6-fcf1-4b55-8aa6-9a84910a3113",
+  "name": "octane-end-task-private",
+  "friendlyName": "ALM Octane Job End v2 (private)",
   "description": "ALM Octane End Task (private)",
   "author": "Micro Focus",
   "category": "Build",
@@ -13,14 +13,14 @@
   "version": {
     "Major": "1",
     "Minor": "18",
-    "Patch": "0"
+    "Patch": "2"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job End",
   "inputs": [
     {
       "name": "OctaneServiceConnection",
-      "type": "connectedService:OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnectionPrivate",
       "label": "ALM Octane service/server end point",
       "required": true,
       "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"

@@ -7,7 +7,8 @@ export enum InputConstants {
     OCTANE_SERVICE_CONNECTION = 'OctaneServiceConnection',
     GITHUB_REPOSITORY_CONNECTION = 'GithubRepositoryConnection',
     WORKSPACES_LIST = 'WorkspaceList',
-    CUCUMBER_REPORT_PATH = 'CucumberReportPath'
+    CUCUMBER_REPORT_PATH = 'CucumberReportPath',
+    AZURE_PAT = 'PAT'
 }
 
 export enum SystemVariablesConstants {
@@ -36,4 +37,12 @@ export enum EntityTypeConstants {
 export enum EntityTypeRestEndpointConstants {
     CI_SERVERS_REST_API_NAME = EntityTypeConstants.CI_SERVER_ENTITY_TYPE + 's',
     PIPELINES_REST_API_NAME = EntityTypeConstants.PIPELINE_ENTITY_TYPE + 's'
+}
+
+export enum OctaneTaskConstants {
+    NGA_API = '/nga/api/v1/'
+}
+
+export enum AzureDevOpsApiVersions {
+    API_VERSION_6_0_PREVIEW = 'api-version=6.0-preview'
 }
