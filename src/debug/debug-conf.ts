@@ -1,20 +1,9 @@
-<<<<<<< HEAD
-import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from "../ExtensionConstants";
-import {EndpointAuthorization} from "azure-pipelines-task-lib";
 import {AuthScheme} from "../services/security/AuthScheme";
 import {Auth} from "../services/security/Auth";
 import {AccessToken} from "../services/security/AccessToken";
 import {UsernamePassword} from "../services/security/UsernamePassword";
-=======
 import {EndpointDataConstants, InputConstants, SystemVariablesConstants} from '../ExtensionConstants';
 import {EndpointAuthorization} from 'azure-pipelines-task-lib';
-
-enum AuthScheme {
-    UNDEFINED,
-    USERNAME_PASSWORD = 'username',
-    PERSONAL_ACCESS_TOKEN = 'PersonalAccessToken'
-}
->>>>>>> main
 
 interface System {
     teamFoundationCollectionUri: string;

@@ -19,5 +19,6 @@
     "@types/q": "1.5.2"
   },
   "devDependencies": {
-    "@ltd/j-toml": "1.6.0"  }
+    "@ltd/j-toml": "1.6.0"
+  }
 }
