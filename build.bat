@@ -54,9 +54,6 @@ echo ======================================
 echo Copying source files
 xcopy /S /Y dist\* pkg\Tasks\StartTask\ >NUL || goto :error
 xcopy /S /Y dist\* pkg\Tasks\EndTask\ >NUL || goto :error
-if "%extension%" == "private" (
-xcopy /S /Y dist\* pkg\Tasks\PipelinesOrchestrator\ >NUL || goto :error
-)
 echo Copying source files DONE
 echo ======================================
 
@@ -64,6 +61,14 @@ echo.
 echo ======================================
 echo Copying %extension% extension template files
 xcopy /S /Y templates\%extension%\* pkg\ || goto :error
+echo ======================================
+
+echo.
+echo ======================================
+echo Deleting %extension% orchestrator files. We don't want to release this yet
+if exist pkg\Tasks\PipelinesOrchestrator (
+   rmdir /S /Q pkg\Tasks\PipelinesOrchestrator || goto :error
+)
 echo ======================================
 
 pushd .

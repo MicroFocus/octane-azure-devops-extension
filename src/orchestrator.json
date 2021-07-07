@@ -2,6 +2,6 @@
   "api-version": "1",
   "sdk-version": "1",
   "plugin-version": "0.1.0",
-  "elapsed-seconds-auto-shutdown": 40,
+  "elapsed-seconds-auto-shutdown": 1780,
   "server-type": "azure_devops"
 }
