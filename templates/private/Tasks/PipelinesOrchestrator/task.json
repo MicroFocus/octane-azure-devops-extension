@@ -13,14 +13,14 @@
   "version": {
     "Major": "0",
     "Minor": "1",
-    "Patch": "9"
+    "Patch": "10"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Pipelines Orchestrator",
   "inputs": [
     {
       "name": "OctaneServiceConnection",
-      "type": "connectedService:OctaneServiceConnectionPrivate",
+      "type": "connectedService:OctaneServiceConnection",
       "label": "ALM Octane service/server end point",
       "required": true,
       "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"

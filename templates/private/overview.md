@@ -1,4 +1,8 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.4.1.4 version Release notes
+* Added support for Gherkin injection
+* Various other improvements, including bug fixes and logs
+
 ## 0.3.5.1 version Release notes
 * Removed the pipeline decorators as they work only in private and cannot be customized for individual pipelines, this making the whole organization's pipelines generate pipelines in Octane.
 * Fixed 401 error in tasks not showing as failed

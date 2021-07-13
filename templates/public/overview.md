@@ -1,4 +1,8 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.2.5.4 version Release notes
+* Added support for Gherkin injection
+* Various other improvements, including bug fixes and logs
+
 ## 0.2.3.1 version Release notes
 * Fixed 401 error in tasks not showing as failed
 * Homogenized public and private extensions. Currently, besides Azure DevOps required manifests and versions there will not be any difference between the private and the public extension.
