@@ -25,6 +25,7 @@ export class GherkinResultData extends DtoObject {
     private static determineDurationAndStatusFromScenarios(scenarios: GherkinScenarioData[]) {
         let duration: number = 0;
         let status: TestRunStatus = TestRunStatus.PASSED;
+        const nanoToMiliDiff: number = 1000000;
 
         scenarios.forEach(scenario => {
             let steps: GherkinStepData[] = Array.isArray(scenario.steps.step)
@@ -32,13 +33,17 @@ export class GherkinResultData extends DtoObject {
                 : Array.of(scenario.steps.step);
             scenario._attributes.status = 'Passed';
             steps.forEach(step => {
-                duration += parseInt(step._attributes.duration.toString());
+                let durationInMillis: number = parseInt(step._attributes.duration.toString()) / nanoToMiliDiff;
+                step._attributes.duration = Math.round(durationInMillis);
+                duration += durationInMillis;
                 if (step._attributes.status == 'failed') {
                     status = TestRunStatus.FAILED;
                     scenario._attributes.status = 'Failed'
                 }
             });
         });
+
+        duration = Math.round(duration);
 
         return {duration, status};
     }
