@@ -1,4 +1,7 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.2.5.5 version Release notes
+* Fix issue with unknown change type on commits, and added logs  
+ 
 ## 0.2.5.4 version Release notes
 * Added support for Gherkin injection
 * Various other improvements, including bug fixes and logs

@@ -81,7 +81,11 @@ export class ScmBuilder {
                                  projectName: string, buildNumber: number, repoId: string, sourceBranchName: string,
                                  tl: any, logger: LogUtils): Promise<ScmData> {
         function convertType(changeType: number): string {
-            return VersionControlChangeType[changeType].toLowerCase();
+            if(VersionControlChangeType[changeType]) {
+                return VersionControlChangeType[changeType].toLowerCase();
+            }
+            logger.warn('Change type was not found: ' + changeType);
+            return 'none';
         }
 
         function convertGitType(changeType: string): string {
