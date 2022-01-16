@@ -63,5 +63,6 @@ export class GitHubAttributes {
     public static readonly draft: string = "draft";
     public static readonly preRelease: string = "prerelease";
     public static readonly getCommitUrlFormat: string = "%s/repos/%s/commits/%s";
+    public static readonly previousFile: string = "previous_filename";
 
 }

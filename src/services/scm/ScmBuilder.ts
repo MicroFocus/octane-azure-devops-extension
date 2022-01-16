@@ -14,6 +14,13 @@ import {BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInt
 
 var request = require('request');
 
+const allowChangeTypes ={
+    "add":"add",
+    "edit":"edit",
+    "delete":"delete",
+    "rename":"add",
+}
+
 export class ScmBuilder {
 
     public static async buildScmData(connection: WebApi, projectName: string, toBuild: number, sourceBranchName: string, tl: any, logger: LogUtils): Promise<ScmData> {
@@ -80,19 +87,34 @@ export class ScmBuilder {
     private static async setData(type: string, repo: BuildRepository, changes: Change[], gitApi: IGitApi,
                                  projectName: string, buildNumber: number, repoId: string, sourceBranchName: string,
                                  tl: any, logger: LogUtils): Promise<ScmData> {
-        function convertType(changeType: number): string {
-            if(VersionControlChangeType[changeType]) {
-                return VersionControlChangeType[changeType].toLowerCase();
+        function convertType(changeType: number): string[] {
+            let changeTypeResult = [];
+            logger.debug('Change type value: ' + changeType );
+            if(VersionControlChangeType[changeType] && allowChangeTypes[VersionControlChangeType[changeType].toLowerCase()]) {
+                return [allowChangeTypes[VersionControlChangeType[changeType].toLowerCase()]];
+            } else {
+                for (const versionControlChangeTypeValue in VersionControlChangeType) {
+                    const value = Number(VersionControlChangeType[versionControlChangeTypeValue]);
+                    if(value && (value & changeType) > 0 && VersionControlChangeType[value & changeType] &&
+                        allowChangeTypes[VersionControlChangeType[value & changeType].toLowerCase()]){
+                        changeTypeResult.push(allowChangeTypes[VersionControlChangeType[value & changeType].toLowerCase()]);
+                    }
+                }
+                if(changeTypeResult.length > 0){
+                    return changeTypeResult;
+                }
             }
-            logger.warn('Change type was not found: ' + changeType);
-            return 'none';
+            logger.warn('Change type was not found or not supported by Octane: ' + changeType);
+            return changeTypeResult;
         }
 
         function convertGitType(changeType: string): string {
+            logger.debug('Change type value: ' + changeType );
             switch (changeType) {
                 case 'removed' :
                     return 'delete';
                 case 'added':
+                case 'renamed':
                     return 'add';
                 case 'modified':
                     return 'edit';
@@ -119,8 +141,9 @@ export class ScmBuilder {
                         element.item.isFolder == null);
 
                     for (let realChange of realChanges) {
-                        let type: string = convertType(realChange.changeType);
-                        fileChanges.push(new ScmCommitFileChange(type, realChange.item.path));
+                        logger.debug('Change found: ' + realChange );
+                        let types: string[] = convertType(realChange.changeType);
+                        types.forEach(type =>fileChanges.push(new ScmCommitFileChange(type, realChange.item.path)));
                     }
                     break;
                 case 'Git':
@@ -136,12 +159,17 @@ export class ScmBuilder {
 
                     let testCommit = await this.getCommit(githubAccessToken, repoId, change.id);
                     let commit = JSON.parse(testCommit['body']);
+                    logger.debug('Commit body = ' + commit);
                     revId = commit[GitHubAttributes.sha];
                     parentRevId = commit[GitHubAttributes.parents][0][GitHubAttributes.sha];
                     for (let file of commit[GitHubAttributes.files]) {
                         let type: string = convertGitType(file[GitHubAttributes.status]);
                         let filePath = file[GitHubAttributes.filename].includes('/') ? file[GitHubAttributes.filename] : '/' + file[GitHubAttributes.filename];
                         fileChanges.push(new ScmCommitFileChange(type, filePath));
+                        if('renamed' === file[GitHubAttributes.status] && file[GitHubAttributes.previousFile]){
+                            const prevFile = file[GitHubAttributes.previousFile].includes('/') ? file[GitHubAttributes.previousFile] : '/' + file[GitHubAttributes.previousFile];
+                            fileChanges.push(new ScmCommitFileChange('delete', prevFile));
+                        }
                     }
                     break;
                 default:
