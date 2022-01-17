@@ -10,10 +10,11 @@ import {VersionControlChangeType} from 'azure-devops-node-api/interfaces/GitInte
 import {LogUtils} from "../../LogUtils";
 import {GitHubAttributes, Utility} from "./Utils";
 import * as util from "util";
-import {BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInterfaces";
+import {BuildQueryOrder, BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInterfaces";
 
 var request = require('request');
 
+const defaultNumberToFetch = 1000;
 const allowChangeTypes ={
     "add":"add",
     "edit":"edit",
@@ -27,12 +28,13 @@ export class ScmBuilder {
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
         let gitApi: git.IGitApi = await connection.getGitApi();
 
+        const definitionId = tl.getVariable("System.DefinitionId");
+
         let build = await buildApi.getBuild(projectName, toBuild);
-        let buildChanges = await buildApi.getBuildChanges(projectName, toBuild);
-        logger.debug("Initial buildChanges: " + JSON.stringify(buildChanges));
+
         let builds = await buildApi.getBuilds(
             projectName,
-            null,                       // definitions: number[]
+            [definitionId],                       // definitions: number[]
             null,                       // queues: number[]
             null,                       // buildNumber
             null,                      // minFinishTime
@@ -43,9 +45,15 @@ export class ScmBuilder {
             null,
             null,                       // tagFilters: string[]
             null,                        // properties: string[]
-            2                               // top: number
+            2,                               // top: number
+            null,
+            null,
+            null,
+            BuildQueryOrder.StartTimeDescending,                               // top: number
         );
         logger.info("Builds: " + JSON.stringify(builds));
+
+        let buildChanges;
 
         if (builds && builds.length > 1) {
             let from = builds[1];
@@ -59,11 +67,31 @@ export class ScmBuilder {
             } else if (build.repository.type === 'TfsGit') {
                 //TfsGit always brings ALL changes for each build
                 //it works for Azure DevOps Server 2020 and doeas not for 2019
-                // buildChanges = await buildApi.getChangesBetweenBuilds(projectName, from.id, toBuild);
-                let buildChangesFrom = await buildApi.getBuildChanges(projectName, from.id);
-                buildChanges = buildChanges.filter(({ id: id1 }) => !buildChangesFrom.some(({ id: id2 }) => id2 === id1));
+                //not working because header API version is not correct and result is not returning
+                buildChanges = await buildApi.getChangesBetweenBuilds(projectName, from.id, toBuild,defaultNumberToFetch);
+                if(!buildChanges) {
+                    logger.warn('Failed to get changes using Azure API, retrying using direct API');
+                    buildChanges = await this.getChangesBetweenBuilds(projectName, from.id, toBuild, connection);
+                    if(!buildChanges){
+                        logger.warn('Failed to get changes using Azure direct Rest API, retrying using build commits');
+                        let buildChangesFrom =  await buildApi.getBuildChanges(projectName,from.id,null,defaultNumberToFetch);
+                        buildChanges =  await buildApi.getBuildChanges(projectName,toBuild,null,defaultNumberToFetch);
+                        if(buildChanges && buildChangesFrom?.length > 0) {
+                            buildChanges = buildChanges.filter(({id: id1}) => !buildChangesFrom.some(({id: id2}) => id2 === id1));
+                        }
+                    }
+                }
                 logger.info(buildChanges ? buildChanges.length : 0 + ' changes were found between builds [' + from.id + ',' + toBuild + ']');
                 logger.debug("Diff buildChanges: " + JSON.stringify(buildChanges));
+                if(buildChanges?.length === defaultNumberToFetch){
+                    logger.warn('Found 1000 commits, you may have more commits that will not be send');
+                }
+            } else {
+                buildChanges = await buildApi.getBuildChanges(projectName, toBuild,null,defaultNumberToFetch);
+                const buildChangesFrom = await buildApi.getBuildChanges(projectName, from.id,null,defaultNumberToFetch);
+                if(buildChanges && buildChangesFrom?.length > 0) {
+                    buildChanges = buildChanges.filter(({ id: id1 }) => !buildChangesFrom.some(({ id: id2 }) => id2 === id1));
+                }
             }
         }
 
@@ -195,6 +223,18 @@ export class ScmBuilder {
             }
         };
         return await util.promisify(request)(options);
+    }
+
+    private static async getChangesBetweenBuilds(projectName,fromBuild,toBuild,connection: WebApi): Promise<any>{
+
+        let url = connection.serverUrl + "/" + projectName +"/" + "_apis/build/changes?frombuildid=" +fromBuild + "&tobuildid=" + toBuild
+           + "&$top=" + defaultNumberToFetch;
+        let options = {
+            acceptHeader:"application/json;api-version=6.0-preview.2",
+        }
+        let buildChanges = await connection.rest.get(url,options);
+
+        return buildChanges?.result ? buildChanges?.result["value"] : null;
     }
 }
 

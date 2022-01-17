@@ -20,7 +20,8 @@ export enum SystemVariablesConstants {
     BUILD_DEFINITION_NAME = 'Build.DefinitionName',
     BUILD_BUILD_ID = 'Build.BuildId',
     AGENT_JOB_NAME = 'Agent.JobName',
-    AGENT_JOB_STATUS = 'AGENT_JOBSTATUS'
+    AGENT_JOB_STATUS = 'AGENT_JOBSTATUS',
+    BUILD_DEFINITION_ID = 'System.DefinitionId'
 }
 
 export enum EndpointDataConstants {
