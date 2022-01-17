@@ -1,4 +1,7 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.2.5.6 version Release notes
+* handle multi changes per commit
+* report to Octane max number of commits the Azure devops API return 
 ## 0.2.5.5 version Release notes
 * Fix issue with unknown change type on commits, and added logs  
  
