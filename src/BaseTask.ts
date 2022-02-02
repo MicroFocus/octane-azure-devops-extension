@@ -21,6 +21,7 @@ const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
     public static ALM_OCTANE_PIPELINE_END = 'AlmOctanePipelineEnd';
+    public static ALM_OCTANE_PIPELINE_START_NAME = 'octanestarttask';
 
     protected octaneSDKConnections: object;
     protected tl: any;

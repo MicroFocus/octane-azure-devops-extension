@@ -24,14 +24,6 @@ export class EndTask extends BaseTask {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         for(let ws in this.octaneSDKConnections) {
             if(this.octaneSDKConnections[ws]) {
-                if (!this.isPipelineStartJob) {
-                    let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
-                    let buildResult = await this.getStatus(api);
-                    let duration = await this.getDuration(api);
-                    let endEvent = new CiEvent(this.agentJobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
-                    await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
-                }
-
                 if (this.isPipelineEndJob) {
                     const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH);
 
@@ -41,6 +33,13 @@ export class EndTask extends BaseTask {
                             await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
                         }
                     }
+                }
+                if (!this.isPipelineStartJob) {
+                    let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
+                    let buildResult = await this.getStatus(api);
+                    let duration = await this.getDuration(api);
+                    let endEvent = new CiEvent(this.agentJobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+                    await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
             }
@@ -64,10 +63,22 @@ export class EndTask extends BaseTask {
     private async getDuration(api: WebApi) {
         let buildApi: ba.IBuildApi = await api.getBuildApi();
         let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
-        let job = timeline.records.filter(r => r.name.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase())[0];
+
+        let job = timeline.records.filter(r => r.name.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START_NAME)[0];
         if (!job) {
-            return 0;
+            job = timeline.records.filter(r => r.name.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_START_NAME +'private')[0];
         }
-        return new Date().getTime() - job.startTime.getTime();
+
+        if(job) {
+            this.logger.debug('Now is ' + new Date().toISOString() + '. Build start: ' + job.startTime + ' , Got from timeline API');
+            return new Date().getTime() - job.startTime.getTime();
+        } else {
+            const build = await buildApi.getBuild(this.projectName, parseInt(this.buildId));
+            if(build) {
+                this.logger.debug('Now is ' + new Date().toISOString() + '. Build start: ' + build.startTime + ' , Got from build API');
+                return new Date().getTime() - build.startTime.getTime();
+            }
+        }
+
     }
 }
