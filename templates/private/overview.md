@@ -1,4 +1,7 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.4.2.2 version Release notes
+* Update Octane CI Server plugin version
+* Update Octane pipeline to will be able to execute from Octane side
 ## 0.4.1.16 version Release notes
 * Report to Octane duration of the pipeline run
 ## 0.4.1.13 version Release notes

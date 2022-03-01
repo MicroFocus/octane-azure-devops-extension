@@ -15,6 +15,8 @@ import {AuthenticationService} from "./services/security/AuthenticationService";
 import {NodeUtils} from "./NodeUtils";
 import {SharedSpaceUtils} from "./SharedSpaceUtils";
 import {UrlUtils} from "./UrlUtils";
+import {WebApi} from "azure-devops-node-api";
+import {ConnectionUtils} from "./ConnectionUtils";
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 
@@ -44,12 +46,16 @@ export class BaseTask {
     protected sourceBranchName: string;
     protected customWebContext: string;
     protected authenticationService: AuthenticationService;
+    protected definitionId: number;
+    protected sourceBranch: string;
 
     private octaneServiceConnectionData: any;
     private url: URL;
     private sharedSpaceId: string;
     private workspaces: any;
     private analyticsCiInternalApiUrlPart: string;
+    private ciInternalAzureApiUrlPart: string;
+    private isRunPipelineFromOctaneEnable: boolean;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -126,6 +132,7 @@ export class BaseTask {
 
     private buildAnalyticsCiInternalApiUrlPart() {
         this.analyticsCiInternalApiUrlPart = '/internal-api/shared_spaces/' + this.sharedSpaceId + '/analytics/ci';
+        this.ciInternalAzureApiUrlPart = '/internal-api/shared_spaces/' + this.sharedSpaceId + '/workspaces/{workspace_id}/analytics/ci';
     }
 
     private setAgentJobName(agentJobName: string) {
@@ -168,12 +175,16 @@ export class BaseTask {
         this.buildId = this.tl.getVariable('Build.BuildId');
         this.sourceBranchName = this.tl.getVariable('Build.SourceBranchName');
         this.jobStatus = this.convertJobStatus(this.tl.getVariable('AGENT_JOBSTATUS'));
+        this.definitionId = this.tl.getVariable("System.DefinitionId");
+        this.sourceBranch = this.tl.getVariable("Build.SourceBranch");
 
         this.logger.info('collectionUri = ' + this.collectionUri);
         this.logger.info('projectId = ' + this.projectId);
         this.logger.info('projectName = ' + this.projectName);
         this.logger.info('buildDefinitionName = ' + this.buildDefinitionName);
         this.logger.info('sourceBranchName = ' + this.sourceBranchName);
+        this.logger.info('definitionId = ' + this.definitionId);
+        this.logger.info('sourceBranch = ' + this.sourceBranch);
     }
 
     protected convertJobStatus(nativeStatus: string): Result {
@@ -221,6 +232,16 @@ export class BaseTask {
         this.workspaces = this.workspaces.split(',').map(s => s.trim());
     }
 
+    private async initializeExperiments(octaneSDKConnection,ws):Promise<void>{
+        const currentVersion = await this.getOctaneVersion(octaneSDKConnection);
+        this.logger.info("Octane current version: " + currentVersion);
+        this.isRunPipelineFromOctaneEnable = this.isVersionGreaterOrEquals(currentVersion,'16.0.316') && await this.isExperimentEnable(octaneSDKConnection,ws);
+        if(this.isRunPipelineFromOctaneEnable){
+            await this.updatePluginVersion(octaneSDKConnection);
+            this.logger.info("Send plugin details to Octane.");
+        }
+    }
+
     private async createOctaneConnectionsAndRetrieveCiServersAndPipelines() {
         let clientId: string = this.authenticationService.getOctaneClientId();
         let clientSecret: string = this.authenticationService.getOctaneClientSecret();
@@ -235,11 +256,11 @@ export class BaseTask {
 
                     await octaneSDKConnection._requestHandler.authenticate();
                 }
-
+                await this.initializeExperiments(octaneSDKConnection,ws);
                 let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
 
                 await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
-                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START,ws);
 
                 this.octaneSDKConnections[ws] = octaneSDKConnection;
             })(ws);
@@ -273,7 +294,7 @@ export class BaseTask {
             } else {
                 throw new Error('CI Server \'' + this.projectFullName + '(instanceId=\'' + this.instanceId + '\')\' not found.');
             }
-        } else {
+        } else if(!this.isRunPipelineFromOctaneEnable){
             let ciServer = {
                 'name': this.projectFullName,
                 'url': serverUrl,
@@ -311,21 +332,127 @@ export class BaseTask {
         return ciServers;
     }
 
-    protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, createOnAbsence) {
-        let pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName))
-            .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
+    protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, createOnAbsence,workspaceId) {
+        let pipelines;
+        if(this.isRunPipelineFromOctaneEnable){
+            const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.projectFullName + '.' + this.buildDefinitionName))
+                .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
+            const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
+                .fields('pipeline,definition_id')
+            .query(pipelineQuery).execute();
 
-        let pipelines = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME).query(pipelineQuery).execute();
-        if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
-            if (createOnAbsence) {
-                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
-                return result[0].data[0];
-            } else {
-                throw new Error('Pipeline \'' + pipelineName + '\' not found.')
+            if(ciJobs && ciJobs.total_count > 0 && ciJobs.data) {
+                pipelines = ciJobs.data.filter(ciJob => ciJob.pipeline).map(ciJob => ciJob.pipeline);
             }
+            if (!pipelines || pipelines.length == 0) {
+                if(createOnAbsence) {
+                    rootJobName = rootJobName + '@@@' + this.definitionId + '@@@' + this.sourceBranch;
+                    let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                    return result[0].data[0];
+                } else {
+                    throw new Error('Pipeline \'' + pipelineName + '\' not found.')
+                }
+            } else {
+                this.logger.debug('Checking if have CI jobs to update Octane');
+                const ciJobsToUpdate = ciJobs.data.filter(ciJob => ciJob.pipeline && ciJob?.definition_id !== this.definitionId);
+                if(ciJobsToUpdate?.length > 0) {
+                    this.logger.info('Updating ' + ciJobsToUpdate.length +' CI jobs of Octane');
+                    await this.updateExistCIJobs(ciJobsToUpdate,ciServer.id,workspaceId,octaneSDKConnection);
+                }
+            }
+            return pipelines[0];
+        } else {
+            const pipelineQuery = Query.field('name').equal(BaseTask.escapeOctaneQueryValue(pipelineName))
+            .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
+            pipelines = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME).query(pipelineQuery).execute();
+            if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
+                if (createOnAbsence) {
+                    let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                    return result[0].data[0];
+                } else {
+                    throw new Error('Pipeline \'' + pipelineName + '\' not found.')
+                }
+            }
+            return pipelines.data[0];
         }
 
-        return pipelines.data[0];
+
+    }
+
+    private async getOctaneVersion(octaneSDKConnection): Promise<string>{
+        const urlStatus = this.analyticsCiInternalApiUrlPart +'/servers/connectivity/status'
+        const response = await octaneSDKConnection._requestHandler._requestor.get(urlStatus);
+        this.logger.debug("Octane connectivity status response: " + response);
+        return response.octaneVersion;
+    }
+    private async updatePluginVersion(octaneSDKConnection): Promise<void>{
+        const querystring = require('querystring');
+        const sdk = "";
+        const plugin = await this.getPluginVersion();
+        const client_id = this.authenticationService.getOctaneClientId();
+        const self_url = querystring.escape(this.collectionUri + this.projectName);
+        const instance_id = this.instanceId;
+
+        const urlConnectivity = this.analyticsCiInternalApiUrlPart +
+           `/servers/${instance_id}/tasks?self-type=azure_devops&api-version=1&sdk-version=${sdk}&plugin-version=${plugin}&self-url=${self_url}&client-id=${client_id}&client-server-user=`;
+        await octaneSDKConnection._requestHandler._requestor.get(urlConnectivity);
+    }
+
+
+    private async getPluginVersion():Promise<string>{
+        const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+        const extApi = await api.getExtensionManagementApi(this.collectionUri)
+        const extension = await extApi.getInstalledExtensionByName("almoctane","alm-octane-integration-public");
+        this.logger.info("extenstion version: " + extension?.version);
+        return extension?.version;
+    }
+
+    private isVersionGreaterOrEquals(version1: string,version2: string): boolean{
+        if(!version1 || !version2){
+            return false;
+        }
+        const version1Spl = version1.split('.');
+        const version2Spl = version2.split('.');
+        for(let i = 0;i < version1Spl.length || i < version2Spl.length;i++){
+            const decrement = parseInt(version1Spl[i]) - parseInt(version2Spl[i]);
+            if(decrement !== 0){
+                return decrement > 0
+            }
+        }
+        return version1Spl.length >= version2Spl.length;
+    }
+
+    private async updateExistCIJobs(ciJobs,ciServerId,workspaceId,octaneSDKConnection): Promise<void> {
+        let ciJobsToUpdate = [];
+        ciJobs.forEach(ciJob => ciJobsToUpdate.push(this.createCiJobBody(ciJob)));
+        this.logger.debug('CI Jobs update body:' + ciJobs);
+        const url = this.ciInternalAzureApiUrlPart.replace('{workspace_id}',workspaceId) + '/ci_job_update?ci-server-id=' + ciServerId;
+        await octaneSDKConnection._requestHandler.update(url,ciJobsToUpdate);
+    }
+
+    private createCiJobBody(ciJob){
+        return {
+            'id': ciJob.id,
+            'definitionId': this.definitionId,
+            'jobCiId': this.projectFullName + '.' + this.buildDefinitionName,
+            'parameters': [
+                {
+                    'name': 'branch',
+                    'type': 'string',
+                    'description': 'Branch to execute pipeline',
+                    'defaultValue': this.sourceBranch,
+                    'choices': [],
+                }
+            ]
+
+        }
+    }
+
+    private async isExperimentEnable(octaneSDKConnection,workspaceId): Promise<boolean>{
+        const experimentUrl = this.ciInternalAzureApiUrlPart.replace('{workspace_id}',workspaceId) + '/experiment_run_pipeline';
+        const response = await octaneSDKConnection._requestHandler._requestor.get(experimentUrl);
+        this.logger.info("Octane experiment 'run_azure_pipeline' enabled: " + response);
+        return response;
     }
 
     private async createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer) {

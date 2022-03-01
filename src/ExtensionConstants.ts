@@ -21,7 +21,8 @@ export enum SystemVariablesConstants {
     BUILD_BUILD_ID = 'Build.BuildId',
     AGENT_JOB_NAME = 'Agent.JobName',
     AGENT_JOB_STATUS = 'AGENT_JOBSTATUS',
-    BUILD_DEFINITION_ID = 'System.DefinitionId'
+    BUILD_DEFINITION_ID = 'System.DefinitionId',
+    BUILD_SOURCE_BRANCH = "Build.SourceBranch"
 }
 
 export enum EndpointDataConstants {
@@ -32,12 +33,14 @@ export enum EndpointDataConstants {
 
 export enum EntityTypeConstants {
     CI_SERVER_ENTITY_TYPE = 'ci_server',
-    PIPELINE_ENTITY_TYPE = 'pipeline'
+    PIPELINE_ENTITY_TYPE = 'pipeline',
+    CI_JOB_ENTITY_TYPE = 'ci_job'
 }
 
 export enum EntityTypeRestEndpointConstants {
     CI_SERVERS_REST_API_NAME = EntityTypeConstants.CI_SERVER_ENTITY_TYPE + 's',
-    PIPELINES_REST_API_NAME = EntityTypeConstants.PIPELINE_ENTITY_TYPE + 's'
+    PIPELINES_REST_API_NAME = EntityTypeConstants.PIPELINE_ENTITY_TYPE + 's',
+    CI_JOB_REST_API_NAME = EntityTypeConstants.CI_JOB_ENTITY_TYPE + 's'
 }
 
 export enum OctaneTaskConstants {

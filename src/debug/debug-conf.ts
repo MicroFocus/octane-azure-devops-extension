@@ -20,6 +20,7 @@ interface Build {
     sourceBranchName: string;
     definitionName: string;
     buildId: string;
+    sourceBranch: string;
 }
 
 interface Octane {
@@ -119,6 +120,7 @@ export class DebugConfToDebugMapsConverter {
         map.set(SystemVariablesConstants.SYSTEM_TEAM_PROJECT_ID, conf.system.teamProjectId);
         map.set(SystemVariablesConstants.BUILD_SOURCE_BRANCH_NAME, conf.build.sourceBranchName);
         map.set(SystemVariablesConstants.BUILD_DEFINITION_ID,conf.system.definitionId);
+        map.set(SystemVariablesConstants.BUILD_SOURCE_BRANCH,conf.build.sourceBranch);
 
         map.set(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN, conf.endpoint.azurePersonalAccessToken);
         map.set(EndpointDataConstants.ENDPOINT_DATA_OCTANE_INSTANCE_ID, conf.endpoint.octaneInstanceId);
