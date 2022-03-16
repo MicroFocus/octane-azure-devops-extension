@@ -382,7 +382,7 @@ export class BaseTask {
     private async getOctaneVersion(octaneSDKConnection): Promise<string>{
         const urlStatus = this.analyticsCiInternalApiUrlPart +'/servers/connectivity/status'
         const response = await octaneSDKConnection._requestHandler._requestor.get(urlStatus);
-        this.logger.debug("Octane connectivity status response: " + response);
+        this.logger.debug("Octane connectivity status response: " + JSON.stringify(response));
         return response.octaneVersion;
     }
     private async updatePluginVersion(octaneSDKConnection): Promise<void>{
@@ -403,8 +403,9 @@ export class BaseTask {
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         const extApi = await api.getExtensionManagementApi(this.collectionUri)
         const extension = await extApi.getInstalledExtensionByName("almoctane","alm-octane-integration-public");
-        this.logger.info("extenstion version: " + extension?.version);
-        return extension?.version;
+        this.logger.debug("Extension query result: " + JSON.stringify(extension));
+        this.logger.info("extension version: " + extension?.version);
+        return extension?.version ? extension.version : "";
     }
 
     private isVersionGreaterOrEquals(version1: string,version2: string): boolean{
