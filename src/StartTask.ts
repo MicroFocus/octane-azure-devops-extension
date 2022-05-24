@@ -5,6 +5,7 @@ import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
 import {ScmBuilder} from "./services/scm/ScmBuilder";
 import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
+import {CiParameter} from "./dto/events/CiParameter";
 
 export class StartTask extends BaseTask {
     private constructor(tl: any) {
@@ -24,7 +25,12 @@ export class StartTask extends BaseTask {
             if (this.octaneSDKConnections[ws]) {
                 if (!this.isPipelineEndJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
-                    let startEvent = new CiEvent(this.agentJobName, CiEventType.STARTED, this.buildId, this.buildId, this.jobFullName, null, new Date().getTime(), null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+
+                    const parameters: CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
+                        await this.parametersService.getParameters(api, this.definitionId, this.buildId, this.projectName, this.sourceBranch) :
+                        undefined;
+
+                    let startEvent = new CiEvent(this.agentJobName, CiEventType.STARTED, this.buildId, this.buildId, this.jobFullName, null, new Date().getTime(), null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
                     await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
                 }
 
