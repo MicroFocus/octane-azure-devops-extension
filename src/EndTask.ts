@@ -8,6 +8,8 @@ import {CiEventCauseBuilder} from './services/events/CiEventCauseBuilder';
 import * as ba from 'azure-devops-node-api/BuildApi';
 import {TaskResult} from 'azure-devops-node-api/interfaces/BuildInterfaces';
 import {InputConstants} from './ExtensionConstants';
+import {CiParameter} from "./dto/events/CiParameter";
+import {PipelineParametersService} from "./services/pipelines/PipelineParametersService";
 
 export class EndTask extends BaseTask {
     private constructor(tl: any) {
@@ -38,7 +40,10 @@ export class EndTask extends BaseTask {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
-                    let endEvent = new CiEvent(this.agentJobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes);
+                    const parameters:CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
+                        await this.parametersService.getParameters(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch) :
+                        undefined;
+                    let endEvent = new CiEvent(this.agentJobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
                     await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
