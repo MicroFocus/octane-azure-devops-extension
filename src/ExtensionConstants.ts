@@ -50,3 +50,8 @@ export enum OctaneTaskConstants {
 export enum AzureDevOpsApiVersions {
     API_VERSION_6_0_PREVIEW = 'api-version=6.0-preview'
 }
+
+export enum OctaneVariablesName {
+    EXPERIMENTS ='ALMOctaneExperiments',
+    OCTANE_VERSION = 'ALMOctaneVersion'
+}
