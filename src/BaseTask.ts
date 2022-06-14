@@ -476,18 +476,22 @@ export class BaseTask {
 
     private async getExperiments(octaneSDKConnection,workspaceId): Promise<{[name:string]: boolean}>{
         const octaneExperimentsVariable = this.tl.getVariable(OctaneVariablesName.EXPERIMENTS);
-        this.logger.info('Octane experiments variables' + (octaneExperimentsVariable ? 'exist' : 'not exist'));
+        this.logger.info('Octane experiments variables ' + (octaneExperimentsVariable ? 'exist' : 'not exist'));
         if(!octaneExperimentsVariable) {
             const experimentUrl = this.ciInternalAzureApiUrlPart.replace('{workspace_id}', workspaceId) + '/azure_pipeline_experiments';
             const response = await octaneSDKConnection._requestHandler._requestor.get(experimentUrl);
             if (response) {
                 this.logger.info("Octane experiments status: " +
-                Object.keys(response).map(expr => expr + '=' + response[expr]).join(', '));
+                    Object.keys(response).map(expr => expr + '=' + response[expr]).join(', '));
             }
-            this.tl.setVariable('ALMOctaneExperiments',response);
+            this.tl.setVariable(OctaneVariablesName.EXPERIMENTS,JSON.stringify(response));
             return response;
+        } else {
+            const octaneExperiments = JSON.parse(octaneExperimentsVariable);
+            this.logger.info("Octane experiments from Varialbe: " +
+                Object.keys(octaneExperiments).map(expr => expr + '=' + octaneExperiments[expr]).join(', '));
+            return octaneExperiments;
         }
-        return octaneExperimentsVariable;
     }
 
     private async createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer) {
