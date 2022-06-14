@@ -488,7 +488,7 @@ export class BaseTask {
             return response;
         } else {
             const octaneExperiments = JSON.parse(octaneExperimentsVariable);
-            this.logger.info("Octane experiments from Varialbe: " +
+            this.logger.info("Octane experiments from Variable: " +
                 Object.keys(octaneExperiments).map(expr => expr + '=' + octaneExperiments[expr]).join(', '));
             return octaneExperiments;
         }
