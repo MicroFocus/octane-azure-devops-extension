@@ -18,9 +18,13 @@ export class CiEvent extends DtoObject {
     phaseType: PhaseType;
     causes: CiEventCause[];
     parameters: CiParameter[] = [];
+    multiBranchType: string;
+    parentCiId: string;
+    branch: string;
 
     constructor(project_display_name: string, ci_event_type: CiEventType, build_ci_id: string, number: string, project: string, result: Result,
-                start_time: number, estimated_duration?: number, duration?: number, scm_data?: ScmData, phase_type?: PhaseType, causes?: CiEventCause[], parameters?: any[]) {
+                start_time: number, estimated_duration?: number, duration?: number, scm_data?: ScmData, phase_type?: PhaseType, causes?: CiEventCause[],
+                parameters?: any[],multiBranchType?:string ,parentCiId?:string, branch?:string) {
         super();
         this.projectDisplayName = project_display_name;
         this.eventType = ci_event_type;
@@ -35,5 +39,8 @@ export class CiEvent extends DtoObject {
         this.phaseType = phase_type;
         this.causes = causes;
         this.parameters = parameters;
+        this.multiBranchType = multiBranchType;
+        this.parentCiId = parentCiId;
+        this.branch =branch;
     }
 }

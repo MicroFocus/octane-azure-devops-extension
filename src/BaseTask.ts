@@ -113,11 +113,12 @@ export class BaseTask {
         let ret = await octaneSDKConnection._requestHandler._requestor.put(eventObj);
 
         this.logger.debug('sendEvent response:' + ret);
+        this.logger.debug('sendEvent response:' + ret);
     }
 
     public async sendTestResult(octaneSDKConnection, testResult: string) {
         let testResultsApiUrl = this.analyticsCiInternalApiUrlPart + '/test-results?skip-errors=true&instance-id=' +
-            this.instanceId + '&job-ci-id=' + this.jobFullName + '&build-ci-id=' + this.buildId;
+            this.instanceId + '&job-ci-id=' + this.getJobCiId() + '&build-ci-id=' + this.buildId;
 
         this.logger.debug('Sending results to:' + testResultsApiUrl + '\nThe result string is:\n' + testResult);
 
@@ -325,7 +326,7 @@ export class BaseTask {
             'name': this.projectFullName,
             'instance_id': this.instanceId,
             'server_type': CI_SERVER_INFO.CI_SERVER_TYPE,
-            'url': serverUrl
+            'url': encodeURI(serverUrl),
         };
 
         let ciServers = [
@@ -343,10 +344,29 @@ export class BaseTask {
         return ciServers;
     }
 
+    protected getJobCiId(){
+        if(this.experiments.support_azure_multi_branch){
+            return this.projectId + '.'+this.definitionId +'.' +this.sourceBranchName;
+        } else {
+            return this.jobFullName;
+        }
+    }
+
+    protected getParentJobCiId(){
+        if(this.experiments.support_azure_multi_branch){
+            return  this.projectId + '.' + this.definitionId;
+        } else {
+            return this.projectFullName + '.' + this.buildDefinitionName;
+        }
+    }
+
     protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, createOnAbsence,workspaceId) {
         let pipelines;
         if(this.experiments.run_azure_pipeline){
-            const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.projectFullName + '.' + this.buildDefinitionName))
+
+            await this.upgradePipelinesIfNeeded(octaneSDKConnection,ciServer,workspaceId);
+
+            const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.getParentJobCiId()))
                 .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
             const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
                 .fields('pipeline,definition_id')
@@ -441,20 +461,72 @@ export class BaseTask {
         return version1Spl.length >= version2Spl.length;
     }
 
+
+    protected  async upgradePipelinesIfNeeded(octaneSDKConnection,ciServer,workspaceId){
+        if(this.experiments.support_azure_multi_branch) {
+            //check if the parent exists in old format:
+            const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.projectFullName + '.' + this.buildDefinitionName))
+                .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
+            const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
+                .fields('pipeline,definition_id')
+                .query(pipelineQuery).execute();
+
+            //if yes - should upgrade the parent
+            if (ciJobs && ciJobs.total_count > 0 && ciJobs.data) {
+                //should update the ciJobs with new id.
+                this.logger.info("start upgrade of ciJob and his pipelines");
+                await this.updateExistCIJobs(ciJobs.data, ciServer.id, workspaceId, octaneSDKConnection);
+
+                let pipelines = ciJobs.data.filter(ciJob => ciJob.pipeline).map(ciJob => ciJob.pipeline);
+
+                if (pipelines && pipelines.length > 0) {
+                    //should update the pipelines to be a multibranch parent
+                    this.logger.info("start upgrade of pipelines to be multibranch pipelines ");
+                    await this.upgradePipelines(pipelines, octaneSDKConnection);
+                }
+            }
+        }
+    }
+
+    private async upgradePipelines(pipelines,octaneSDKConnection): Promise<void>{
+        let pipelinesToUpdate = [];
+        pipelines.forEach(pipeline => pipelinesToUpdate.push(this.createPipelineBody(pipeline)));
+        this.logger.debug('Pipelines update body:' + pipelines);
+
+        if(pipelinesToUpdate.length >0) {
+            let pipelinesData = '{ "data":' + JSON.stringify(pipelinesToUpdate) + ',"total_count":' + pipelinesToUpdate.length + '}';
+
+            let results = [
+                await octaneSDKConnection.update(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME, JSON.parse(pipelinesData)).execute()
+            ];
+
+            if (results.length === pipelinesToUpdate.length) {
+                this.logger.info("Pipelines have been upgraded successfully ");
+
+            }
+        }
+    }
+
     private async updateExistCIJobs(ciJobs,ciServerId,workspaceId,octaneSDKConnection): Promise<void> {
         let ciJobsToUpdate = [];
         ciJobs.forEach(ciJob => ciJobsToUpdate.push(this.createCiJobBody(ciJob)));
         this.logger.debug('CI Jobs update body:' + ciJobs);
+
         const url = this.ciInternalAzureApiUrlPart.replace('{workspace_id}',workspaceId) + '/ci_job_update?ci-server-id=' + ciServerId;
         await octaneSDKConnection._requestHandler.update(url,ciJobsToUpdate);
     }
 
-    private createCiJobBody(ciJob){
+    private createPipelineBody(pipeline){
         return {
-            'id': ciJob.id,
-            'definitionId': this.definitionId,
-            'jobCiId': this.projectFullName + '.' + this.buildDefinitionName,
-            'parameters': [
+            'id': pipeline.id,
+            'multi_branch_type': 'PARENT',
+        }
+    }
+    private createCiJobBody(ciJob){
+        let jobCiId = this.getParentJobCiId();
+        let parameters = []
+        if(!this.experiments.support_azure_multi_branch){
+            parameters = [
                 {
                     'name': 'branch',
                     'type': 'string',
@@ -463,6 +535,12 @@ export class BaseTask {
                     'choices': [],
                 }
             ]
+        }
+        return {
+            'jobId': ciJob.id,
+            'definitionId': this.definitionId,
+            'jobCiId': jobCiId,
+            'parameters': parameters,
 
         }
     }
@@ -499,20 +577,22 @@ export class BaseTask {
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
 
         if(this.experiments.run_azure_pipeline_with_parameters){
-            const parameters = await this.parametersService.getDefinedParameters(api,this.definitionId,this.projectName,this.sourceBranch);
+            const parameters = await this.parametersService.getDefinedParametersWithBranch(api,this.definitionId,this.projectName,this.sourceBranch,this.experiments.support_azure_multi_branch?false:true);
+
             pipeline = {
                 'name': pipelineName,
                 'ci_server': {'type': EntityTypeConstants.CI_SERVER_ENTITY_TYPE, 'id': ciServer.id},
                 'jobs': [{
-                    'name':this.agentJobName,
-                    'jobCiId': this.projectFullName + '.' + this.buildDefinitionName,
+                    'name': this.agentJobName,
+                    'jobCiId': this.getParentJobCiId(),
                     'definitionId': this.definitionId,
                     'parameters': parameters,
                 }],
-                'root_job_ci_id': this.projectFullName + '.' + this.buildDefinitionName,
+                'root_job_ci_id': this.getParentJobCiId(),
                 'notification_track': false,
-                'notification_track_tester': false
+                   'notification_track_tester': false
             };
+
         } else {
              pipeline = {
                 'name': pipelineName,
@@ -521,6 +601,10 @@ export class BaseTask {
                 'notification_track': false,
                 'notification_track_tester': false
             };
+        }
+
+        if(this.experiments.support_azure_multi_branch){
+            pipeline.multi_branch_type = 'PARENT';
         }
 
         let pipelines = [

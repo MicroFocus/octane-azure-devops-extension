@@ -12,11 +12,20 @@ export class PipelineParametersService {
         this.logger = logger;
     }
 
+    public async getParametersWithBranch(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string, withBranch:boolean): Promise<CiParameter[]> {
+
+        let parameters: CiParameter[] = await this.getParameters(connection, definitionId, buildId, projectName, branchName);
+        if(withBranch) {
+            parameters.push(this.createParameter('branch', '', true, branchName));
+        }
+        return parameters
+    }
+
     public async getParameters(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string): Promise<CiParameter[]> {
         try {
             const buildApi: ba.IBuildApi = await connection.getBuildApi();
             const buildDef = await buildApi.getDefinition(projectName, definitionId);
-            let parameters: CiParameter[] = [this.createParameter('branch', '', true, branchName)];
+            let parameters: CiParameter[] = [];
             this.logger.info('Get parameters from task.');
             this.logger.debug('Get Parameters - Build definition variables: ' + buildDef?.variables?.toString());
             if (buildDef.variables) {
@@ -47,9 +56,19 @@ export class PipelineParametersService {
         return [];
     }
 
+
+    public async getDefinedParametersWithBranch(connection: WebApi, definitionId: number, projectName: string, branchName: string, withBranch: boolean): Promise<CiParameter[]> {
+
+        let parameters: CiParameter[] = await this.getDefinedParameters(connection, definitionId, projectName, branchName);
+        if(withBranch) {
+            parameters.push(this.createParameter('branch', branchName, undefined, 'Branch to execute pipeline'));
+        }
+        return parameters
+    }
     public async getDefinedParameters(connection: WebApi, definitionId: number, projectName: string, branchName: string): Promise<CiParameter[]> {
         const buildApi: ba.IBuildApi = await connection.getBuildApi();
-        let parameters: CiParameter[] = [this.createParameter('branch', branchName, undefined, 'Branch to execute pipeline')];
+        let parameters: CiParameter[] = [];
+
         const buildDef = await buildApi.getDefinition(projectName, definitionId);
         this.logger.debug('Get Defined Parameters - Build definition variables: ' + buildDef.variables);
         if (buildDef.variables) {

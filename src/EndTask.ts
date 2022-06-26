@@ -41,9 +41,21 @@ export class EndTask extends BaseTask {
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
                     const parameters:CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
-                        await this.parametersService.getParameters(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch) :
-                        undefined;
-                    let endEvent = new CiEvent(this.agentJobName, CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
+                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, this.experiments.support_azure_multi_branch?false:true)
+                        :undefined;
+
+                    let endEvent;
+
+                    if(this.experiments.support_azure_multi_branch){
+                        let jobCiId = this.getJobCiId();
+                         endEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName , CiEventType.FINISHED, this.buildId, this.buildId, jobCiId,
+                             buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
+                             causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch);
+                    } else {
+                         endEvent = new CiEvent(this.agentJobName , CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
+
+                    }
+
                     await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
