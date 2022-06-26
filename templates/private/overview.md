@@ -1,7 +1,7 @@
 # ALM Octane Integration with Azure DevOps Services
-## 0.4.2.13 version Release notes
-* Send parameters structure to Octane
-* Send parameters values executed to Octane
+## 0.4.2.14 version Release notes
+* Send parameters structure to Octane, from version 16.1.18.
+* Send parameters values executed to Octane, from version 16.1.18.
 * Fix defects
 ## 0.4.2.5 version Release notes
 * Update Octane CI Server plugin version.
