@@ -1,4 +1,9 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.2.7.1 version Release notes
+* Added support for multi-branch pipelines:  
+ALM Octane automatically creates a corresponding child pipeline whenever a new branch is built for the first time.   
+Existing pipelines are upgraded to be multi-branch.
+
 ## 0.2.7.0 version Release notes
 * Send parameters structure to Octane, from version 16.1.18.
 * Send parameters values executed to Octane, from version 16.1.18.
