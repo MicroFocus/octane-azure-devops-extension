@@ -27,13 +27,13 @@ export class TestResultsBuilder {
     private static readonly GHERKIN_OCTANE_TEST_LEVEL_DISPLAY_VALUE = 'Gherkin Test';
     private static readonly UNIT_OCTANE_TEST_LEVEL_DISPLAY_VALUE = 'Unit Test';
 
-    public static buildUnitTestResult(testResults: any, server_id: string, job_id: string, logger: LogUtils): TestResult {
+    public static buildUnitTestResult(testResults: any, server_id: string, job_id: string, logger: LogUtils,upgrade_azure_test_runs_paths_experiment:boolean): TestResult {
         if (!testResults || !testResults.length) {
             logger.info('No unit test results were retrieved/found');
             return new EmptyTestResult();
         }
 
-        let testResultTestRuns = this.buildUnitResultElement(testResults, logger);
+        let testResultTestRuns = this.buildUnitResultElement(testResults, logger,upgrade_azure_test_runs_paths_experiment);
         let testResultTestFields = this.buildTestResultTestFields(testResults[0].automatedTestType);
         let testResultBuild = new TestResultBuildAttributes(server_id, job_id, testResults[0].build.id);
 
@@ -61,8 +61,8 @@ export class TestResultsBuilder {
         return convertedXml;
     }
 
-    private static getUnitTestResultXml(testResults: TestCaseResult[], server_id: string, job_id: string, logger: LogUtils): string {
-        let result: TestResult = TestResultsBuilder.buildUnitTestResult(testResults, server_id, job_id, logger);
+    private static getUnitTestResultXml(testResults: TestCaseResult[], server_id: string, job_id: string, logger: LogUtils,upgrade_azure_test_runs_paths_experiment:boolean): string {
+        let result: TestResult = TestResultsBuilder.buildUnitTestResult(testResults, server_id, job_id, logger,upgrade_azure_test_runs_paths_experiment);
 
         const {'': testRuns} = result.test_runs;
         if (testRuns.length === 0) {
@@ -83,7 +83,7 @@ export class TestResultsBuilder {
         return this.getTestResultXml(result, logger);
     }
 
-    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string, cucumberReportsPath: string, logger: LogUtils): Promise<string[]> {
+    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string, cucumberReportsPath: string, logger: LogUtils,upgrade_azure_test_runs_paths_experiment:boolean): Promise<string[]> {
         let xmlTestResults: string[] = [];
         let gherkinResults = this.getCucumberReportsFromPath(cucumberReportsPath, logger);
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
@@ -104,7 +104,7 @@ export class TestResultsBuilder {
         let unitTestResults: TestCaseResult[] = await this.getUnitReports(processedTests, testApi, buildURI, projectName);
 
         if (unitTestResults.length > 0) {
-            const generatedXml: string = TestResultsBuilder.getUnitTestResultXml(unitTestResults, serverId, jobId, logger);
+            const generatedXml: string = TestResultsBuilder.getUnitTestResultXml(unitTestResults, serverId, jobId, logger,upgrade_azure_test_runs_paths_experiment);
             if (!(generatedXml === '')) {
                 xmlTestResults.push(generatedXml)
             }
@@ -170,10 +170,14 @@ export class TestResultsBuilder {
         return gherkinResults;
     }
 
-    private static buildUnitResultElement(testResults: any, logger: LogUtils): UnitResultElement[] {
+    private static buildUnitResultElement(testResults: any, logger: LogUtils,upgrade_azure_test_runs_paths_experiment:boolean): UnitResultElement[] {
         let unitTestResults: Array<UnitResultElement> = [];
         testResults.forEach(element => {
-            let packagename = element.automatedTestStorage;
+            let packagename = upgrade_azure_test_runs_paths_experiment ?
+                    element.automatedTestStorage && element.automatedTestStorage.indexOf('.') > 0 ?
+                    element.automatedTestStorage.substring(0,element.automatedTestStorage.lastIndexOf('.')) :
+                    element.automatedTestStorage :
+                element.automatedTestStorage;
             if (packagename.length > 255) {
                 logger.error('Package name is longer than 255 chars: ' + packagename);
                 return;
@@ -183,7 +187,11 @@ export class TestResultsBuilder {
                 logger.error('Test name is longer than 255 chars: ' + name);
                 return;
             }
-            let classname = packagename + '.' + name;
+            let classname = upgrade_azure_test_runs_paths_experiment ?
+                    element.automatedTestStorage && element.automatedTestStorage.indexOf('.') > 0 ?
+                    element.automatedTestStorage.substring(element.automatedTestStorage.lastIndexOf('.') + 1) :
+                    element.automatedTestStorage :
+                packagename + '.' + name;
             if (classname.length > 255) {
                 logger.error('Classname name is longer than 255 chars: ' + classname);
                 return;
