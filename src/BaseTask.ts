@@ -385,6 +385,7 @@ export class BaseTask {
                 }
             } else {
                 this.logger.debug('Checking if have CI jobs to update Octane');
+                //update the CI job with definition-id if the field not exist
                 const ciJobsToUpdate = ciJobs.data.filter(ciJob => ciJob.pipeline && ciJob?.definition_id !== this.definitionId);
                 if(ciJobsToUpdate?.length > 0) {
                     this.logger.info('Updating ' + ciJobsToUpdate.length +' CI jobs of Octane');
@@ -464,7 +465,7 @@ export class BaseTask {
 
     protected  async upgradePipelinesIfNeeded(octaneSDKConnection,ciServer,workspaceId){
         if(this.experiments.support_azure_multi_branch) {
-            //check if the parent exists in old format:
+            //check if the parent exists in old format of ci_id:
             const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.projectFullName + '.' + this.buildDefinitionName))
                 .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
             const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
@@ -509,7 +510,12 @@ export class BaseTask {
 
     private async updateExistCIJobs(ciJobs,ciServerId,workspaceId,octaneSDKConnection): Promise<void> {
         let ciJobsToUpdate = [];
-        ciJobs.forEach(ciJob => ciJobsToUpdate.push(this.createCiJobBody(ciJob)));
+        const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+        for(const ciJob of ciJobs){
+            const  parameters = await this.parametersService.getDefinedParametersWithBranch(api, this.definitionId, this.projectName, this.sourceBranch, this.experiments.support_azure_multi_branch ? false : true);
+            ciJobsToUpdate.push(this.createCiJobBody(ciJob,parameters))
+        }
+
         this.logger.debug('CI Jobs update body:' + ciJobs);
 
         const url = this.ciInternalAzureApiUrlPart.replace('{workspace_id}',workspaceId) + '/ci_job_update?ci-server-id=' + ciServerId;
@@ -522,20 +528,9 @@ export class BaseTask {
             'multi_branch_type': 'PARENT',
         }
     }
-    private createCiJobBody(ciJob){
+    private  createCiJobBody(ciJob,parameters){
         let jobCiId = this.getParentJobCiId();
-        let parameters = []
-        if(!this.experiments.support_azure_multi_branch){
-            parameters = [
-                {
-                    'name': 'branch',
-                    'type': 'string',
-                    'description': 'Branch to execute pipeline',
-                    'defaultValue': this.sourceBranch,
-                    'choices': [],
-                }
-            ]
-        }
+
         return {
             'jobId': ciJob.id,
             'definitionId': this.definitionId,
