@@ -1,5 +1,5 @@
 # ALM Octane Integration with Azure DevOps Services
-## 0.2.7.4 version Release notes
+## 0.2.7.6 version Release notes
 * Fix test run report path that send to Octane, supported from version 16.1.100 of Octane
 ## 0.2.7.3 version Release notes
 * Fix defects
