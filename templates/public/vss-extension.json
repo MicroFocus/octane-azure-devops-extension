@@ -1,9 +1,9 @@
 {
   "manifestVersion": 1,
   "id": "alm-octane-integration-public",
-  "version": "0.2.7.6",
+  "version": "1.0.0.0",
   "name": "ALM Octane Integration Extension",
-  "description": "Tech Preview. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
+  "description": "An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "almoctane",
   "public": true,
   "categories": [
