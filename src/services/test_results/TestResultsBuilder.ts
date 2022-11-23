@@ -173,16 +173,18 @@ export class TestResultsBuilder {
     private static buildUnitResultElement(testResults: any, logger: LogUtils,upgrade_azure_test_runs_paths_experiment:boolean): UnitResultElement[] {
         let unitTestResults: Array<UnitResultElement> = [];
         testResults.forEach(element => {
+            logger.debug("Azure test input - automatedTestStorage: " + element.automatedTestStorage + " , automatedTestName: " + element.automatedTestName);
             let packagename = upgrade_azure_test_runs_paths_experiment ?
                     element.automatedTestStorage && element.automatedTestStorage.indexOf('.') > 0 ?
                     element.automatedTestStorage.substring(0,element.automatedTestStorage.lastIndexOf('.')) :
                     element.automatedTestStorage :
                 element.automatedTestStorage;
+            packagename = packagename || "";
             if (packagename.length > 255) {
                 logger.error('Package name is longer than 255 chars: ' + packagename);
                 return;
             }
-            let name = element.automatedTestName;
+            let name = element.automatedTestName || "";
             if (name.length > 255) {
                 logger.error('Test name is longer than 255 chars: ' + name);
                 return;
@@ -192,6 +194,7 @@ export class TestResultsBuilder {
                     element.automatedTestStorage.substring(element.automatedTestStorage.lastIndexOf('.') + 1) :
                     element.automatedTestStorage :
                 packagename + '.' + name;
+            classname = classname || "";
             if (classname.length > 255) {
                 logger.error('Classname name is longer than 255 chars: ' + classname);
                 return;

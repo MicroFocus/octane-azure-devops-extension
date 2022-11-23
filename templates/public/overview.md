@@ -1,4 +1,6 @@
 # ALM Octane Integration with Azure DevOps Services
+## 1.0.0.1 version Release notes
+* Fix defects
 ## 1.0.0.0 version Release notes
 * Updated to major version. The integration (previously tech preview) is now fully supported.
 ## 0.2.7.6 version Release notes
