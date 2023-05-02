@@ -1,4 +1,7 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.3.2.39 version Release notes
+* Fix defects
+* Fix Documentation
 ## 0.4.2.38 version Release notes
 * Fix defects
 ## 0.4.2.36 version Release notes
@@ -49,13 +52,12 @@ Existing pipelines are upgraded to be multi-branch.
 * The only unit of an executable code that an extension can contribute to the Azure DevOps Services framework is a task that is normally executed during a pipeline run. The task can be integrated into existing jobs or can be added to the pipeline under a separate job.
 
 ## The integration
-* The current implementation supports only one direction – an Azure DevOps pipeline and its jobs can notify ALM Octane about their progress and statuses, as well as send information about the source control commits and test results relevant to them. However running and stopping the pipeline from ALM Octane, is not supported.
 * The integration was implemented by developing an Azure DevOps Services extension with the following contributions:
   1. A new service connection type (ALM Octane Service Connection). By creating an a service connection of this type the user provides the properties of an ALM Octane Workspace (Connection name, URL, instance ID, shared space ID, workspace ID, API client ID and secret). This instance is then used by Azure DevOps pipelines for notifying the workspace with the events and data specified above.
   2. Two new task types (“ALM Octane Job Start” and “ALM Octane Job End”), instances of which must be added to every job in the pipeline at the appropriate locations – the start and the end points of every job by the client itself, either through YAML or Legacy drag&drop process
 
  ### The workflow for establishing a successful integration between an ALM Octane workspace and an Azure DevOps Services project
- 1. In the Azure DevOps organization you must install the private ALM Octane Integration Extension. (For the Alpha and Beta versions a special request must be sent to ALM Octane Dev for sharing the extension with the target organization. For the GA release, the extension will be published to the Microsoft Azure DevOps Marketplace).
+ 1. In the Azure DevOps organization you must install the ALM Octane Integration Extension.
  2. In the ALM Octane shared space: Create an API client ID and secret with the “CI/CD Integration” role over the target ALM Octane workspace.
  3. In the target Azure DevOps project:
      1. Create a new ALM Octane Service Connection by providing all the required settings. Let’s assume the connection name is OctaneCon.

@@ -67,7 +67,7 @@ export class EndTask extends BaseTask {
         if (this.isPipelineEndJob) {
             let buildApi: ba.IBuildApi = await api.getBuildApi();
             let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
-            let failed_jobs = timeline.records.filter(r => r.type == 'Job'
+            let failed_jobs = timeline.records.filter(r => (r.type == 'Job' || r.type == 'Task')
                 && r.name.toLowerCase() !== BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase()
                 && r.name.toLowerCase() !== BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase()
                 && r.result == TaskResult.Failed);

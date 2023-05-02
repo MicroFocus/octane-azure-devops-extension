@@ -187,7 +187,7 @@ export class ScmBuilder {
 
                     let testCommit = await this.getCommit(githubAccessToken, repoId, change.id);
                     let commit = JSON.parse(testCommit['body']);
-                    logger.debug('Commit body = ' + commit);
+                    logger.debug('commit: ' + JSON.stringify(commit));
                     revId = commit[GitHubAttributes.sha];
                     parentRevId = commit[GitHubAttributes.parents][0][GitHubAttributes.sha];
                     for (let file of commit[GitHubAttributes.files]) {
