@@ -30,7 +30,10 @@ export class PipelineParametersService {
             this.logger.debug('Get Parameters - Build definition variables: ' + buildDef?.variables?.toString());
             if (buildDef.variables) {
                 Object.keys(buildDef.variables)
-                        .map(paramKey =>this.createParameter(paramKey, '', true,this.tl.getVariable(paramKey) ? this.tl.getVariable(paramKey) : ''))
+                        .map(paramKey => this.createParameter(paramKey,
+                            (buildDef.variables[paramKey] && buildDef.variables[paramKey].value) ?
+                                buildDef.variables[paramKey].value : '',true,
+                            this.tl.getVariable(paramKey) ? this.tl.getVariable(paramKey) : ''))
                         .forEach(parameter => parameters.push(parameter));
             }
 
