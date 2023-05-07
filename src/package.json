@@ -9,7 +9,7 @@
   "author": "Micro Focus",
   "license": "ISC",
   "dependencies": {
-    "@microfocus/alm-octane-js-rest-sdk": "16.0.400",
+    "@microfocus/alm-octane-js-rest-sdk": "15.0.20.1",
     "azure-devops-node-api": "11.0.0",
     "azure-pipelines-task-lib": "3.1.2",
     "globby": "11.0.3",
