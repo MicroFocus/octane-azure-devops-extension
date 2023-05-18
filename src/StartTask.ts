@@ -34,11 +34,11 @@ export class StartTask extends BaseTask {
                     if(this.experiments.support_azure_multi_branch){
                         let jobCiId = this.getJobCiId();
                         startEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName, CiEventType.STARTED, this.buildId, this.buildId, jobCiId, null, new Date().getTime(),
-                            null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
+                            this.createPipelineRequired, null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
                             'CHILD',this.getParentJobCiId(), this.sourceBranch);
                     } else{
                         startEvent = new CiEvent(this.agentJobName, CiEventType.STARTED, this.buildId, this.buildId,this.jobFullName, null, new Date().getTime(),
-                            null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters)
+                            this.createPipelineRequired, null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters)
                     }
 
                     await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
@@ -50,10 +50,10 @@ export class StartTask extends BaseTask {
                     let scmEvent;
                     if(this.experiments.support_azure_multi_branch){
                         let jobCiId = this.getJobCiId();
-                        scmEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName, CiEventType.SCM, this.buildId, this.buildId,jobCiId, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
+                        scmEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName, CiEventType.SCM, this.buildId, this.buildId,jobCiId, null, new Date().getTime(), this.createPipelineRequired, null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
 
                     } else {
-                        scmEvent = new CiEvent(this.agentJobName, CiEventType.SCM, this.buildId, this.buildId,this.jobFullName, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
+                        scmEvent = new CiEvent(this.agentJobName, CiEventType.SCM, this.buildId, this.buildId,this.jobFullName, null, new Date().getTime(), this.createPipelineRequired, null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
 
                     }
                     await this.sendEvent(this.octaneSDKConnections[ws], scmEvent);
