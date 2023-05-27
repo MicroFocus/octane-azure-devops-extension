@@ -161,7 +161,7 @@ export class BaseTask {
     }
 
     private prepareCreatePipelineRequired() {
-        this.createPipelineRequired = this.tl.getInput('DontCreatePipelineCheckbox', true).toLowerCase() !== 'true';
+        this.createPipelineRequired = this.tl.getInput('CreatePipelineCheckbox', true).toLowerCase() === 'true';
     }
 
     private prepareOctaneUrlAndCustomWebContext() {

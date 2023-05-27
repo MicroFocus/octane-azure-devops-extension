@@ -40,11 +40,12 @@
       "helpMarkDown": "Github repository connection"
     },
     {
-      "name": "DontCreatePipelineCheckbox",
+      "name": "CreatePipelineCheckbox",
       "type": "boolean",
-      "label": "Do not create ALM Octane pipeline",
+      "label": "Create ALM Octane pipeline",
       "required": true,
-      "helpMarkDown": "If checked, a pipeline is not created in ALM Octane. Available from version 16.2.100. If a pipeline has already been created, checking this checkbox will not remove the existing pipeline"
+      "helpMarkDown": "If checked, a pipeline is created in ALM Octane. Unchecking this checkbox will not take an effect on ALM Octane versions lower than 16.2.100. If a pipeline has already been created, unchecking this checkbox will not remove the existing pipeline",
+      "defaultValue": true
     }
   ],
   "execution": {

@@ -9,7 +9,7 @@ export enum InputConstants {
     WORKSPACES_LIST = 'WorkspaceList',
     CUCUMBER_REPORT_PATH = 'CucumberReportPath',
     AZURE_PAT = 'PAT',
-    SKIP_PIPELINE_CREATION = 'DontCreatePipelineCheckbox'
+    CREATE_PIPELINE = 'CreatePipelineCheckbox'
 }
 
 export enum SystemVariablesConstants {

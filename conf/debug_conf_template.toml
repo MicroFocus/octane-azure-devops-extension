@@ -20,7 +20,7 @@ cucumberReportPath = "" # Path to directory for the cucuber genereated gherkin t
 [octane]
 serviceConnectionName = "Octane" # It should always be Octane for this case. See task-mock-initializer
 workspaces = "" # The list of workspaces, comma separated, as string. Example: "1002" or "1002,1003"
-skipPipelineCreation = "" # If Extension should skip cration pipeline. Example: "true" or "false"
+createPipeline = "" # If Extension should cration pipeline. Example: "true" or "false"
 [octane.auth]
 parameters = "" # The connection details for the extension to connect to Octane. In Debug, site admin can be specified.
                 # Example 1: { username: "someuser@somecompany.com", password: "pwd"}

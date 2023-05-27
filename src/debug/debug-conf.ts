@@ -27,7 +27,7 @@ interface Octane {
     serviceConnectionName: string;
     workspaces: string;
     auth: Auth;
-    skipPipelineCreation: string;
+    createPipeline: string;
 }
 
 interface Endpoint {
@@ -113,7 +113,7 @@ export class DebugConfToDebugMapsConverter {
         map.set(InputConstants.WORKSPACES_LIST, conf.octane.workspaces);
         map.set(InputConstants.GITHUB_REPOSITORY_CONNECTION, conf.repository.repositoryConnection);
         map.set(InputConstants.CUCUMBER_REPORT_PATH, conf.testInjection.gherkin.cucumber.cucumberReportPath)
-        map.set(InputConstants.SKIP_PIPELINE_CREATION, conf.octane.skipPipelineCreation);
+        map.set(InputConstants.CREATE_PIPELINE, conf.octane.createPipeline);
     }
 
     private static populateSystemVariablesMap(conf: TomlDebugConf, map: Map<string, any>) {
