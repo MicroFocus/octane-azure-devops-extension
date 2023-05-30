@@ -271,13 +271,10 @@ export class BaseTask {
                     await octaneSDKConnection._requestHandler.authenticate();
                 }
                 await this.initializeExperiments(octaneSDKConnection,ws);
-                let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START ||
-                    this.agentJobName === BaseTask.ALM_OCTANE_TEST_RUNNER_START);
+                let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
+                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START, ws);
 
-                if (this.agentJobName === BaseTask.ALM_OCTANE_TEST_RUNNER_START) {
-                    await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
-                        this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START, ws);
-                }
                 this.octaneSDKConnections[ws] = octaneSDKConnection;
             })(ws);
         }

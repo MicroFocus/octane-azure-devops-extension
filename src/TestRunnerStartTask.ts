@@ -241,37 +241,42 @@ export class TestRunnerStartTask extends BaseTask {
         const executionId = this.tl.getVariable('executionId');
         const suiteRunId = this.tl.getVariable('suiteRunId');
 
-        this.logger.debug("executionId: " + executionId);
-        this.logger.debug("suiteRunId: " + suiteRunId);
+        this.logger.info("executionId: " + executionId);
+        this.logger.info("suiteRunId: " + suiteRunId);
 
-        for (let ws in this.octaneSDKConnections) {
-            this.logger.debug("octaneConnection per ws: " + ws);
-            if (this.octaneSDKConnections[ws]) {
-                let startTime: Date = new Date();
-                this.logger.info('Run start time: ' + startTime.toTimeString());
+        if(typeof executionId!='undefined' && executionId &&
+            typeof suiteRunId!='undefined' && suiteRunId) {
+            for (let ws in this.octaneSDKConnections) {
+                this.logger.debug("octaneConnection per ws: " + ws);
+                if (this.octaneSDKConnections[ws]) {
+                    let startTime: Date = new Date();
+                    this.logger.info('Run start time: ' + startTime.toTimeString());
 
-                try {
-                    await this.runInternal();
-                } catch(ex) {
-                    this.logger.error('Tests Converter failed to properly execute: ' + ex);
+                    try {
+                        await this.runInternal();
+                    } catch (ex) {
+                        this.logger.error('Tests Converter failed to properly execute: ' + ex);
+                    }
+
+                    let startEvent = new TestExecutionEvent(this.buildDefinitionName + " " + this.sourceBranchName,
+                        CiEventType.STARTED, this.buildId, this.buildId, this.getJobCiId(), null, new Date().getTime(),
+                        executionId, suiteRunId, null, null, null,
+                        this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
+                        'CHILD', this.getParentJobCiId(), this.sourceBranch);
+
+                    await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
+
+                    let endTime: Date = new Date();
+
+                    this.logger.info('Run end time: ' + endTime.toTimeString());
+                    let diff = endTime.getTime() - startTime.getTime();
+                    this.logger.info('Total duration: ' +
+                        (Math.floor(diff / 1000.0)) + ' seconds, ' + (diff % 1000.0) + ' millis');
+                    this.logger.info('Shutting down...');
                 }
-
-                let startEvent = new TestExecutionEvent(this.buildDefinitionName + " " +this.sourceBranchName,
-                    CiEventType.STARTED, this.buildId, this.buildId, this.getJobCiId(), null, new Date().getTime(),
-                    executionId, suiteRunId, null, null, null,
-                    this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
-                    'CHILD',this.getParentJobCiId(), this.sourceBranch);
-
-                await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
-
-                let endTime: Date = new Date();
-
-                this.logger.info('Run end time: ' + endTime.toTimeString());
-                let diff = endTime.getTime() - startTime.getTime();
-                this.logger.info('Total duration: ' +
-                    (Math.floor(diff / 1000.0)) + ' seconds, ' + (diff % 1000.0) + ' millis');
-                this.logger.info('Shutting down...');
             }
+        } else {
+            this.logger.info("there is no execution id, no need to send event")
         }
     }
 
