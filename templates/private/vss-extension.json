@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "alm-octane-integration",
-  "version": "0.4.2.41",
+  "version": "0.4.2.46",
   "name": "ALM Octane Integration Private Extension",
   "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
   "publisher": "almoctane",
@@ -89,6 +89,17 @@
       ],
       "properties": {
         "name": "Tasks/StartTask"
+      }
+    },
+    {
+      "id": "octane-test-runner-start-task-private",
+      "description": "ALM Octane Test Runner Start Task (private)",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "Tasks/TestRunnerStartTask"
       }
     },
     {
