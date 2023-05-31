@@ -161,7 +161,9 @@ export class BaseTask {
     }
 
     private prepareCreatePipelineRequired() {
-        this.createPipelineRequired = this.tl.getInput('CreatePipelineCheckbox', true).toLowerCase() === 'true';
+        if (this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START) {
+            this.createPipelineRequired = this.tl.getInput('CreatePipelineCheckbox', true).toLowerCase() === 'true';
+        }
     }
 
     private prepareOctaneUrlAndCustomWebContext() {
@@ -277,11 +279,12 @@ export class BaseTask {
                 await this.initializeExperiments(octaneSDKConnection,ws);
                 let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
 
-                if (this.createPipelineRequired || !await this.doesOctaneSupportCreatingCIJobsDirectly(octaneSDKConnection)) {
-                    await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
-                        this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START, ws);
-                } else {
-                    await this.getCiJob(octaneSDKConnection, this.buildDefinitionName, ciServer);
+                if (this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START) {
+                    if (this.createPipelineRequired || !await this.doesOctaneSupportCreatingCIJobsDirectly(octaneSDKConnection)) {
+                        await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer, ws);
+                    } else {
+                        await this.getCiJob(octaneSDKConnection, this.buildDefinitionName, ciServer);
+                    }
                 }
 
                 this.octaneSDKConnections[ws] = octaneSDKConnection;
@@ -370,7 +373,7 @@ export class BaseTask {
         }
     }
 
-    protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, createOnAbsence,workspaceId) {
+    protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, workspaceId) {
         let pipelines;
         if(this.experiments.run_azure_pipeline){
 
@@ -386,13 +389,9 @@ export class BaseTask {
                 pipelines = ciJobs.data.filter(ciJob => ciJob.pipeline).map(ciJob => ciJob.pipeline);
             }
             if (!pipelines || pipelines.length == 0) {
-                if(createOnAbsence) {
-                    rootJobName = rootJobName + '@@@' + this.definitionId + '@@@' + this.sourceBranch;
-                    let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
-                    return result[0].data[0];
-                } else {
-                    throw new Error('Pipeline \'' + pipelineName + '\' not found.')
-                }
+                rootJobName = rootJobName + '@@@' + this.definitionId + '@@@' + this.sourceBranch;
+                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                return result[0].data[0];
             } else {
                 this.logger.debug('Checking if have CI jobs to update Octane');
                 //update the CI job with definition-id if the field not exist
@@ -408,12 +407,8 @@ export class BaseTask {
             .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
             pipelines = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME).query(pipelineQuery).execute();
             if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
-                if (createOnAbsence) {
-                    let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
-                    return result[0].data[0];
-                } else {
-                    throw new Error('Pipeline \'' + pipelineName + '\' not found.')
-                }
+                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                return result[0].data[0];
             }
             return pipelines.data[0];
         }

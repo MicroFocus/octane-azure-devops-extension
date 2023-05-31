@@ -44,7 +44,7 @@
       "type": "boolean",
       "label": "Create ALM Octane pipeline",
       "required": true,
-      "helpMarkDown": "If checked, a pipeline is created in ALM Octane. Unchecking this checkbox will not take an effect on ALM Octane versions lower than 16.2.100. If a pipeline has already been created, unchecking this checkbox will not remove the existing pipeline",
+      "helpMarkDown": "When checked, a pipeline is created in ALM Octane. For versions 16.2.100 and higher, selecting the checkbox creates a pipeline, while clearing it prevents pipeline creation. Prior versions always create a pipeline, irrespective of the checkbox. Clearing the checkbox does not remove an existing pipeline.",
       "defaultValue": true
     }
   ],
