@@ -250,8 +250,7 @@ export class BaseTask {
             this.experiments['run_azure_pipeline'] = isRunPipelineFromOctaneEnable;
         }
         if(this.experiments.run_azure_pipeline || this.experiments.run_azure_pipeline_with_parameters ){
-            // TODO EmilyS - Remove remark!
-            // await this.updatePluginVersion(octaneSDKConnection);
+            await this.updatePluginVersion(octaneSDKConnection);
             this.logger.info("Send plugin details to Octane.");
         }
     }
@@ -277,9 +276,16 @@ export class BaseTask {
                         this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START, ws);
                 }
 
+                await this.additionalConfig(octaneSDKConnection, ws);
+
                 this.octaneSDKConnections[ws] = octaneSDKConnection;
             })(ws);
         }
+    }
+
+    // For test runner task config (to avoid code duplication)
+    protected async additionalConfig(octaneSDKConnection, ws) {
+        // Do nothing
     }
 
     protected async getCiServer(octaneSDKConnection, createOnAbsence) {

@@ -82,29 +82,13 @@ export class TestRunnerStartTask extends BaseTask {
         this.logger.debug("testsToRun: " + this.testToConvert);
     }
 
-    protected async createOctaneConnectionsAndRetrieveCiServersAndPipelines() {
-        let clientId: string = this.authenticationService.getOctaneClientId();
-        let clientSecret: string = this.authenticationService.getOctaneClientSecret();
+    protected async additionalConfig(octaneSDKConnection, ws) {
+        this.ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START ||
+            this.agentJobName === BaseTask.ALM_OCTANE_TEST_RUNNER_START);
 
-        for (let i in this.workspaces) {
-            let ws = this.workspaces[i];
-            await (async (ws) => {
-                let octaneSDKConnection = this.octaneSDKConnections[ws];
-                if (!octaneSDKConnection) {
-                    octaneSDKConnection = OctaneConnectionUtils.getNewOctaneSDKConnection(this.url,
-                        this.customWebContext, this.sharedSpaceId, ws, clientId, clientSecret);
+        this.executor = await this.getExecutor(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, this.ciServer);
 
-                    await octaneSDKConnection._requestHandler.authenticate();
-                }
-                await this.initializeExperiments(octaneSDKConnection,ws);
-                this.ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START ||
-                    this.agentJobName === BaseTask.ALM_OCTANE_TEST_RUNNER_START);
-
-                this.executor = await this.getExecutor(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, this.ciServer);
-
-                this.octaneSDKConnections[ws] = octaneSDKConnection;
-            })(ws);
-        }
+        this.octaneSDKConnections[ws] = octaneSDKConnection;
     }
 
     protected async getExecutor(octaneSDKConnection, pipelineName, rootJobName, ciServer) {

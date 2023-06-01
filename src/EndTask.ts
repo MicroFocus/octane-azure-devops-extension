@@ -9,7 +9,6 @@ import * as ba from 'azure-devops-node-api/BuildApi';
 import {TaskResult} from 'azure-devops-node-api/interfaces/BuildInterfaces';
 import {InputConstants} from './ExtensionConstants';
 import {CiParameter} from "./dto/events/CiParameter";
-import {PipelineParametersService} from "./services/pipelines/PipelineParametersService";
 
 export class EndTask extends BaseTask {
     private constructor(tl: any) {
