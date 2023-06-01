@@ -10,6 +10,7 @@ import {ConnectionUtils} from "./ConnectionUtils";
 import {TestExecutionEvent} from "./dto/events/TestExecutionEvent";
 import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
 import {CiParameter} from "./dto/events/CiParameter";
+import {TestsConverter} from "./services/test_converter/TestsConverter";
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 
@@ -79,7 +80,6 @@ export class TestRunnerStartTask extends BaseTask {
     private prepareTestToConvert(): void {
         this.testToConvert = this.tl.getVariable('testsToRun');
         this.logger.debug("testsToRun: " + this.testToConvert);
-        this.testToConvert = this.testToConvert.slice(this.testToConvert.indexOf(":") + 1);
     }
 
     protected async createOctaneConnectionsAndRetrieveCiServersAndPipelines() {
@@ -229,14 +229,6 @@ export class TestRunnerStartTask extends BaseTask {
     }
 
     public async run() {
-        let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
-
-        let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
-
-        const parameters: CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
-            await this.parametersService.getParametersWithBranch(api, this.definitionId, this.buildId, this.projectName,
-                this.sourceBranch,this.experiments.support_azure_multi_branch?false:true)
-            :undefined;
 
         const executionId = this.tl.getVariable('executionId');
         const suiteRunId = this.tl.getVariable('suiteRunId');
@@ -244,8 +236,24 @@ export class TestRunnerStartTask extends BaseTask {
         this.logger.info("executionId: " + executionId);
         this.logger.info("suiteRunId: " + suiteRunId);
 
+        //run the converter functionality only in case we have the execution id from Octane side
         if(typeof executionId!='undefined' && executionId &&
             typeof suiteRunId!='undefined' && suiteRunId) {
+
+            let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+            let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
+
+            const parameters: CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
+                await this.parametersService.getParametersWithBranch(api, this.definitionId, this.buildId, this.projectName,
+                    this.sourceBranch,this.experiments.support_azure_multi_branch?false:true)
+                :undefined;
+
+            let startEvent = new TestExecutionEvent(this.buildDefinitionName + " " + this.sourceBranchName,
+                CiEventType.STARTED, this.buildId, this.buildId, this.getJobCiId(), null, new Date().getTime(),
+                executionId, suiteRunId, null, null, null,
+                this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
+                'CHILD', this.getParentJobCiId(), this.sourceBranch);
+
             for (let ws in this.octaneSDKConnections) {
                 this.logger.debug("octaneConnection per ws: " + ws);
                 if (this.octaneSDKConnections[ws]) {
@@ -257,12 +265,6 @@ export class TestRunnerStartTask extends BaseTask {
                     } catch (ex) {
                         this.logger.error('Tests Converter failed to properly execute: ' + ex);
                     }
-
-                    let startEvent = new TestExecutionEvent(this.buildDefinitionName + " " + this.sourceBranchName,
-                        CiEventType.STARTED, this.buildId, this.buildId, this.getJobCiId(), null, new Date().getTime(),
-                        executionId, suiteRunId, null, null, null,
-                        this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
-                        'CHILD', this.getParentJobCiId(), this.sourceBranch);
 
                     await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
 
@@ -276,65 +278,14 @@ export class TestRunnerStartTask extends BaseTask {
                 }
             }
         } else {
-            this.logger.info("there is no execution id, no need to send event")
+            this.logger.info("there is no execution id (meaning - no suite run from Octane), no need to send event")
         }
     }
 
-    private runInternal(){
-        if(this.testToConvert) {
-            if ('junit' == this.framework || 'testNG'  == this.framework) {
-                this.handleJunitOrTestNgFramework();
-            } else if ('gradle' == this.framework) {
-                this.handleGradleFramework();
-            } else if ('protractor' == this.framework) {
-                this.handleProtractorFramework();
-            } else if ('cucumber' == this.framework || 'bddScenario'  == this.framework) {
-                this.handleBddOrCucumberFramework();
-            } else if ('jbehave' == this.framework) {
-                this.handleJbehaveFramework();
-            }
-        }
+    private async runInternal(){
+        let converter = new TestsConverter(this.tl);
+        let convertedTests = converter.convert(this.testToConvert, this.framework);
+        this.tl.setVariable('testsToRunConverted', convertedTests);
     }
 
-    /** Before conversion: v1:package1|className1|testName1;package2|className2|testName2 **/
-    // Example: package2.className2#testName2,package1.className1#testName1
-    private handleJunitOrTestNgFramework() {
-        let testMap = {};
-        const testsSplit = this.testToConvert.split(";");
-        testsSplit?.forEach(test => {
-            const testSplit = test.split("|");
-            if (testSplit?.length >= 3) {
-                const fullPath = testSplit[0] ? testSplit[0] + '.' + testSplit[1] : testSplit[1];
-                if (testMap[fullPath]) {
-                    testMap[fullPath] = testMap[fullPath] + '+' + testSplit[2];
-                } else {
-                    testMap[fullPath] = testSplit[2];
-                }
-            }
-        });
-        const testConverted = Object.keys(testMap)
-            .map(key => key + '#' + testMap[key])
-            .join(',');
-        this.tl.setVariable('testsToRunConverted', testConverted);
-    }
-
-    // Example: --tests package1.className1.testName1 --tests package2.className2.testName2
-    private handleGradleFramework() {
-
-    }
-
-    // Example: className1 testName1|className2 testName2
-    private handleProtractorFramework() {
-
-    }
-
-    // Example: --name '^testName1$' --name '^testName2$'
-    private handleBddOrCucumberFramework() {
-
-    }
-
-    // Example: $featureFilePath,$featureFilePath
-    private handleJbehaveFramework() {
-
-    }
 }

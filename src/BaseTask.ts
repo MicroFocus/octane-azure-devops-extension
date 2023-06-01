@@ -103,7 +103,7 @@ export class BaseTask {
         this.logger.debug('Sending event:\n' + JSON.stringify(event));
 
         let serverInfo = new CiServerInfo(CI_SERVER_INFO.CI_SERVER_TYPE, CI_SERVER_INFO.PLUGIN_VERSION,
-            this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
+        this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
 
         let eventObj = {
@@ -119,7 +119,7 @@ export class BaseTask {
 
     public async sendTestResult(octaneSDKConnection, testResult: string) {
         let testResultsApiUrl = this.analyticsCiInternalApiUrlPart + '/test-results?skip-errors=true&instance-id=' +
-            this.instanceId + '&job-ci-id=' + this.getJobCiId() + '&build-ci-id=' + this.buildId;
+        this.instanceId + '&job-ci-id=' + this.getJobCiId() + '&build-ci-id=' + this.buildId;
 
         this.logger.debug('Sending results to:' + testResultsApiUrl + '\nThe result string is:\n' + testResult);
 
@@ -271,9 +271,11 @@ export class BaseTask {
                     await octaneSDKConnection._requestHandler.authenticate();
                 }
                 await this.initializeExperiments(octaneSDKConnection,ws);
-                let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
-                await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
-                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START, ws);
+                if(this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START) {
+                    let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
+                    await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
+                        this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START, ws);
+                }
 
                 this.octaneSDKConnections[ws] = octaneSDKConnection;
             })(ws);
