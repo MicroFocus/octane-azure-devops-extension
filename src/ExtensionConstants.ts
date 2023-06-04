@@ -12,7 +12,8 @@ export enum InputConstants {
     FRAMEWORK = 'Framework',
     TESTS_TO_RUN = 'testsToRun',
     EXECUTION_ID = 'executionId',
-    SUITE_RUN_ID = 'suiteRunId'
+    SUITE_RUN_ID = 'suiteRunId',
+    CREATE_PIPELINE = 'CreatePipelineCheckbox'
 }
 
 export enum SystemVariablesConstants {
