@@ -3,7 +3,6 @@ import {
     EntityTypeConstants,
     EntityTypeRestEndpointConstants, InputConstants,
 } from "./ExtensionConstants";
-import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
 import {CiEventType, PhaseType} from "./dto/events/CiTypes";
 import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
@@ -30,7 +29,7 @@ export class TestRunnerStartTask extends BaseTask {
     }
 
     public static async instance(tl: any): Promise<TestRunnerStartTask> {
-        let task = new TestRunnerStartTask(tl);
+        const task = new TestRunnerStartTask(tl);
         await task.init(BaseTask.ALM_OCTANE_TEST_RUNNER_START);
         return task;
     }
@@ -98,7 +97,7 @@ export class TestRunnerStartTask extends BaseTask {
 
         this.logger.info('executorQuery: ', executorQuery);
 
-        let ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
+        const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
             .fields('name,ci_server{server_type},name,ci_id,parameters,executor{id, subtype}')
             .query(executorQuery).execute();
 
@@ -139,7 +138,7 @@ export class TestRunnerStartTask extends BaseTask {
             'definition_id': this.definitionId
         }
 
-        let ciJobs = [
+        const ciJobs = [
             await octaneSDKConnection.create(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME, ciJob).execute()
         ];
 
@@ -157,7 +156,7 @@ export class TestRunnerStartTask extends BaseTask {
         const framework = this.framework;
         this.logger.debug('framework: ' + framework);
         const frameworkId = await this.getFrameworkId(framework);
-        let test_runner = {
+        const test_runner = {
             'name': this.buildDefinitionName,
             'subtype': EntityTypeConstants.TEST_RUNNER_ENTITY_TYPE,
             'framework': {
@@ -174,7 +173,7 @@ export class TestRunnerStartTask extends BaseTask {
             }
         };
 
-        let executors = [
+        const executors = [
             await octaneSDKConnection.create(EntityTypeRestEndpointConstants.EXECUTORS_REST_API_NAME, test_runner).execute()
         ];
 
@@ -220,19 +219,18 @@ export class TestRunnerStartTask extends BaseTask {
         this.logger.info("executionId: " + executionId);
         this.logger.info("suiteRunId: " + suiteRunId);
 
-        //run the converter functionality only in case we have the execution id from Octane side
-        if(typeof executionId!='undefined' && executionId &&
-            typeof suiteRunId!='undefined' && suiteRunId) {
+        // Run the converter functionality only in case we have the execution id and suite run id from Octane side
+        if (executionId && suiteRunId) {
 
-            let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
-            let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
+            const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+            const causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
 
             const parameters: CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
                 await this.parametersService.getParametersWithBranch(api, this.definitionId, this.buildId, this.projectName,
                     this.sourceBranch,this.experiments.support_azure_multi_branch?false:true)
                 :undefined;
 
-            let startEvent = new TestExecutionEvent(this.buildDefinitionName + " " + this.sourceBranchName,
+            const startEvent = new TestExecutionEvent(this.buildDefinitionName + " " + this.sourceBranchName,
                 CiEventType.STARTED, this.buildId, this.buildId, this.getJobCiId(), null, new Date().getTime(),
                 executionId, suiteRunId, null, null, null,
                 this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
@@ -241,7 +239,7 @@ export class TestRunnerStartTask extends BaseTask {
             for (let ws in this.octaneSDKConnections) {
                 this.logger.debug("octaneConnection per ws: " + ws);
                 if (this.octaneSDKConnections[ws]) {
-                    let startTime: Date = new Date();
+                    const startTime: Date = new Date();
                     this.logger.info('Run start time: ' + startTime.toTimeString());
 
                     try {
@@ -252,10 +250,10 @@ export class TestRunnerStartTask extends BaseTask {
 
                     await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
 
-                    let endTime: Date = new Date();
+                    const endTime: Date = new Date();
 
                     this.logger.info('Run end time: ' + endTime.toTimeString());
-                    let diff = endTime.getTime() - startTime.getTime();
+                    const diff = endTime.getTime() - startTime.getTime();
                     this.logger.info('Total duration: ' +
                         (Math.floor(diff / 1000.0)) + ' seconds, ' + (diff % 1000.0) + ' millis');
                     this.logger.info('Shutting down...');
@@ -267,8 +265,8 @@ export class TestRunnerStartTask extends BaseTask {
     }
 
     private async runInternal(){
-        let converter = new TestsConverter(this.tl);
-        let convertedTests = converter.convert(this.testToConvert, this.framework);
+        const converter = new TestsConverter(this.tl);
+        const convertedTests = converter.convert(this.testToConvert, this.framework);
         this.tl.setVariable('testsToRunConverted', convertedTests);
     }
 
