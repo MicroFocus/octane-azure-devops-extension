@@ -21,6 +21,7 @@ export class CiEvent extends DtoObject {
     multiBranchType: string;
     parentCiId: string;
     branch: string;
+    createPipelineRequired: boolean;
 
     constructor(project_display_name: string, ci_event_type: CiEventType, build_ci_id: string, number: string, project: string, result: Result,
                 start_time: number, estimated_duration?: number, duration?: number, scm_data?: ScmData, phase_type?: PhaseType, causes?: CiEventCause[],

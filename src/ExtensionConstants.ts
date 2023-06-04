@@ -8,7 +8,8 @@ export enum InputConstants {
     GITHUB_REPOSITORY_CONNECTION = 'GithubRepositoryConnection',
     WORKSPACES_LIST = 'WorkspaceList',
     CUCUMBER_REPORT_PATH = 'CucumberReportPath',
-    AZURE_PAT = 'PAT'
+    AZURE_PAT = 'PAT',
+    CREATE_PIPELINE = 'CreatePipelineCheckbox'
 }
 
 export enum SystemVariablesConstants {

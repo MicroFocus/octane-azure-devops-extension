@@ -49,6 +49,7 @@ export class BaseTask {
     protected authenticationService: AuthenticationService;
     protected definitionId: number;
     protected sourceBranch: string;
+    protected createPipelineRequired: boolean;
 
     private octaneServiceConnectionData: any;
     private url: URL;
@@ -84,6 +85,7 @@ export class BaseTask {
                 this.setJobNames();
                 this.prepareWorkspaces();
                 this.prepareParametersService();
+                this.prepareCreatePipelineRequired();
 
                 await this.createOctaneConnectionsAndRetrieveCiServersAndPipelines();
 
@@ -156,6 +158,12 @@ export class BaseTask {
     }
     private prepareParametersService() {
         this.parametersService = new PipelineParametersService(this.tl, this.logger);
+    }
+
+    private prepareCreatePipelineRequired() {
+        if (this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START) {
+            this.createPipelineRequired = this.tl.getInput('CreatePipelineCheckbox', true).toLowerCase() === 'true';
+        }
     }
 
     private prepareOctaneUrlAndCustomWebContext() {
@@ -271,8 +279,13 @@ export class BaseTask {
                 await this.initializeExperiments(octaneSDKConnection,ws);
                 let ciServer = await this.getCiServer(octaneSDKConnection, this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START);
 
-                await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer,
-                    this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START,ws);
+                if (this.agentJobName === BaseTask.ALM_OCTANE_PIPELINE_START) {
+                    if (this.createPipelineRequired || !await this.doesOctaneSupportCreatingCIJobsDirectly(octaneSDKConnection)) {
+                        await this.getPipeline(octaneSDKConnection, this.buildDefinitionName, this.pipelineFullName, ciServer, ws);
+                    } else {
+                        await this.getCiJob(octaneSDKConnection, this.buildDefinitionName, ciServer);
+                    }
+                }
 
                 this.octaneSDKConnections[ws] = octaneSDKConnection;
             })(ws);
@@ -360,7 +373,7 @@ export class BaseTask {
         }
     }
 
-    protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, createOnAbsence,workspaceId) {
+    protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, workspaceId) {
         let pipelines;
         if(this.experiments.run_azure_pipeline){
 
@@ -376,13 +389,9 @@ export class BaseTask {
                 pipelines = ciJobs.data.filter(ciJob => ciJob.pipeline).map(ciJob => ciJob.pipeline);
             }
             if (!pipelines || pipelines.length == 0) {
-                if(createOnAbsence) {
-                    rootJobName = rootJobName + '@@@' + this.definitionId + '@@@' + this.sourceBranch;
-                    let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
-                    return result[0].data[0];
-                } else {
-                    throw new Error('Pipeline \'' + pipelineName + '\' not found.')
-                }
+                rootJobName = rootJobName + '@@@' + this.definitionId + '@@@' + this.sourceBranch;
+                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                return result[0].data[0];
             } else {
                 this.logger.debug('Checking if have CI jobs to update Octane');
                 //update the CI job with definition-id if the field not exist
@@ -398,17 +407,24 @@ export class BaseTask {
             .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
             pipelines = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME).query(pipelineQuery).execute();
             if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
-                if (createOnAbsence) {
-                    let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
-                    return result[0].data[0];
-                } else {
-                    throw new Error('Pipeline \'' + pipelineName + '\' not found.')
-                }
+                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                return result[0].data[0];
             }
             return pipelines.data[0];
         }
+    }
 
+    protected async getCiJob(octaneSDKConnection, rootJobName, ciServer) {
+        const ciJobQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.getParentJobCiId()))
+            .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
+        const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
+            .fields('definition_id').query(ciJobQuery).execute();
 
+        if (ciJobs && ciJobs.total_count > 0 && ciJobs.data) {
+            return ciJobs[0];
+        } else {
+            return await this.createCiJob(octaneSDKConnection, ciServer);
+        }
     }
 
     private async getOctaneVersion(octaneSDKConnection): Promise<string>{
@@ -615,9 +631,40 @@ export class BaseTask {
         return pipelines;
     }
 
+    private async createCiJob(octaneSDKConnection, ciServer) {
+        let ciJob;
+        const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+
+        const parameters = await this.parametersService.getDefinedParametersWithBranch(api, this.definitionId, this.projectName, this.sourceBranch, !this.experiments.support_azure_multi_branch);
+        ciJob = {
+            'name': this.agentJobName,
+            'ci_id': this.getParentJobCiId(),
+            'ci_server': {'type': EntityTypeConstants.CI_SERVER_ENTITY_TYPE, 'id': ciServer.id},
+            'definition_id': this.definitionId,
+            'parameters': parameters
+        }
+
+        let ciJobs = [
+            await octaneSDKConnection.create(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME, ciJob).execute()
+        ];
+
+        if (ciJobs.length === 1) {
+            this.logger.info('CiJob ' + ciJobs[0].data[0].id + ' created');
+        } else {
+            this.logger.error('CiJob creation failed', this.logger.getCaller());
+        }
+
+        return ciJobs;
+    }
+
     protected static escapeOctaneQueryValue(q) {
         return q && q.replace(/\\/g, '\\\\')
             .replace(/\(/g, '\\(')
             .replace(/\)/g, '\\)');
+    }
+
+    private async doesOctaneSupportCreatingCIJobsDirectly(octaneSDKConnection) {
+        let currentVersion = await this.getOctaneVersion(octaneSDKConnection);
+        return this.isVersionGreaterOrEquals(currentVersion, "16.2.100")
     }
 }
