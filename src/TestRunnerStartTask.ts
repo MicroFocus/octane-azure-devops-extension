@@ -122,7 +122,7 @@ export class TestRunnerStartTask extends BaseTask {
         return executors[0];
     }
 
-    private async createCiJob(octaneSDKConnection) {
+    protected async createCiJob(octaneSDKConnection) {
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         const  parameters = await this.parametersService.getDefinedParametersWithBranch(api, this.definitionId,
             this.projectName, this.sourceBranch, this.experiments.support_azure_multi_branch ? false : true);

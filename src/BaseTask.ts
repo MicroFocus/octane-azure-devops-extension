@@ -636,7 +636,7 @@ export class BaseTask {
         return pipelines;
     }
 
-    private async createCiJob(octaneSDKConnection, ciServer) {
+    protected async createCiJob(octaneSDKConnection, ciServer) {
         let ciJob;
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
 
