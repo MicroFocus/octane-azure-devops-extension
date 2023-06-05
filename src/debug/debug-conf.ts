@@ -10,6 +10,16 @@ interface System {
     teamProjectId: string;
     teamProject: string;
     definitionId: number;
+
+    testRunnerName: string;
+    testRunnerSubtype: string;
+    testRunnerFrameworkType: string;
+    testRunnerFrameworkId: string;
+    ciServerId: number;
+    ciJobId: number;
+    testsToRun: string;
+    executionId: number;
+    suiteRunId: number;
 }
 
 interface Logging {
@@ -27,6 +37,7 @@ interface Octane {
     serviceConnectionName: string;
     workspaces: string;
     auth: Auth;
+    framework: string;
     createPipeline: string;
 }
 
@@ -112,7 +123,8 @@ export class DebugConfToDebugMapsConverter {
         map.set(InputConstants.OCTANE_SERVICE_CONNECTION, conf.octane.serviceConnectionName);
         map.set(InputConstants.WORKSPACES_LIST, conf.octane.workspaces);
         map.set(InputConstants.GITHUB_REPOSITORY_CONNECTION, conf.repository.repositoryConnection);
-        map.set(InputConstants.CUCUMBER_REPORT_PATH, conf.testInjection.gherkin.cucumber.cucumberReportPath)
+        map.set(InputConstants.CUCUMBER_REPORT_PATH, conf.testInjection.gherkin.cucumber.cucumberReportPath);
+        map.set(InputConstants.FRAMEWORK, conf.octane.framework);
         map.set(InputConstants.CREATE_PIPELINE, conf.octane.createPipeline);
     }
 
@@ -124,6 +136,13 @@ export class DebugConfToDebugMapsConverter {
         map.set(SystemVariablesConstants.BUILD_DEFINITION_ID,conf.system.definitionId);
         map.set(SystemVariablesConstants.BUILD_SOURCE_BRANCH,conf.build.sourceBranch);
 
+        map.set(SystemVariablesConstants.SYSTEM_TEST_RUNNER_NAME, conf.system.testRunnerName);
+        map.set(SystemVariablesConstants.SYSTEM_TEST_RUNNER_SUBTYPE, conf.system.testRunnerSubtype);
+        map.set(SystemVariablesConstants.SYSTEM_TEST_RUNNER_FRAMEWORK_TYPE, conf.system.testRunnerFrameworkType);
+        map.set(SystemVariablesConstants.SYSTEM_TEST_RUNNER_FRAMEWORK_ID, conf.system.testRunnerFrameworkId);
+        map.set(SystemVariablesConstants.SYSTEM_CI_SERVER_ID, conf.system.ciServerId);
+        map.set(SystemVariablesConstants.SYSTEM_CI_JOB_ID, conf.system.ciJobId);
+
         map.set(EndpointDataConstants.ENDPOINT_DATA_OCTANE_AZURE_PERSONAL_ACCESS_TOKEN, conf.endpoint.azurePersonalAccessToken);
         map.set(EndpointDataConstants.ENDPOINT_DATA_OCTANE_INSTANCE_ID, conf.endpoint.octaneInstanceId);
         map.set(EndpointDataConstants.ENDPOINT_URL, conf.endpoint.url);
@@ -131,6 +150,10 @@ export class DebugConfToDebugMapsConverter {
         map.set(SystemVariablesConstants.SYSTEM_TEAM_PROJECT, conf.system.teamProject);
         map.set(SystemVariablesConstants.BUILD_BUILD_ID, conf.build.buildId);
         map.set(SystemVariablesConstants.BUILD_DEFINITION_NAME, conf.build.definitionName);
+
+        map.set(InputConstants.TESTS_TO_RUN, conf.system.testsToRun);
+        map.set(InputConstants.EXECUTION_ID, conf.system.executionId);
+        map.set(InputConstants.SUITE_RUN_ID, conf.system.suiteRunId);
     }
 
     private static getAuthentication(confAuth: Auth): EndpointAuthorization {

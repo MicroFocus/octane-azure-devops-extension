@@ -1,0 +1,52 @@
+{
+  "id": "141b3a00-1961-46ec-ab62-baf7d340454b",
+  "name": "octane-test-runner-start-task-private",
+  "friendlyName": "ALM Octane Test Runner Job Start (private)",
+  "description": "ALM Octane Test Runner Start Task (private)",
+  "author": "Micro Focus",
+  "category": "Build",
+  "visibility": [
+    "Build",
+    "Release"
+  ],
+  "demands": [],
+  "version": {
+    "Major": "1",
+    "Minor": "0",
+    "Patch": "11"
+  },
+  "minimumAgentVersion": "2.170.1",
+  "instanceNameFormat": "ALM Octane Job Test Runner Start",
+  "inputs": [
+    {
+      "name": "OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnection",
+      "label": "ALM Octane service/server end point",
+      "required": true,
+      "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"
+    },
+    {
+      "name": "WorkspaceList",
+      "type": "string",
+      "label": "Target ALM Octane workspaces",
+      "required": true,
+      "helpMarkDown": "Comma separated list of target Octane workspaces"
+    },
+    {
+      "name": "Framework",
+      "type": "pickList",
+      "label": "Framework convert type",
+      "required": true,
+      "helpMarkDown": "Framework convert type",
+      "options": {
+        "junit": "JUnit"
+      }
+    }
+  ],
+  "execution": {
+    "Node10": {
+      "target": "task.js",
+      "argumentFormat": ""
+    }
+  }
+}
