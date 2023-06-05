@@ -42,19 +42,19 @@ async function runTasks() {
     let startTask: StartTask = await StartTask.instance(azureTaskMock);
     await startTask.run();
 
-    // conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_NAME, 'C');
-    // let startInnerTask: StartTask = await StartTask.instance(azureTaskMock);
-    // await startInnerTask.run();
-    //
-    // conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_NAME, 'C');
-    // conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_STATUS, 'Failed');
-    // let endInnerTask: EndTask = await EndTask.instance(azureTaskMock);
-    // await endInnerTask.run();
+    conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_NAME, 'C');
+    let startInnerTask: StartTask = await StartTask.instance(azureTaskMock);
+    await startInnerTask.run();
 
-    conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_NAME, 'AlmOctaneTestsConverter');
-    azureTaskMock.setVariable('testsToRun','v1:com.hp.devops.demoapp|CalcsTest|sub_test_A|runId=2034;com.hp.devops.demoapp|CalcsTest|neq_test_B|runId=2035;com.hp.devops.demoapp|CalcsTest|sub_test_C|runId=2036');
-    const converterTask = await TestsConverter.instance(azureTaskMock);
-    await converterTask.run();
+    conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_NAME, 'C');
+    conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_STATUS, 'Failed');
+    let endInnerTask: EndTask = await EndTask.instance(azureTaskMock);
+    await endInnerTask.run();
+
+    // conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_NAME, 'AlmOctaneTestsConverter');
+    // azureTaskMock.setVariable('testsToRun','v1:com.hp.devops.demoapp|CalcsTest|sub_test_A|runId=2034;com.hp.devops.demoapp|CalcsTest|neq_test_B|runId=2035;com.hp.devops.demoapp|CalcsTest|sub_test_C|runId=2036');
+    // const converterTask = await TestsConverter.instance(azureTaskMock);
+    // await converterTask.run();
 
     conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_NAME, BaseTask.ALM_OCTANE_PIPELINE_END);
     conf.systemVariables.set(SystemVariablesConstants.AGENT_JOB_STATUS, 'Succeeded');

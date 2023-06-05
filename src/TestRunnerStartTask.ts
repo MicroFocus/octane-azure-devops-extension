@@ -6,10 +6,10 @@ import {
 import {CiEventType, PhaseType} from "./dto/events/CiTypes";
 import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
-import {TestExecutionEvent} from "./dto/events/TestExecutionEvent";
 import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
 import {CiParameter} from "./dto/events/CiParameter";
 import {TestsConverter} from "./services/test_converter/TestsConverter";
+import {CiEvent} from "./dto/events/CiEvent";
 
 const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
 
@@ -230,9 +230,9 @@ export class TestRunnerStartTask extends BaseTask {
                     this.sourceBranch,this.experiments.support_azure_multi_branch?false:true)
                 :undefined;
 
-            const startEvent = new TestExecutionEvent(this.buildDefinitionName + " " + this.sourceBranchName,
+            const startEvent = new CiEvent(this.buildDefinitionName + " " + this.sourceBranchName,
                 CiEventType.STARTED, this.buildId, this.buildId, this.getJobCiId(), null, new Date().getTime(),
-                executionId, suiteRunId, null, null, null,
+                null, null, null,
                 this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters,
                 'CHILD', this.getParentJobCiId(), this.sourceBranch);
 

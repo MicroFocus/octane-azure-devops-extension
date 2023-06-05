@@ -13,7 +13,7 @@
   "version": {
     "Major": "1",
     "Minor": "0",
-    "Patch": "5"
+    "Patch": "11"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job Test Runner Start",
@@ -39,12 +39,6 @@
       "required": true,
       "helpMarkDown": "Framework convert type",
       "options": {
-        "gradle": "Gradle",
-        "testNG": "Test NG",
-        "protractor": "Protractor",
-        "cucumber": "Cucumber-JVM over Maven",
-        "bddScenario": "BDD Scenario",
-        "jbehave": "JBehave over Maven",
         "junit": "JUnit"
       }
     }

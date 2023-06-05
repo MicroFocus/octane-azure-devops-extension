@@ -261,6 +261,13 @@ export class BaseTask {
             await this.updatePluginVersion(octaneSDKConnection);
             this.logger.info("Send plugin details to Octane.");
         }
+        const azureTestingFrameworkSupportedVersion = '16.2.31';
+        if(this.agentJobName === BaseTask.ALM_OCTANE_TEST_RUNNER_START &&
+            !this.isVersionGreaterOrEquals(currentVersion,azureTestingFrameworkSupportedVersion)) {
+
+            throw new Error('Azure testing framework is not supported for Octane version less than ' + azureTestingFrameworkSupportedVersion +
+                '. Current Octane version is :' + currentVersion);
+        }
     }
 
     protected async createOctaneConnectionsAndRetrieveCiServersAndPipelines() {
