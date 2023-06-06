@@ -677,6 +677,6 @@ export class BaseTask {
 
     private async doesOctaneSupportCreatingCIJobsDirectly(octaneSDKConnection) {
         let currentVersion = await this.getOctaneVersion(octaneSDKConnection);
-        return this.isVersionGreaterOrEquals(currentVersion, "16.2.100")
+        return this.isVersionGreaterOrEquals(currentVersion, "16.2.32")
     }
 }
