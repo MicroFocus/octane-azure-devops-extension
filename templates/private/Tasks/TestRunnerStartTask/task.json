@@ -2,7 +2,7 @@
   "id": "141b3a00-1961-46ec-ab62-baf7d340454b",
   "name": "octane-test-runner-start-task-private",
   "friendlyName": "ALM Octane Test Runner Job Start (private)",
-  "description": "ALM Octane Test Runner Start Task (private)",
+  "description": "This task is intended to support execution of automated tests from Micro Focus ALM Octane.\n The task searches for the \"testsToRun\" parameter which is sent from ALM Octane as part of the execution framework.\nOnce it is found, its value is converted to the format of the selected testing framework and injected to the \"testsToRunConverted\" variable.\nLater, the variable can be used in the appropriate execution task.\nFor example: \nIn maven task you can use it: \nmavenOptions: '-Dtest=$(testsToRunConverted)'\n",
   "author": "Micro Focus",
   "category": "Build",
   "visibility": [
@@ -13,7 +13,7 @@
   "version": {
     "Major": "1",
     "Minor": "0",
-    "Patch": "11"
+    "Patch": "14"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job Test Runner Start",
@@ -37,8 +37,11 @@
       "type": "pickList",
       "label": "Framework convert type",
       "required": true,
-      "helpMarkDown": "Framework convert type",
+      "helpMarkDown": "Select the testing framework whose format you want to convert to.\n",
       "options": {
+        "testNG": "Test NG",
+        "cucumber": "Cucumber-JVM over Maven",
+        "bddScenario": "BDD Scenario",
         "junit": "JUnit"
       }
     }
