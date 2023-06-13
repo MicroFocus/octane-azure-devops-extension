@@ -157,7 +157,7 @@ export class TestRunnerStartTask extends BaseTask {
         this.logger.debug('framework: ' + framework);
         const frameworkId = await this.getFrameworkId(framework);
         const test_runner = {
-            'name': this.buildDefinitionName,
+            'name': this.buildDefinitionName + " " + this.sourceBranch,
             'subtype': EntityTypeConstants.TEST_RUNNER_ENTITY_TYPE,
             'framework': {
                 'type': "list_node",
