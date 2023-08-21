@@ -51,7 +51,7 @@ export class EndTask extends BaseTask {
                         let jobCiId = this.getJobCiId();
                          endEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName , CiEventType.FINISHED, this.buildId, this.buildId, jobCiId,
                              buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
-                             causes,parameters,testResultExpected,'CHILD',this.getParentJobCiId(), this.sourceBranch);
+                             causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch,testResultExpected);
                     } else {
                          endEvent = new CiEvent(this.agentJobName , CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
 
