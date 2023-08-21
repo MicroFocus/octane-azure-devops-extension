@@ -93,6 +93,17 @@
       }
     },
     {
+      "id": "octane-test-runner-start-task",
+      "description": "ALM Octane Test Runner Start Task",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "Tasks/TestRunnerStartTask"
+      }
+    },
+    {
       "id": "octane-end-task",
       "description": "ALM Octane End Task",
       "type": "ms.vss-distributed-task.task",

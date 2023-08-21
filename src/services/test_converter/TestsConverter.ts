@@ -16,7 +16,7 @@ export class TestsConverter {
     public convert(testToConverts :string, framework:string) {
 
         this.logger.info("testToConverts is: "+ testToConverts);
-        let testToRunData = this.parsTests(testToConverts);
+        const testToRunData = this.parseTests(testToConverts);
 
         let testsConvertedStr = "";
         switch (framework) {
@@ -42,30 +42,28 @@ export class TestsConverter {
 
     //original srt: v1:||Approve2222|runId=4174127|featureFilePath=src\test\resources\F1\test_1001.feature;||numberStatus|runId=4174128|featureFilePath=src\test\resources\F1\test_1001.feature
     //converted:'src\test\resources\F1\test_1001.feature' 'src\test\resources\F1\test_1001.feature'
-    private handleCucumberJVM(testsToRunData : Array<TestToRunData>){
+    private handleCucumberJVM(testsToRunData : TestToRunData[]){
 
-        let testsConvertedStr = "";
-        let classJoiner = "";
-
-        testsToRunData.forEach(function(item, index) {
-            testsConvertedStr =testsConvertedStr + classJoiner + "'" +this.getFeatureFilePath(item) + "'";
-            classJoiner = " ";
-        });
+        const testsConvertedStr = testsToRunData.filter(item => item.parameters['featureFilePath'])
+            .map(item => '\\"' + item.parameters['featureFilePath'] +'\\"')
+            .filter((value, index, array) => array.indexOf(value) === index)
+            .join(' ')
+        console.log('test to run converter :' + testsConvertedStr);
 
         return testsConvertedStr;
     }
 
-    private handleJunitOrTestNgFramework(testToRunData : Array<TestToRunData>) {
+    private handleJunitOrTestNgFramework(testToRunData : TestToRunData[]) {
 
         let testMap = {};
         testToRunData?.forEach(testData =>{
 
             const fullPath =
-                testData.getPackageName() ? testData.getPackageName() + '.' + testData.getClassName() : testData.getClassName();
+                testData.packageName ? testData.packageName + '.' + testData.className : testData.className;
             if(testMap[fullPath]) {
-                testMap[fullPath] = testMap[fullPath] + '+' + testData.getTestName();
+                testMap[fullPath] = testMap[fullPath] + '+' + testData.testName;
             } else {
-                testMap[fullPath] = testData.getTestName();
+                testMap[fullPath] = testData.testName;
             }
 
         });
@@ -80,42 +78,22 @@ export class TestsConverter {
 
     //original srt :"v1:||No Results in Search|runId=3985071|featureFilePath=src\test\resources\F1\Add Widget Gallery - Widget_36002.feature;||Search is done for each category|runId=3985072|featureFilePath=src\test\resources\F1\Add Widget Gallery - Widget_36002.feature
     //converted: 'src\test\resources\F1\Add Widget Gallery - Widget_36002.feature' --name '^No Results in Search$' --name '^Search is done for each category$'
-    private handleBddScenarioFramework(testToRunData : Array<TestToRunData>) {
+    private handleBddScenarioFramework(testsToRunData : Array<TestToRunData>) {
 
-        let featuresStr = testToRunData.map(d => this.getFeatureFilePath(d))
-            .filter(d => d!= null && d !== "")
-            .map(n => "'"+ n +"'")
+        const featuresStr = testsToRunData.filter(item => item.parameters['featureFilePath'])
+            .map(item => "'" + item.parameters['featureFilePath'] +"'")
             .filter((value, index, array) => array.indexOf(value) === index)
             .join(" ");
 
-        //let featuresStrDistinct = featuresStr.filter((value, index, array) => array.indexOf(value) === index).join(" ");
-
-        let testsStr = testToRunData.map(d => d.getTestName().replace("'","."))
+        const testsStr = testsToRunData.map(item => item.testName.replace("'","."))
             .map(n => "--name '^" + n + "$'")
             .filter((value, index, array) => array.indexOf(value) === index)//distinct
             .join(" ")
 
         return featuresStr + " " + testsStr;
-
-        /*
-         String featuresStr = data.stream()
-                .map(d -> getFeatureFilePath(d)).filter(d -> d != null && !d.isEmpty())
-                .distinct()
-                .map(n -> "'" + n + "'")
-                .collect(Collectors.joining(" "));
-        String testsStr = data.stream()
-                .map(d -> d.getTestName().replace("'","."))
-                .map(n -> "--name '^" + n + "$'")
-                .distinct()
-                .collect(Collectors.joining(" "));
-        return featuresStr + " " + testsStr;
-         */
     }
 
-    private getFeatureFilePath(item: TestToRunData) {
-        return item.getParameter('featureFilePath');
-    }
-    private parsTests(testsToConvert : string) {
+    private parseTests(testsToConvert : string): TestToRunData[] {
 
         //testToConverts format: v1:package1|class1|test1|key1=val1|key2=val2;package2|class2|test2#arguments2;package3|class3|test3#arguments3
         let TEST_PARTS_MINIMAL_SIZE = 3;
@@ -133,18 +111,28 @@ export class TestsConverter {
                     this.logger.error("Test '" + test + "' does not contains all required components");
                 }
 
-                let testToRunData: TestToRunData;
-                testToRunData = new TestToRunData(testSplit[0], testSplit[1], testSplit[2]);
+                const testToRunData:TestToRunData = {
+                    packageName: testSplit[0],
+                    className: testSplit[1],
+                    testName:testSplit[2],
+                }
+                if(testSplit.length > TEST_PARTS_MINIMAL_SIZE){
+                    testToRunData.parameters = {}
+                }
                 //add parameters
-                for (let i = TEST_PARTS_MINIMAL_SIZE; i < testsList.length; i++) {
-                    let paramSplit = testsList[i].split("=")
+                for (let i = TEST_PARTS_MINIMAL_SIZE; i < testSplit.length; i++) {
+                    let paramSplit = testSplit[i].split("=")
                     if (paramSplit.length != PARAMETER_SIZE) {
                         //throw an exception
                     } else {
-                        testToRunData.addParameters(paramSplit[0], paramSplit[1]);
+
+                        testToRunData.parameters[paramSplit[0]] = paramSplit[1];
                     }
                 }
-                this.logger.info("test data:" + testToRunData.toStringRow());
+                this.logger.info('test data:' + testToRunData.packageName + '.' + testToRunData.className + '.' + testToRunData.testName +
+                    ', parameters: ' + testToRunData.parameters && Object.keys(testToRunData.parameters).map(param => param +'=' + testToRunData.parameters[param]).join(','));
+
+
                 testToRunList.push(testToRunData);
             });
             return testToRunList;
