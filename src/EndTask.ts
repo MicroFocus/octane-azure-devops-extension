@@ -25,12 +25,14 @@ export class EndTask extends BaseTask {
         let api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         for(let ws in this.octaneSDKConnections) {
             if(this.octaneSDKConnections[ws]) {
+                let testResultExpected = false;
                 if (this.isPipelineEndJob) {
                     const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH);
 
                     let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger,this.experiments.upgrade_azure_test_runs_paths);
                     for (const testResult of testResults) {
                         if (testResult && testResult.length > 0) {
+                            testResultExpected = true;
                             await this.sendTestResult(this.octaneSDKConnections[ws], testResult);
                         }
                     }
@@ -49,7 +51,7 @@ export class EndTask extends BaseTask {
                         let jobCiId = this.getJobCiId();
                          endEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName , CiEventType.FINISHED, this.buildId, this.buildId, jobCiId,
                              buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
-                             causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch);
+                             causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch,testResultExpected);
                     } else {
                          endEvent = new CiEvent(this.agentJobName , CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
 

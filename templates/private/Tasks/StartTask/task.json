@@ -3,7 +3,7 @@
   "name": "octane-start-task-private",
   "friendlyName": "ALM Octane Job Start v2 (private)",
   "description": "ALM Octane Start Task (private)",
-  "author": "Micro Focus",
+  "author": "Open Text",
   "category": "Build",
   "visibility": [
     "Build",
@@ -13,7 +13,7 @@
   "version": {
     "Major": "1",
     "Minor": "19",
-    "Patch": "40"
+    "Patch": "42"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job Start",

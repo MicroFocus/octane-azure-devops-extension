@@ -3,7 +3,7 @@
   "name": "octane-end-task",
   "friendlyName": "ALM Octane Job End",
   "description": "ALM Octane End Task",
-  "author": "Micro Focus",
+  "author": "Open Text",
   "category": "Build",
   "visibility": [
     "Build",
