@@ -3,7 +3,7 @@
   "name": "octane-pipelines-orchestrator-task-private",
   "friendlyName": "ALM Octane Pipelines Orchestrator (private)",
   "description": "ALM Octane Pipelines Orchestrator Task (private)",
-  "author": "Micro Focus",
+  "author": "Open Text",
   "category": "Build",
   "visibility": [
     "Build",
