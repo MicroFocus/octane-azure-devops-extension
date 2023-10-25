@@ -1,5 +1,5 @@
 # ALM Octane Integration with Azure DevOps Services
-## 1.0.0.3 version Release notes
+## 1.0.0.4 version Release notes
 * Added support to Testing Framework for running test using test runners starting from version 23.4 of ALM Octane.
 * Added possibility to skip creation of ALM Octane pipelines starting from version 23.4 of ALM Octane.
 * Rebranding to Open Text
