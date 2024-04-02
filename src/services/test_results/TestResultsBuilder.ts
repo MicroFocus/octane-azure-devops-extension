@@ -40,7 +40,7 @@ import {TestResultError} from '../../dto/test_results/TestResultError';
 import {WebApi} from 'azure-devops-node-api';
 import * as ba from 'azure-devops-node-api/BuildApi';
 import * as ta from 'azure-devops-node-api/TestApi';
-import {TestCaseResult} from 'azure-devops-node-api/interfaces/TestInterfaces';
+import {TestCaseResult, TestRun} from 'azure-devops-node-api/interfaces/TestInterfaces';
 import {LogUtils} from '../../LogUtils';
 import {GherkinResultElement} from '../../dto/test_results/GherkinResultElement';
 import {GherkinResultData} from '../../dto/test_results/GherkinResultData';
@@ -160,11 +160,28 @@ export class TestResultsBuilder {
 
     private static async getUnitReports(processedTests: Set<string>, testApi: ta.ITestApi, buildURI: string, projectName: string): Promise<TestCaseResult[]> {
         let results: TestCaseResult[] = [];
-        let testRuns = await testApi.getTestRuns(projectName, buildURI);
+        let testRuns : TestRun[];
+        testRuns = await testApi.getTestRuns(projectName, buildURI);
 
         for (let i = 0; i < testRuns.length; i++) {
-            let testRunId = testRuns[i].id;
-            results = results.concat(await testApi.getTestResults(projectName, testRunId));
+            let currentTestRuns = testRuns[i];
+            let testRunId = currentTestRuns.id;
+            const MAX_TEST_RUN_COUNT = 1000;
+
+            const totalTests = currentTestRuns.totalTests;
+            // Implement paging to support case of getting more than 1K test runs
+            if (totalTests >= MAX_TEST_RUN_COUNT) {
+                let currentResults : TestCaseResult[] = []
+
+                for (let j = 1; j <= totalTests/MAX_TEST_RUN_COUNT + 1; j++) {
+                    currentResults = await testApi.getTestResults(projectName, testRunId, null, MAX_TEST_RUN_COUNT*(j-1), MAX_TEST_RUN_COUNT);
+                    if (currentResults.length > 0) {
+                        results = results.concat(currentResults);
+                    }
+                }
+            } else { // No paging required
+                results = results.concat(await testApi.getTestResults(projectName, testRunId));
+            }
         }
 
         results = results.filter(result => !processedTests.has(result.automatedTestName));
@@ -180,7 +197,9 @@ export class TestResultsBuilder {
         }
 
         const inputPath = cucumberReportsPath.replace(/\\/g, '/')
+        // const files = globby.sync('C:/CloudAzureAgent/_work/8/s/bdd2OctaneResult/*.xml');
         const files = globby.sync([`${inputPath}/*.xml`])
+
         logger.info(`Found ${files.length} matching ${inputPath} pattern`)
 
         let options = {compact: true, ignoreComment: true, spaces: 4};
@@ -194,7 +213,18 @@ export class TestResultsBuilder {
                 ? featuresAsJson.features.feature
                 : Array.of(featuresAsJson.features.feature);
 
-            features.forEach(feat => gherkinResults.push(new GherkinResultData(feat)));
+            features.forEach(feat =>
+            {
+                feat._attributes.name = xmlescape(feat._attributes.name);
+                feat.scenarios.scenario.forEach(scenario =>
+                {
+                    scenario._attributes.name = xmlescape(scenario._attributes.name);
+                    if (scenario.steps && scenario.steps.step && scenario.steps.steplength !== 0) {
+                        scenario.steps.step.forEach(step => step._attributes.name = xmlescape(step._attributes.name));
+                    }
+                });
+                gherkinResults.push(new GherkinResultData(feat))
+            });
         });
 
         return gherkinResults;
@@ -204,17 +234,17 @@ export class TestResultsBuilder {
         let unitTestResults: Array<UnitResultElement> = [];
         testResults.forEach(element => {
             logger.debug("Azure test input - automatedTestStorage: " + element.automatedTestStorage + " , automatedTestName: " + element.automatedTestName);
-            let packagename = upgrade_azure_test_runs_paths_experiment ?
+            let packageName = upgrade_azure_test_runs_paths_experiment ?
                     element.automatedTestStorage && element.automatedTestStorage.indexOf('.') > 0 ?
                     element.automatedTestStorage.substring(0,element.automatedTestStorage.lastIndexOf('.')) :
                     element.automatedTestStorage :
                 element.automatedTestStorage;
-            packagename = packagename || "";
-            if (packagename.length > 255) {
-                logger.error('Package name is longer than 255 chars: ' + packagename);
+            packageName = xmlescape(packageName || "");
+            if (packageName.length > 255) {
+                logger.error('Package name is longer than 255 chars: ' + packageName);
                 return;
             }
-            let name = element.automatedTestName || "";
+            let name = xmlescape(element.automatedTestName || "");
             if (name.length > 255) {
                 logger.error('Test name is longer than 255 chars: ' + name);
                 return;
@@ -223,8 +253,8 @@ export class TestResultsBuilder {
                     element.automatedTestStorage && element.automatedTestStorage.indexOf('.') > 0 ?
                     element.automatedTestStorage.substring(element.automatedTestStorage.lastIndexOf('.') + 1) :
                     element.automatedTestStorage :
-                packagename + '.' + name;
-            classname = classname || "";
+                packageName + '.' + name;
+            classname = xmlescape(classname || "");
             if (classname.length > 255) {
                 logger.error('Classname name is longer than 255 chars: ' + classname);
                 return;
@@ -245,7 +275,7 @@ export class TestResultsBuilder {
             } else {
                 error = undefined;
             }
-            let testResultElem = new UnitResultElement(new UnitResultAttributes(undefined, packagename, name, classname, duration,
+            let testResultElem = new UnitResultElement(new UnitResultAttributes(undefined, packageName, name, classname, duration,
                 status, started, external_report_url), error);
 
             unitTestResults.push(testResultElem);
