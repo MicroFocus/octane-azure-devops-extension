@@ -50,6 +50,7 @@ import {ConnectionUtils} from "./ConnectionUtils";
 import {PipelineParametersService} from "./services/pipelines/PipelineParametersService";
 
 import { Query } from '@microfocus/alm-octane-js-rest-sdk';
+import * as ba from "azure-devops-node-api/BuildApi";
 
 export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
@@ -90,6 +91,9 @@ export class BaseTask {
     private ciInternalAzureApiUrlPart: string;
     protected experiments: {[name:string]: boolean} = {};
     protected parametersService: PipelineParametersService;
+
+    private octanePipelineName: string;
+    private useFullPipelinePath:string;
 
     protected constructor(tl: any) {
         this.tl = tl;
@@ -251,6 +255,8 @@ export class BaseTask {
         this.isPipelineEndJob = this.agentJobName.toLowerCase() === BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase();
         this.isPipelineJob = this.isPipelineStartJob || this.isPipelineEndJob;
         this.pipelineFullName = this.projectFullName + '.' + this.buildDefinitionName + '@@@' + this.agentJobName;
+        this.octanePipelineName = this.tl.getInput(InputConstants.PIPELINE_NAME,false);
+        this.useFullPipelinePath = this.tl.getInput(InputConstants.IS_FULL_PATHNAME,false);
 
         this.logger.info('Pipeline full name:' + this.pipelineFullName);
     }
@@ -428,6 +434,7 @@ export class BaseTask {
             }
             if (!pipelines || pipelines.length == 0) {
                 rootJobName = rootJobName + '@@@' + this.definitionId + '@@@' + this.sourceBranch;
+                pipelineName = await this.getPipelineName(pipelineName);
                 let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
                 return result[0].data[0];
             } else {
@@ -450,6 +457,23 @@ export class BaseTask {
             }
             return pipelines.data[0];
         }
+    }
+
+    private async getPipelineName(pipelineName:string):Promise<string>{
+        if(!this.useFullPipelinePath || this.useFullPipelinePath?.toLowerCase() === 'false'){
+            return this.octanePipelineName || pipelineName;
+        }
+        const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+        let buildApi: ba.IBuildApi = await api.getBuildApi();
+        let build_info = await buildApi.getBuild(this.projectName, parseInt(this.buildId));
+        let pipelineNameForCreate = build_info?.definition?.path && build_info?.definition.path !== '\\' ? build_info.definition.path + '\\' + pipelineName : pipelineName;
+        if(pipelineNameForCreate.startsWith('\\')){
+            pipelineNameForCreate = pipelineNameForCreate.substring(1);
+        }
+        if(pipelineNameForCreate.indexOf('\\') > 0) {
+            return pipelineNameForCreate.replaceAll('\\','/');
+        }
+        return pipelineNameForCreate;
     }
 
     protected async getCiJob(octaneSDKConnection, rootJobName, ciServer) {
