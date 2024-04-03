@@ -280,12 +280,20 @@ export class BaseTask {
     protected async initializeExperiments(octaneSDKConnection,ws):Promise<void>{
         const currentVersion = await this.getOctaneVersion(octaneSDKConnection);
         this.logger.info("Octane current version: " + currentVersion);
-        if(this.isVersionGreaterOrEquals(currentVersion,'16.1.14')){
-            this.experiments = await this.getExperiments(octaneSDKConnection,ws);
-        } else if (this.isVersionGreaterOrEquals(currentVersion,'16.0.316')){
-            const isRunPipelineFromOctaneEnable = await this.isExperimentEnable(octaneSDKConnection,ws);
-            this.experiments['run_azure_pipeline'] = isRunPipelineFromOctaneEnable;
+
+        if(this.isVersionGreaterOrEquals(currentVersion,'16.0.316')) {
+            this.experiments['run_azure_pipeline'] = true;
         }
+        if(this.isVersionGreaterOrEquals(currentVersion,'16.1.18')){
+            this.experiments['run_azure_pipeline_with_parameters'] = true;
+        }
+        if(this.isVersionGreaterOrEquals(currentVersion,'16.1.34')){
+            this.experiments['support_azure_multi_branch'] = true;
+        }
+        if(this.isVersionGreaterOrEquals(currentVersion,'16.1.41')){
+            this.experiments['upgrade_azure_test_runs_paths'] = true;
+        }
+
         if(this.experiments.run_azure_pipeline || this.experiments.run_azure_pipeline_with_parameters ){
             await this.updatePluginVersion(octaneSDKConnection);
             this.logger.info("Send plugin details to Octane.");
@@ -612,33 +620,6 @@ export class BaseTask {
             'definitionId': this.definitionId,
             'jobCiId': jobCiId,
             'parameters': parameters
-        }
-    }
-
-    private async isExperimentEnable(octaneSDKConnection,workspaceId): Promise<boolean>{
-        const experimentUrl = this.ciInternalAzureApiUrlPart.replace('{workspace_id}',workspaceId) + '/experiment_run_pipeline';
-        const response = await octaneSDKConnection._requestHandler._requestor.get(experimentUrl);
-        this.logger.info("Octane experiment 'run_azure_pipeline' enabled: " + response);
-        return response;
-    }
-
-    private async getExperiments(octaneSDKConnection,workspaceId): Promise<{[name:string]: boolean}>{
-        const octaneExperimentsVariable = this.tl.getVariable(OctaneVariablesName.EXPERIMENTS);
-        this.logger.info('Octane experiments variables ' + (octaneExperimentsVariable ? 'exist' : 'not exist'));
-        if(!octaneExperimentsVariable) {
-            const experimentUrl = this.ciInternalAzureApiUrlPart.replace('{workspace_id}', workspaceId) + '/azure_pipeline_experiments';
-            const response = await octaneSDKConnection._requestHandler._requestor.get(experimentUrl);
-            if (response) {
-                this.logger.info("Octane experiments status: " +
-                    Object.keys(response).map(expr => expr + '=' + response[expr]).join(', '));
-            }
-            this.tl.setVariable(OctaneVariablesName.EXPERIMENTS,JSON.stringify(response));
-            return response;
-        } else {
-            const octaneExperiments = JSON.parse(octaneExperimentsVariable);
-            this.logger.info("Octane experiments from Variable: " +
-                Object.keys(octaneExperiments).map(expr => expr + '=' + octaneExperiments[expr]).join(', '));
-            return octaneExperiments;
         }
     }
 
