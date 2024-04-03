@@ -434,7 +434,7 @@ export class BaseTask {
                 .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
 
             const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
-                .fields('pipeline,definition_id')
+                .fields('pipeline,definition_id,name')
                 .query(pipelineQuery).execute();
 
             if(ciJobs && ciJobs.total_count > 0 && ciJobs.data) {
@@ -452,6 +452,9 @@ export class BaseTask {
                 if(ciJobsToUpdate?.length > 0) {
                     this.logger.info('Updating ' + ciJobsToUpdate.length +' CI jobs of Octane');
                     await this.updateExistCIJobs(ciJobsToUpdate,ciServer.id,workspaceId,octaneSDKConnection);
+                } else {
+                    this.logger.info('check if need to update ci job name');
+                    await this.updateExistCiJobNameIfNeeded(ciJobs.data,workspaceId,ciServer.id,octaneSDKConnection);
                 }
             }
             return pipelines[0];
@@ -606,6 +609,25 @@ export class BaseTask {
         await octaneSDKConnection._requestHandler.update(url,ciJobsToUpdate);
     }
 
+    private async updateExistCiJobNameIfNeeded(ciJobs,workspaceId,ciServerId,octaneSDKConnection){
+        let ciJobsToUpdate = [];
+        for(const ciJob of ciJobs){
+            if(ciJob.name === this.agentJobName || BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase() === ciJob.name?.toLowerCase()) {
+                ciJobsToUpdate.push({
+                    'name': this.buildDefinitionName,
+                    'jobId': ciJob.id,
+                    'jobCiId': this.getParentJobCiId()
+                });
+            }
+        }
+        if(ciJobsToUpdate.length > 0) {
+            this.logger.info('CI Jobs update body:' + ciJobs);
+
+            const url = this.ciInternalAzureApiUrlPart.replace('{workspace_id}', workspaceId) + '/ci_job_update?ci-server-id=' + ciServerId;
+            await octaneSDKConnection._requestHandler.update(url, ciJobsToUpdate);
+        }
+    }
+
     private createPipelineBody(pipeline){
         return {
             'id': pipeline.id,
@@ -616,6 +638,7 @@ export class BaseTask {
         let jobCiId = this.getParentJobCiId();
 
         return {
+            'name': this.buildDefinitionName,
             'jobId': ciJob.id,
             'definitionId': this.definitionId,
             'jobCiId': jobCiId,
@@ -634,7 +657,7 @@ export class BaseTask {
                 'name': pipelineName,
                 'ci_server': {'type': EntityTypeConstants.CI_SERVER_ENTITY_TYPE, 'id': ciServer.id},
                 'jobs': [{
-                    'name': this.agentJobName,
+                    'name': this.buildDefinitionName,
                     'jobCiId': this.getParentJobCiId(),
                     'definitionId': this.definitionId,
                     'parameters': parameters,
