@@ -49,7 +49,7 @@ import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
 import {PipelineParametersService} from "./services/pipelines/PipelineParametersService";
 
-const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
+import { Query } from '@microfocus/alm-octane-js-rest-sdk';
 
 export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
@@ -138,15 +138,10 @@ export class BaseTask {
         this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
 
-        let eventObj = {
-            url: this.analyticsCiInternalApiUrlPart +'/events',
-            body: events.toJSON()
-        }
 
-        let ret = await octaneSDKConnection._requestHandler._requestor.put(eventObj);
-
-        this.logger.debug('sendEvent response:' + ret);
-        this.logger.debug('sendEvent response:' + ret);
+        let ret = await octaneSDKConnection._requestHandler._requestor
+                    .put(this.analyticsCiInternalApiUrlPart +'/events',events.toJSON());
+        this.logger.debug('sendEvent response:' + ret.status);
     }
 
     public async sendTestResult(octaneSDKConnection, testResult: string) {
@@ -155,16 +150,14 @@ export class BaseTask {
 
         this.logger.debug('Sending results to:' + testResultsApiUrl + '\nThe result string is:\n' + testResult);
 
-        let testResultObj = {
-            url: testResultsApiUrl,
+        const options = {
             headers: {'Content-Type': 'application/xml'},
             json: false,
-            body: testResult
-        };
+        }
 
-        let ret = await octaneSDKConnection._requestHandler._requestor.post(testResultObj);
+        let ret = await octaneSDKConnection._requestHandler._requestor.post(testResultsApiUrl,testResult,options);
 
-        this.logger.debug('sendTestResult response:\n' + ret);
+        this.logger.debug('sendTestResult response:' + ret.status + ', result: ' + ret.result);
     }
 
     private buildAnalyticsCiInternalApiUrlPart() {
@@ -478,9 +471,9 @@ export class BaseTask {
         if(!octaneVersionVariable) {
             const urlStatus = this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status'
             const response = await octaneSDKConnection._requestHandler._requestor.get(urlStatus);
-            this.logger.debug("Octane connectivity status response: " + JSON.stringify(response));
-            this.tl.setVariable('ALMOctaneVersion',response.octaneVersion);
-            return response.octaneVersion;
+            this.logger.debug("Octane connectivity status response: " + JSON.stringify(response.data));
+            this.tl.setVariable('ALMOctaneVersion',response.data.octaneVersion);
+            return response.data.octaneVersion;
         }
         return octaneVersionVariable;
 

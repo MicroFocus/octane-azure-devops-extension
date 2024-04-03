@@ -1,4 +1,8 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.4.2.85 version Release notes
+* Add option to define pipeline name created on ALM Octane or use pipeline's full folder path.
+* Fix issue that not all test result was sent to ALM Octane.
+* Fix issue that test result was sent without escape characters. 
 ## 0.4.2.67 version Release notes
 * Added support to Testing Framework for running test using test runners starting from version 23.4 of ALM Octane.  
 * Added possibility to skip creation of ALM Octane pipelines starting from version 23.4 of ALM Octane.
