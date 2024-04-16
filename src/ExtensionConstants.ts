@@ -43,7 +43,10 @@ export enum InputConstants {
     TESTS_TO_RUN = 'testsToRun',
     EXECUTION_ID = 'executionId',
     SUITE_RUN_ID = 'suiteRunId',
-    CREATE_PIPELINE = 'CreatePipelineCheckbox'
+    CREATE_PIPELINE = 'CreatePipelineCheckbox',
+
+    PIPELINE_NAME = 'PipelineNameCreated',
+    IS_FULL_PATHNAME = 'UseFullPipelinePath'
 }
 
 export enum SystemVariablesConstants {

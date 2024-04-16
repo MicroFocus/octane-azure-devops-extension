@@ -13,10 +13,17 @@
   "version": {
     "Major": "2",
     "Minor": "0",
-    "Patch": "5"
+    "Patch": "6"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "ALM Octane Job Start",
+  "groups" : [
+    {
+      "name": "PipelineNaming",
+      "displayName" : "Pipeline creation options",
+      "isExpanded" : false
+    }
+  ],
   "inputs": [
     {
       "name": "OctaneServiceConnection",
@@ -45,11 +52,30 @@
       "label": "Create ALM Octane pipeline",
       "required": true,
       "helpMarkDown": "When checked, a pipeline is created in ALM Octane. For versions 16.2.100 and higher, selecting the checkbox creates a pipeline, while clearing it prevents pipeline creation. Prior versions always create a pipeline, irrespective of the checkbox. Clearing the checkbox does not remove an existing pipeline.",
-      "defaultValue": true
+      "defaultValue": true,
+      "groupName" : "PipelineNaming"
+    },
+    {
+      "name": "UseFullPipelinePath",
+      "type": "boolean",
+      "label": "Use full pipeline path as a name",
+      "required": false,
+      "helpMarkDown": "Create a pipeline with the name of the full pipeline path. As the pipeline name in ALM Octane must be unique, use this option to differentiate between pipelines that have the same name. This value only applies to new pipelines. It does not affect existing ones.",
+      "defaultValue": false,
+      "groupName" : "PipelineNaming"
+    },
+    {
+      "name": "PipelineNameCreated",
+      "type": "String",
+      "label": "ALM Octane Pipeline name",
+      "required": false,
+      "helpMarkDown": "The name of the new pipeline in ALM Octane. This value only applies to new pipelines and does not affect existing pipelines. Leave the field empty to use the pipeline’s name in Azure DevOps, as its name for ALM Octane.",
+      "visibleRule": "UseFullPipelinePath == false",
+      "groupName" : "PipelineNaming"
     }
   ],
   "execution": {
-    "Node10": {
+    "Node16": {
       "target": "task.js",
       "argumentFormat": ""
     }

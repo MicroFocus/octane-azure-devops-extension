@@ -9,9 +9,9 @@
   "author": "OpenText",
   "license": "ISC",
   "dependencies": {
-    "@microfocus/alm-octane-js-rest-sdk": "15.0.20.1",
+    "@microfocus/alm-octane-js-rest-sdk": "23.3.1",
     "azure-devops-node-api": "11.0.0",
-    "azure-pipelines-task-lib": "3.1.2",
+    "azure-pipelines-task-lib": "4.1.0",
     "globby": "11.0.3",
     "xml-escape": "1.1.0",
     "xml-js": "1.6.11",

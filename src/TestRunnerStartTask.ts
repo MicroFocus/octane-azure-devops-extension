@@ -41,8 +41,7 @@ import {CiParameter} from "./dto/events/CiParameter";
 import {TestsConverter} from "./services/test_converter/TestsConverter";
 import {CiEvent} from "./dto/events/CiEvent";
 
-const Query = require('@microfocus/alm-octane-js-rest-sdk/lib/query');
-
+import { Query } from '@microfocus/alm-octane-js-rest-sdk';
 export class TestRunnerStartTask extends BaseTask {
 
     private executorId: string;

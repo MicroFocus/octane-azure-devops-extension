@@ -140,15 +140,16 @@ function buildGetAbridgedTaskAsyncQueryParams() {
 }
 
 async function sendAckResponse(octaneSDKConnection: any, taskId: string) {
-    let ackResponseObj = {
-        url: analyticsCiInternalApiUrlPart + '/servers/' + selfIdentity + "/tasks/" + taskId + "/result",
+    const url =  analyticsCiInternalApiUrlPart + '/servers/' + selfIdentity + "/tasks/" + taskId + "/result";
+    const body = {status: 201};
+
+    const options = {
         headers: {ACCEPT_HEADER: 'application/json'},
         json: true,
-        body: {status: 201}
-    };
+    }
 
-    let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
-    console.log(ret);
+    let ret = await octaneSDKConnection._requestHandler._requestor.put(url,body,options);
+    console.log(ret.status);
 }
 
 async function runPipeline(ret: any) {
@@ -255,18 +256,16 @@ async function runScheduledTask() {
 
     let counter = 0;
     let fn = async () => {
-        let eventObj = {
-            url: analyticsCiInternalApiUrlPart + 'servers/' + selfIdentity + "/tasks" + buildGetAbridgedTaskAsyncQueryParams(),
-            headers: {ACCEPT_HEADER: 'application/json'},
-            json: true,
-            body: ""
-        }
+        const url = analyticsCiInternalApiUrlPart + 'servers/' + selfIdentity + "/tasks" + buildGetAbridgedTaskAsyncQueryParams();
 
         let ret;
-
+        const options = {
+            headers: {ACCEPT_HEADER: 'application/json'},
+            json: true,
+        }
         try {
             // retrieving the job, if any, from Octane
-            ret = await octaneSDKConnection._requestHandler._requestor.get(eventObj);
+            ret = await octaneSDKConnection._requestHandler._requestor.get(url,"",options);
             console.log(ret);
             // sending back ACK
             if (ret != undefined) {

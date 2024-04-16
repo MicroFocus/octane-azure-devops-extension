@@ -179,7 +179,7 @@ export class PipelinesOrchestratorTask {
         let serverConnectivityStatusObj = await this.octaneSDKConnection._requestHandler._requestor.get(
             this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status');
 
-        this.logger.info('Server connectivity status:' + JSON.stringify(serverConnectivityStatusObj));
+        this.logger.info('Server connectivity status:' + JSON.stringify(serverConnectivityStatusObj.data));
 
         await new Promise<void>((async (resolve, reject) => {
             const loopStartTime = Date.now();
@@ -192,7 +192,7 @@ export class PipelinesOrchestratorTask {
                     this.logger.info((new Date()).toTimeString() + ': Requesting tasks from Octane through: ' + this.eventObj.url);
                     response = await this.octaneSDKConnection._requestHandler._requestor.get(this.eventObj);
 
-                    if (this.areThereAnyTasksToProcess(response)) {
+                    if (this.areThereAnyTasksToProcess(response.data)) {
                         this.logger.info((new Date()).toTimeString() + ': Received ' + response.length + ' tasks to process');
 
                         for(let i = 0; i < response.length; i++) {
@@ -242,6 +242,6 @@ export class PipelinesOrchestratorTask {
         };
 
         let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
-        this.logger.info('Octane response from receiving task status: ' + ret);
+        this.logger.info('Octane response from receiving task status: ' + ret.status);
     }
 }
