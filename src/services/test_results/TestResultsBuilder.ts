@@ -216,7 +216,9 @@ export class TestResultsBuilder {
             features.forEach(feat =>
             {
                 feat._attributes.name = xmlescape(feat._attributes.name);
-                feat.scenarios.scenario.forEach(scenario =>
+                const scenarioElement = feat.scenarios.scenario;
+                const scenarios = Array.isArray(scenarioElement) ? scenarioElement : Array.of(scenarioElement);
+                scenarios.forEach(scenario =>
                 {
                     scenario._attributes.name = xmlescape(scenario._attributes.name);
                     if (scenario.steps && scenario.steps.step && scenario.steps.steplength !== 0) {
