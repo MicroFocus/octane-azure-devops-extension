@@ -34,7 +34,7 @@
         "displayName": "ALM Octane (private)",
         "url": {
           "displayName": "Server Url",
-          "helpText": "ALM Octane Workspace Url"
+          "helpText": "ALM Octane Url"
         },
         "authenticationSchemes": [
           {
