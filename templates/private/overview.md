@@ -1,4 +1,6 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.4.2.88 version Release notes
+* Fix defects
 ## 0.4.2.86 version Release notes
 * Add option to define pipeline name created on ALM Octane or use pipeline's full folder path.
 * Fix issue that not all test result was sent to ALM Octane.
