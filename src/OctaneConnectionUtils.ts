@@ -28,6 +28,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {URL} from "url";
+
 const OctaneSDK = require('@microfocus/alm-octane-js-rest-sdk').Octane;
 
 export class OctaneConnectionUtils {

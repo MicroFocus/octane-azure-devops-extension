@@ -113,7 +113,7 @@ export class TestResultsBuilder {
         return this.getTestResultXml(result, logger);
     }
 
-    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string, cucumberReportsPath: string, logger: LogUtils,upgrade_azure_test_runs_paths_experiment:boolean): Promise<string[]> {
+    public static async getTestsResultsByBuildId(connection: WebApi, projectName: string, buildId: number, serverId: string, jobId: string, cucumberReportsPath: string, logger: LogUtils,upgrade_azure_test_runs_paths_experiment:boolean = false): Promise<string[]> {
         let xmlTestResults: string[] = [];
         let gherkinResults = this.getCucumberReportsFromPath(cucumberReportsPath, logger);
         let buildApi: ba.IBuildApi = await connection.getBuildApi();
