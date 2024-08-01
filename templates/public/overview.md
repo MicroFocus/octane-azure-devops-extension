@@ -1,4 +1,6 @@
 # ALM Octane Integration with Azure DevOps Services
+## 1.0.0.7 version Release notes
+* Upgraded ALM Octane Js SDK Version
 ## 1.0.0.6 version Release notes
 * Fix defects
 ## 1.0.0.5 version Release notes

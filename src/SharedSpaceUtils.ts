@@ -28,6 +28,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {URL} from "url";
+
 export class SharedSpaceUtils {
     public static validateOctaneUrlAndExtractSharedSpaceId(url: URL): string {
         let paramsError = 'shared space and workspace must be a part of the Octane server URL. For example: https://octane.example.com/ui?p=1001/1002';

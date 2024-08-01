@@ -49,7 +49,7 @@ import {WebApi} from "azure-devops-node-api";
 import {ConnectionUtils} from "./ConnectionUtils";
 import {PipelineParametersService} from "./services/pipelines/PipelineParametersService";
 
-import { Query } from '@microfocus/alm-octane-js-rest-sdk';
+import {Octane, Query} from '@microfocus/alm-octane-js-rest-sdk';
 import * as ba from "azure-devops-node-api/BuildApi";
 
 export class BaseTask {
@@ -142,10 +142,9 @@ export class BaseTask {
         this.collectionUri + this.projectId, this.instanceId, null, new Date().getTime());
         let events = new CiEventsList(serverInfo, [event]);
 
-
-        let ret = await octaneSDKConnection._requestHandler._requestor
-                    .put(this.analyticsCiInternalApiUrlPart +'/events',events.toJSON());
-        this.logger.debug('sendEvent response:' + ret.status);
+        let ret = await octaneSDKConnection.executeCustomRequest(this.analyticsCiInternalApiUrlPart + '/events',
+            Octane.operationTypes.update, events.toJSON());
+        this.logger.debug('sendEvent response:' + ret?.status);
     }
 
     public async sendTestResult(octaneSDKConnection, testResult: string) {
@@ -159,7 +158,8 @@ export class BaseTask {
             json: false,
         }
 
-        let ret = await octaneSDKConnection._requestHandler._requestor.post(testResultsApiUrl,testResult,options);
+        let ret = await octaneSDKConnection.executeCustomRequest(testResultsApiUrl,
+            Octane.operationTypes.create, testResult, options.headers);
 
         this.logger.debug('sendTestResult response:' + ret.status + ', result: ' + ret.result);
     }
@@ -505,10 +505,10 @@ export class BaseTask {
         this.logger.info('Octane version variable value: ' + (octaneVersionVariable ? octaneVersionVariable : 'not exist'));
         if(!octaneVersionVariable) {
             const urlStatus = this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status'
-            const response = await octaneSDKConnection._requestHandler._requestor.get(urlStatus);
+            const response = await octaneSDKConnection.executeCustomRequest(urlStatus, Octane.operationTypes.get);
             this.logger.debug("Octane connectivity status response: " + JSON.stringify(response.data));
-            this.tl.setVariable('ALMOctaneVersion',response.data.octaneVersion);
-            return response.data.octaneVersion;
+            this.tl.setVariable('ALMOctaneVersion',response.octaneVersion);
+            return response.octaneVersion;
         }
         return octaneVersionVariable;
 
@@ -523,7 +523,7 @@ export class BaseTask {
 
         const urlConnectivity = this.analyticsCiInternalApiUrlPart +
            `/servers/${instance_id}/tasks?self-type=azure_devops&api-version=1&sdk-version=${sdk}&plugin-version=${plugin}&self-url=${self_url}&client-id=${client_id}&client-server-user=`;
-        await octaneSDKConnection._requestHandler._requestor.get(urlConnectivity);
+        await octaneSDKConnection.executeCustomRequest(urlConnectivity, Octane.operationTypes.get);
     }
 
     private async getPluginVersion():Promise<string>{

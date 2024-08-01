@@ -41,6 +41,7 @@ import {OctaneConnectionUtils} from "../OctaneConnectionUtils";
 import {URL} from "url";
 import {MetadataUtils} from "../MetadataUtils";
 import {SharedSpaceUtils} from "../SharedSpaceUtils";
+import {Octane} from "@microfocus/alm-octane-js-rest-sdk";
 
 let azureTaskMock: AzurePipelineTaskLibMock = <AzurePipelineTaskLibMock>{};
 let conf: DebugConf;
@@ -148,7 +149,7 @@ async function sendAckResponse(octaneSDKConnection: any, taskId: string) {
         json: true,
     }
 
-    let ret = await octaneSDKConnection._requestHandler._requestor.put(url,body,options);
+    let ret = await octaneSDKConnection.executeCustomRequest(url, Octane.operationTypes.update, body);
     console.log(ret.status);
 }
 
@@ -265,7 +266,7 @@ async function runScheduledTask() {
         }
         try {
             // retrieving the job, if any, from Octane
-            ret = await octaneSDKConnection._requestHandler._requestor.get(url,"",options);
+            ret = await octaneSDKConnection.executeCustomRequest(url, Octane.operationTypes.get);
             console.log(ret);
             // sending back ACK
             if (ret != undefined) {

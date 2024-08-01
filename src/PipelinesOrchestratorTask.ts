@@ -42,6 +42,7 @@ import {AuthenticationService} from "./services/security/AuthenticationService";
 import {NodeUtils} from "./NodeUtils";
 import {SharedSpaceUtils} from "./SharedSpaceUtils";
 import {UrlUtils} from "./UrlUtils";
+import {Octane} from "@microfocus/alm-octane-js-rest-sdk";
 
 export class PipelinesOrchestratorTask {
     private readonly logger: LogUtils;
@@ -176,8 +177,7 @@ export class PipelinesOrchestratorTask {
     private async runInternal() {
         await this.octaneSDKConnection._requestHandler.authenticate();
 
-        let serverConnectivityStatusObj = await this.octaneSDKConnection._requestHandler._requestor.get(
-            this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status');
+        let serverConnectivityStatusObj = await this.octaneSDKConnection.executeCustomRequest(this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status', Octane.operationTypes.get);
 
         this.logger.info('Server connectivity status:' + JSON.stringify(serverConnectivityStatusObj.data));
 
@@ -190,7 +190,7 @@ export class PipelinesOrchestratorTask {
 
                 try {
                     this.logger.info((new Date()).toTimeString() + ': Requesting tasks from Octane through: ' + this.eventObj.url);
-                    response = await this.octaneSDKConnection._requestHandler._requestor.get(this.eventObj);
+                    response = await this.octaneSDKConnection.executeCustomRequest(this.eventObj.url, Octane.operationTypes.get);
 
                     if (this.areThereAnyTasksToProcess(response.data)) {
                         this.logger.info((new Date()).toTimeString() + ': Received ' + response.length + ' tasks to process');
@@ -241,7 +241,7 @@ export class PipelinesOrchestratorTask {
             body: {status: status}
         };
 
-        let ret = await octaneSDKConnection._requestHandler._requestor.put(ackResponseObj);
+        let ret = await octaneSDKConnection.executeCustomRequest(ackResponseObj.url, Octane.operationTypes.update, ackResponseObj.body);
         this.logger.info('Octane response from receiving task status: ' + ret.status);
     }
 }
