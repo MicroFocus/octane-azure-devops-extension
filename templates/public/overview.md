@@ -1,4 +1,6 @@
 # ALM Octane Integration with Azure DevOps Services
+## 1.0.0.8 version Release notes
+* Added project name into pipeline name
 ## 1.0.0.7 version Release notes
 * Upgraded ALM Octane Js SDK Version
 ## 1.0.0.6 version Release notes

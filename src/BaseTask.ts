@@ -477,7 +477,7 @@ export class BaseTask {
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         let buildApi: ba.IBuildApi = await api.getBuildApi();
         let build_info = await buildApi.getBuild(this.projectName, parseInt(this.buildId));
-        let pipelineNameForCreate = build_info?.definition?.path && build_info?.definition.path !== '\\' ? build_info.definition.path + '\\' + pipelineName : pipelineName;
+        let pipelineNameForCreate = build_info?.definition?.path && build_info?.definition.path !== '\\' ? build_info.project.name +  build_info.definition.path + '\\' + pipelineName : build_info.project.name + '\\' + pipelineName;
         if(pipelineNameForCreate.startsWith('\\')){
             pipelineNameForCreate = pipelineNameForCreate.substring(1);
         }
