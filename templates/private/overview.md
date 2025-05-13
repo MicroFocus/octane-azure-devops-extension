@@ -1,4 +1,6 @@
 # ALM Octane Integration with Azure DevOps Services
+## 0.4.2.105 version Release notes
+* Added support for aborted pipeline runs
 ## 0.4.2.94 version Release notes
 * Added project name into pipeline name
 ## 0.4.2.92 version Release notes

@@ -36,7 +36,7 @@ import {ConnectionUtils} from './ConnectionUtils';
 import {TestResultsBuilder} from './services/test_results/TestResultsBuilder';
 import {CiEventCauseBuilder} from './services/events/CiEventCauseBuilder';
 import * as ba from 'azure-devops-node-api/BuildApi';
-import {TaskResult} from 'azure-devops-node-api/interfaces/BuildInterfaces';
+import {TaskResult, TimelineRecord} from 'azure-devops-node-api/interfaces/BuildInterfaces';
 import {InputConstants} from './ExtensionConstants';
 import {CiParameter} from "./dto/events/CiParameter";
 
@@ -98,7 +98,15 @@ export class EndTask extends BaseTask {
         if (this.isPipelineEndJob) {
             let buildApi: ba.IBuildApi = await api.getBuildApi();
             let timeline = await buildApi.getBuildTimeline(this.projectName, parseInt(this.buildId));
-            let failed_jobs = timeline.records.filter(r => (r.type == 'Job' || r.type == 'Task')
+            const isJobOrTask = (record: TimelineRecord) => record.type === 'Job' || record.type === 'Task';
+
+            const shouldAbort = timeline.records.some(record => isJobOrTask(record) && record.result === TaskResult.Canceled)
+                || await this.areIntermediateJobsAllSkipped(timeline.records);
+            if(shouldAbort) {
+                return Result.ABORTED;
+            }
+
+            let failed_jobs = timeline.records.filter(r => isJobOrTask(r)
                 && r.name.toLowerCase() !== BaseTask.ALM_OCTANE_PIPELINE_START.toLowerCase()
                 && r.name.toLowerCase() !== BaseTask.ALM_OCTANE_PIPELINE_END.toLowerCase()
                 && r.result == TaskResult.Failed);
@@ -106,6 +114,26 @@ export class EndTask extends BaseTask {
         } else {
             return this.jobStatus;
         }
+    }
+
+    private async areIntermediateJobsAllSkipped(records: TimelineRecord[]): Promise<boolean> {
+        const startTask= records.find(r => r.name === 'octanestarttask');
+        const endTask= records.find(r => r.name === 'octaneendtask');
+        if (!startTask || !endTask) {
+            throw new Error(
+                `Could not find ${!startTask ? 'octanestarttask' : 'octaneendtask'} in the provided records.`
+            );
+        }
+        const startTime= new Date(startTask.startTime!).getTime();
+        const endTime= new Date(endTask.startTime!).getTime();
+
+        const intermediateTasks = records.filter(record => {
+            if (!(record.type === 'Task' || record.type === 'Job') || !record.startTime) return false;
+            const time = new Date(record.startTime).getTime();
+            return time > startTime && time < endTime;
+        });
+
+        return intermediateTasks.every(r => r.result === TaskResult.Skipped);
     }
 
     private async getDuration(api: WebApi) {
