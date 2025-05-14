@@ -1,6 +1,7 @@
 # ALM Octane Integration with Azure DevOps Services
-## 0.4.2.105 version Release notes
+## 0.4.2.112 version Release notes
 * Added support for aborted pipeline runs
+* Secret variables set in Azure DevOps will not be shown in Octane
 ## 0.4.2.94 version Release notes
 * Added project name into pipeline name
 ## 0.4.2.92 version Release notes

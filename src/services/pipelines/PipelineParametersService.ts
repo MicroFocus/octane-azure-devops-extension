@@ -44,14 +44,14 @@ export class PipelineParametersService {
 
     public async getParametersWithBranch(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string, withBranch:boolean): Promise<CiParameter[]> {
 
-        let parameters: CiParameter[] = await this.getParameters(connection, definitionId, buildId, projectName, branchName);
+        let parameters: CiParameter[] = await this.getParameters(connection, definitionId, buildId, projectName);
         if(withBranch) {
             parameters.push(this.createParameter('branch', '', true, branchName));
         }
         return parameters
     }
 
-    public async getParameters(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string): Promise<CiParameter[]> {
+    public async getParameters(connection: WebApi, definitionId: number, buildId: string, projectName: string): Promise<CiParameter[]> {
         try {
             const buildApi: ba.IBuildApi = await connection.getBuildApi();
             const buildDef = await buildApi.getDefinition(projectName, definitionId);
@@ -60,6 +60,7 @@ export class PipelineParametersService {
             this.logger.debug('Get Parameters - Build definition variables: ' + buildDef?.variables?.toString());
             if (buildDef.variables) {
                 Object.keys(buildDef.variables)
+                    .filter(paramKey => !buildDef.variables![paramKey].isSecret)
                         .map(paramKey => this.createParameter(paramKey,
                             (buildDef.variables[paramKey] && buildDef.variables[paramKey].value) ?
                                 buildDef.variables[paramKey].value : '',true,
@@ -92,13 +93,14 @@ export class PipelineParametersService {
 
     public async getDefinedParametersWithBranch(connection: WebApi, definitionId: number, projectName: string, branchName: string, withBranch: boolean): Promise<CiParameter[]> {
 
-        let parameters: CiParameter[] = await this.getDefinedParameters(connection, definitionId, projectName, branchName);
+        let parameters: CiParameter[] = await this.getDefinedParameters(connection, definitionId, projectName);
         if(withBranch) {
             parameters.push(this.createParameter('branch', branchName, undefined, 'Branch to execute pipeline'));
         }
         return parameters
     }
-    public async getDefinedParameters(connection: WebApi, definitionId: number, projectName: string, branchName: string): Promise<CiParameter[]> {
+
+    public async getDefinedParameters(connection: WebApi, definitionId: number, projectName: string): Promise<CiParameter[]> {
         const buildApi: ba.IBuildApi = await connection.getBuildApi();
         let parameters: CiParameter[] = [];
 
@@ -106,10 +108,11 @@ export class PipelineParametersService {
         this.logger.debug('Get Defined Parameters - Build definition variables: ' + buildDef.variables);
         if (buildDef.variables) {
             Object.keys(buildDef.variables)
-            .map(paramKey => {
-                const variable = buildDef.variables[paramKey]
-                parameters.push(this.createParameter(paramKey, variable.value,false));
-            })
+                .filter(paramKey => !buildDef.variables![paramKey].isSecret)
+                .map(paramKey => {
+                    const variable = buildDef.variables[paramKey]
+                    parameters.push(this.createParameter(paramKey, variable.value, false));
+                })
         }
 
         return parameters;
