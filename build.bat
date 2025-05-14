@@ -22,7 +22,8 @@ echo.
 echo ======================================
 echo Installing and typescript compiling for PROD
 cd src
-cmd /C "npm install && tsc --build tsconfig.prod.json || goto :error"
+cmd /C "npm install || goto :error"
+cmd /C "tsc --build tsconfig.prod.json || goto :error"
 echo Installing and compiling for PROD FINISHED
 echo ======================================
 popd
