@@ -17,6 +17,15 @@ if exist dist (
 )
 echo ======================================
 
+echo ======================================
+echo Replacing overview.md with README.md for %extension% extension
+if exist templates\%extension%\overview.md (
+    del templates\%extension%\overview.md || goto :error
+)
+copy /Y README.md templates\%extension%\overview.md || goto :error
+echo overview.md replaced
+echo ======================================
+
 pushd .
 echo.
 echo ======================================
