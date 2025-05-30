@@ -55,9 +55,10 @@ export class StartTask extends BaseTask {
             if (this.octaneSDKConnections[ws]) {
                 if (!this.isPipelineEndJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
+                    const octaneUseAzureDevopsParametersValue = await this.getOctaneParameter(this.octaneSDKConnections[ws], ws);
 
                     const parameters: CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
-                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch,this.experiments.support_azure_multi_branch?false:true)
+                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch,this.experiments.support_azure_multi_branch?false:true, octaneUseAzureDevopsParametersValue)
                         :undefined;
 
                     let startEvent;
