@@ -62,7 +62,6 @@ export class PipelineParametersService {
             const buildApi: ba.IBuildApi = await connection.getBuildApi();
             const buildDef = await buildApi.getDefinition(projectName, definitionId);
             let parameters: CiParameter[] = [];
-            this.logger.debug('octaneUseAzureDevopsParametersValue = ' + JSON.stringify(octaneUseAzureDevopsParametersValue));
             if(octaneUseAzureDevopsParametersValue) {
                 const build = await buildApi.getBuild(projectName, Number(buildId));
                 this.logger.info('Get runtime parameters from templateParameters.');
@@ -150,7 +149,6 @@ export class PipelineParametersService {
         const buildDef = await buildApi.getDefinition(projectName, definitionId);
         let parameters: CiParameter[] = [];
 
-        this.logger.debug('octaneUseAzureDevopsParametersValue = ' + JSON.stringify(octaneUseAzureDevopsParametersValue));
         if(octaneUseAzureDevopsParametersValue){
             this.logger.debug('Fetching pipeline parameters using raw call');
             const repositoryType = buildDef.repository.type;
