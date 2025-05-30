@@ -59,7 +59,7 @@ export class EndTask extends BaseTask {
                 if (this.isPipelineEndJob) {
                     const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH);
 
-                    let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger,this.experiments.upgrade_azure_test_runs_paths);
+                    let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger);
                     for (const testResult of testResults) {
                         if (testResult && testResult.length > 0) {
                             testResultExpected = true;
@@ -71,21 +71,15 @@ export class EndTask extends BaseTask {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
-                    const parameters:CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
-                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, this.experiments.support_azure_multi_branch?false:true)
-                        :undefined;
+                    const parameters:CiParameter[] =
+                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, false, this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled())
 
                     let endEvent;
 
-                    if(this.experiments.support_azure_multi_branch){
-                        let jobCiId = this.getJobCiId();
-                         endEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName , CiEventType.FINISHED, this.buildId, this.buildId, jobCiId,
-                             buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
-                             causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch,testResultExpected);
-                    } else {
-                         endEvent = new CiEvent(this.agentJobName , CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
-
-                    }
+                    let jobCiId = this.getJobCiId();
+                    endEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName , CiEventType.FINISHED, this.buildId, this.buildId, jobCiId,
+                        buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
+                        causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch,testResultExpected);
 
                     await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
                 }
@@ -117,6 +111,7 @@ export class EndTask extends BaseTask {
     }
 
     private async areIntermediateJobsAllSkipped(records: TimelineRecord[]): Promise<boolean> {
+        //TODO: edit to octanestarttaskprivate when testing
         const startTask= records.find(r => r.name === 'octanestarttask');
         const endTask= records.find(r => r.name === 'octaneendtask');
         if (!startTask || !endTask) {

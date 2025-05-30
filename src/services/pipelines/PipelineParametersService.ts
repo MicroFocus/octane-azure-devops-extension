@@ -32,6 +32,12 @@ import {CiParameter} from "../../dto/events/CiParameter";
 import {WebApi} from "azure-devops-node-api";
 import * as ba from "azure-devops-node-api/BuildApi";
 import {LogUtils} from "../../LogUtils";
+import * as yaml from 'js-yaml';
+import {YamlProcess} from "azure-devops-node-api/interfaces/BuildInterfaces";
+import * as https from "https";
+import {AzureDevopsPipelineConfiguration} from "../../dto/parameters/AzureDevopsPipelineConfiguration";
+import {AzureDevOpsApiVersions, SystemVariablesConstants} from "../../ExtensionConstants";
+import {AzureDevopsPipelineParameter} from "../../dto/parameters/AzureDevopsPipelineParameter";
 
 export class PipelineParametersService {
     private logger: LogUtils;
@@ -42,43 +48,43 @@ export class PipelineParametersService {
         this.logger = logger;
     }
 
-    public async getParametersWithBranch(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string, withBranch:boolean): Promise<CiParameter[]> {
+    public async getParametersWithBranch(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string, withBranch:boolean, octaneUseAzureDevopsParametersValue: boolean): Promise<CiParameter[]> {
 
-        let parameters: CiParameter[] = await this.getParameters(connection, definitionId, buildId, projectName);
+        let parameters: CiParameter[] = await this.getParameters(connection, definitionId, buildId, projectName, octaneUseAzureDevopsParametersValue);
         if(withBranch) {
             parameters.push(this.createParameter('branch', '', true, branchName));
         }
         return parameters
     }
 
-    public async getParameters(connection: WebApi, definitionId: number, buildId: string, projectName: string): Promise<CiParameter[]> {
+    public async getParameters(connection: WebApi, definitionId: number, buildId: string, projectName: string, octaneUseAzureDevopsParametersValue: boolean): Promise<CiParameter[]> {
         try {
             const buildApi: ba.IBuildApi = await connection.getBuildApi();
             const buildDef = await buildApi.getDefinition(projectName, definitionId);
             let parameters: CiParameter[] = [];
-            this.logger.info('Get parameters from task.');
-            this.logger.debug('Get Parameters - Build definition variables: ' + buildDef?.variables?.toString());
-            if (buildDef.variables) {
-                Object.keys(buildDef.variables)
-                    .filter(paramKey => !buildDef.variables![paramKey].isSecret)
-                        .map(paramKey => this.createParameter(paramKey,
-                            (buildDef.variables[paramKey] && buildDef.variables[paramKey].value) ?
-                                buildDef.variables[paramKey].value : '',true,
-                            this.tl.getVariable(paramKey) ? this.tl.getVariable(paramKey) : ''))
-                        .forEach(parameter => parameters.push(parameter));
-            }
-
-            this.logger.info('Get parameters from build.');
-            const build = await buildApi.getBuild(projectName, Number(buildId));
-            this.logger.debug('Build parameters received: ' + build.parameters);
-            if (build.parameters) {
-                const buildParams = JSON.parse(build.parameters);
-                Object.keys(buildParams).forEach(paramKey => {
-                    const variable = buildParams[paramKey];
-                    if (!parameters.some(parameter => parameter.name === paramKey)) {
-                        parameters.push(this.createParameter(paramKey, '', true,variable))
-                    }
+            if(octaneUseAzureDevopsParametersValue) {
+                const build = await buildApi.getBuild(projectName, Number(buildId));
+                this.logger.info('Get runtime parameters from templateParameters.');
+                const templateParameters: { [name: string]: any } = build.templateParameters || {};
+                this.logger.debug('templateParameters payload:' + JSON.stringify(templateParameters));
+                Object.entries(templateParameters).forEach(([paramKey, paramVal]) => {
+                    parameters.push(
+                        this.createParameter(paramKey, '', true, paramVal)
+                    );
                 });
+            }
+            else {
+                this.logger.info('Getting variables.');
+                this.logger.debug('Get Variables - Build definition variables: ' + JSON.stringify(buildDef?.variables));
+                if (buildDef.variables) {
+                    Object.keys(buildDef.variables)
+                        .filter(paramKey => !buildDef.variables![paramKey].isSecret)
+                            .map(paramKey => this.createParameter(paramKey,
+                                (buildDef.variables[paramKey] && buildDef.variables[paramKey].value) ?
+                                    buildDef.variables[paramKey].value : '',true,
+                                this.tl.getVariable(paramKey) ? this.tl.getVariable(paramKey) : ''))
+                            .forEach(parameter => parameters.push(parameter));
+                }
             }
             if(parameters?.length > 0) {
                 this.logger.info('Build parameters: ' + parameters.map(param => param.name + '=' + param.defaultValue + '-'+ param.value).join(';'));
@@ -90,29 +96,91 @@ export class PipelineParametersService {
         return [];
     }
 
+    private async fetchPipelineConfigurationFileFromSourceProvider(projectName: string,
+                                                                   encodedRepositoryName: string,
+                                                                   repositoryType: string,
+                                                                   branchName: string,
+                                                                   filePath: string,
+                                                                   serviceEndpointId: string,
+                                                                   token: string): Promise<AzureDevopsPipelineParameter[]> {
+        let url = '';
+        if (repositoryType === 'TfsGit') {
+            url = `${this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI)}/${projectName}/_apis/sourceProviders/${repositoryType}/filecontents?repository=${encodedRepositoryName}&commitOrBranch=${branchName}&path=${filePath}&${AzureDevOpsApiVersions.API_VERSION_7_1_PREVIEW}`
+        } else {
+            url = `${this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI)}/${projectName}/_apis/sourceProviders/${repositoryType}/filecontents?repository=${encodedRepositoryName}&commitOrBranch=${branchName}&path=${filePath}&serviceEndpointId=${serviceEndpointId}&${AzureDevOpsApiVersions.API_VERSION_7_1_PREVIEW}`
+        }
+        this.logger.debug('The called url is: ' + url);
+        const headers = {
+            'Authorization': 'Basic ' + Buffer.from(token + ':').toString('base64'),
+        };
 
-    public async getDefinedParametersWithBranch(connection: WebApi, definitionId: number, projectName: string, branchName: string, withBranch: boolean): Promise<CiParameter[]> {
+        return new Promise((resolve, reject) => {
+            https.get(url, {headers}, (res) => {
+                let body: Buffer[] = [];
 
-        let parameters: CiParameter[] = await this.getDefinedParameters(connection, definitionId, projectName);
+                this.logger.debug('Status code: ' + res.statusCode);
+                res.on('data', chunk => body.push(chunk));
+                res.on('end', () => {
+                    const content = Buffer.concat(body).toString('utf8');
+                    try {
+                        const parsedContent = yaml.load(content) as AzureDevopsPipelineConfiguration;
+                        resolve(parsedContent.parameters ?? []);
+                    } catch {
+                        resolve([]);
+                    }
+                });
+            }).on('error', reject);
+        });
+    }
+
+    public async getDefinedParametersWithBranch(connection: WebApi, buildId: string, definitionId: number, projectName: string, branchName: string, withBranch: boolean, token: string, octaneUseAzureDevopsParametersValue: boolean): Promise<CiParameter[]> {
+
+        let parameters: CiParameter[] = await this.getDefinedParameters(connection, buildId, definitionId, projectName, token, octaneUseAzureDevopsParametersValue);
         if(withBranch) {
             parameters.push(this.createParameter('branch', branchName, undefined, 'Branch to execute pipeline'));
         }
         return parameters
     }
 
-    public async getDefinedParameters(connection: WebApi, definitionId: number, projectName: string): Promise<CiParameter[]> {
+    public async getDefinedParameters(connection: WebApi, buildId: string, definitionId: number, projectName: string, token: string, octaneUseAzureDevopsParametersValue: boolean): Promise<CiParameter[]> {
         const buildApi: ba.IBuildApi = await connection.getBuildApi();
+        const build = await buildApi.getBuild(projectName, Number(buildId));
+        const buildDef = await buildApi.getDefinition(projectName, definitionId);
         let parameters: CiParameter[] = [];
 
-        const buildDef = await buildApi.getDefinition(projectName, definitionId);
-        this.logger.debug('Get Defined Parameters - Build definition variables: ' + buildDef.variables);
-        if (buildDef.variables) {
-            Object.keys(buildDef.variables)
-                .filter(paramKey => !buildDef.variables![paramKey].isSecret)
-                .map(paramKey => {
-                    const variable = buildDef.variables[paramKey]
-                    parameters.push(this.createParameter(paramKey, variable.value, false));
-                })
+        if(octaneUseAzureDevopsParametersValue){
+            this.logger.debug('Fetching pipeline parameters using raw call');
+            const repositoryType = buildDef.repository.type;
+            const encodedRepositoryName = encodeURIComponent(buildDef.repository.name)
+            const filePath = (buildDef.process as YamlProcess).yamlFilename;
+            const branch = build.sourceBranch;
+            const serviceEndpointId = buildDef.repository.properties.connectedServiceId;
+
+            const yamlParameters =
+                await this.fetchPipelineConfigurationFileFromSourceProvider(projectName,
+                                                                            encodedRepositoryName,
+                                                                            repositoryType,
+                                                                            branch,
+                                                                            filePath,
+                                                                            serviceEndpointId,
+                                                                            token);
+            this.logger.info('The extracted pipeline parameters are: ' + JSON.stringify(yamlParameters));
+
+            parameters.push(...yamlParameters.map(parameter =>
+                this.createParameter(parameter.name, parameter.default ?? '', false)));
+        }
+        else {
+            this.logger.info('Fetching variables');
+            this.logger.debug('Get Variables - Build definition variables: ' + buildDef.variables);
+            if (buildDef.variables) {
+                Object.keys(buildDef.variables)
+                    .filter(paramKey => !buildDef.variables![paramKey].isSecret)
+                    .map(paramKey => {
+                        const variable = buildDef.variables[paramKey]
+                        parameters.push(this.createParameter(paramKey, variable.value, false));
+                    })
+            }
+            this.logger.info('The extracted pipeline variables are: ' + JSON.stringify(parameters));
         }
 
         return parameters;
