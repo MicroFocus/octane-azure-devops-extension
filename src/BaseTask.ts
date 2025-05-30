@@ -36,7 +36,7 @@ import {
     CI_SERVER_INFO,
     EntityTypeConstants,
     EntityTypeRestEndpointConstants,
-    InputConstants, OctaneVariablesName
+    InputConstants, OctaneParametersName, OctaneVariablesName
 } from "./ExtensionConstants";
 import {LogUtils} from "./LogUtils";
 import {OctaneConnectionUtils} from "./OctaneConnectionUtils";
@@ -443,7 +443,7 @@ export class BaseTask {
             if (!pipelines || pipelines.length == 0) {
                 rootJobName = rootJobName + '@@@' + this.definitionId + '@@@' + this.sourceBranch;
                 pipelineName = await this.getPipelineName(pipelineName);
-                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                let result = await this.createPipeline(octaneSDKConnection, workspaceId, pipelineName, rootJobName, ciServer);
                 return result[0].data[0];
             } else {
                 this.logger.debug('Checking if have CI jobs to update Octane');
@@ -463,7 +463,7 @@ export class BaseTask {
             .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
             pipelines = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME).query(pipelineQuery).execute();
             if (!pipelines || pipelines.total_count == 0 || pipelines.data.length == 0) {
-                let result = await this.createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer);
+                let result = await this.createPipeline(octaneSDKConnection, workspaceId, pipelineName, rootJobName, ciServer);
                 return result[0].data[0];
             }
             return pipelines.data[0];
@@ -506,13 +506,23 @@ export class BaseTask {
         if(!octaneVersionVariable) {
             const urlStatus = this.analyticsCiInternalApiUrlPart + '/servers/connectivity/status'
             const response = await octaneSDKConnection.executeCustomRequest(urlStatus, Octane.operationTypes.get);
-            this.logger.debug("Octane connectivity status response: " + JSON.stringify(response.data));
+            this.logger.debug("Octane connectivity status response: " + JSON.stringify(response.octaneVersion));
             this.tl.setVariable('ALMOctaneVersion',response.octaneVersion);
             return response.octaneVersion;
         }
         return octaneVersionVariable;
 
     }
+
+    protected async getOctaneParameter(octaneSDKConnection, ws): Promise<boolean>{
+        const url = this.ciInternalAzureApiUrlPart.replace('{workspace_id}', ws) + '/azure_feature_toggles';
+        this.logger.debug("Octane endpoint that fetches USE_AZURE_DEVOPS_PARAMETERS parameter: " + url);
+        const response = await octaneSDKConnection.executeCustomRequest(url, Octane.operationTypes.get);
+        const parameterValue = response[OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS];
+        this.logger.debug("Octane USE_AZURE_DEVOPS_PARAMETERS parameter value: " + JSON.stringify(parameterValue));
+        return parameterValue;
+    }
+
     private async updatePluginVersion(octaneSDKConnection): Promise<void>{
         const querystring = require('querystring');
         const sdk = "";
@@ -598,8 +608,17 @@ export class BaseTask {
     private async updateExistCIJobs(ciJobs,ciServerId,workspaceId,octaneSDKConnection): Promise<void> {
         let ciJobsToUpdate = [];
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+        const octaneUseAzureDevopsParametersValue = await this.getOctaneParameter(octaneSDKConnection, workspaceId);
         for(const ciJob of ciJobs){
-            const  parameters = await this.parametersService.getDefinedParametersWithBranch(api, this.definitionId, this.projectName, this.sourceBranch, this.experiments.support_azure_multi_branch ? false : true);
+            const parameters =
+                await this.parametersService.getDefinedParametersWithBranch(api,
+                                                                            this.buildId,
+                                                                            this.definitionId,
+                                                                            this.projectName,
+                                                                            this.sourceBranch,
+                                                                            this.experiments.support_azure_multi_branch ? false : true,
+                                                                            this.authenticationService.getAzureAccessToken(),
+                                                                            octaneUseAzureDevopsParametersValue);
             ciJobsToUpdate.push(this.createCiJobBody(ciJob,parameters))
         }
 
@@ -646,12 +665,21 @@ export class BaseTask {
         }
     }
 
-    private async createPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer) {
+    private async createPipeline(octaneSDKConnection, workspaceId, pipelineName, rootJobName, ciServer) {
         let pipeline;
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+        const octaneUseAzureDevopsParametersValue = await this.getOctaneParameter(octaneSDKConnection, workspaceId);
 
         if(this.experiments.run_azure_pipeline_with_parameters){
-            const parameters = await this.parametersService.getDefinedParametersWithBranch(api,this.definitionId,this.projectName,this.sourceBranch,this.experiments.support_azure_multi_branch?false:true);
+            const parameters =
+                await this.parametersService.getDefinedParametersWithBranch(api,
+                                                                            this.buildId,
+                                                                            this.definitionId,
+                                                                            this.projectName,
+                                                                            this.sourceBranch,
+                                                                            this.experiments.support_azure_multi_branch?false:true,
+                                                                            this.authenticationService.getAzureAccessToken(),
+                                                                            octaneUseAzureDevopsParametersValue);
 
             pipeline = {
                 'name': pipelineName,
@@ -697,8 +725,17 @@ export class BaseTask {
     protected async createCiJob(octaneSDKConnection, ciServer) {
         let ciJob;
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+        const octaneUseAzureDevopsParametersValue = await this.getOctaneParameter(octaneSDKConnection, this.workspaces[0]);
 
-        const parameters = await this.parametersService.getDefinedParametersWithBranch(api, this.definitionId, this.projectName, this.sourceBranch, !this.experiments.support_azure_multi_branch);
+        const parameters =
+            await this.parametersService.getDefinedParametersWithBranch(api,
+                                                                        this.buildId,
+                                                                        this.definitionId,
+                                                                        this.projectName,
+                                                                        this.sourceBranch,
+                                                                        !this.experiments.support_azure_multi_branch,
+                                                                        this.authenticationService.getAzureAccessToken(),
+                                                                        octaneUseAzureDevopsParametersValue);
         ciJob = {
             'name': this.agentJobName,
             'ci_id': this.getParentJobCiId(),

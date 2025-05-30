@@ -71,8 +71,9 @@ export class EndTask extends BaseTask {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
+                    const octaneUseAzureDevopsParametersValue = await this.getOctaneParameter(this.octaneSDKConnections[ws], ws);
                     const parameters:CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
-                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, this.experiments.support_azure_multi_branch?false:true)
+                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, this.experiments.support_azure_multi_branch?false:true, octaneUseAzureDevopsParametersValue)
                         :undefined;
 
                     let endEvent;
@@ -117,6 +118,7 @@ export class EndTask extends BaseTask {
     }
 
     private async areIntermediateJobsAllSkipped(records: TimelineRecord[]): Promise<boolean> {
+        //TODO: edit to octanestarttaskprivate when testing
         const startTask= records.find(r => r.name === 'octanestarttask');
         const endTask= records.find(r => r.name === 'octaneendtask');
         if (!startTask || !endTask) {
