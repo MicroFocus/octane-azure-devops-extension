@@ -96,14 +96,14 @@ export class PipelineParametersService {
         return [];
     }
 
-    private async fetchYamlFromSourceProvider(organizationName: string,
-                                              projectName: string,
-                                              encodedRepositoryName: string,
-                                              repositoryType: string,
-                                              branchName: string,
-                                              filePath: string,
-                                              serviceEndpointId: string,
-                                              token: string): Promise<AzureDevopsPipelineParameter[]> {
+    private async fetchPipelineConfigurationFileFromSourceProvider(organizationName: string,
+                                                                   projectName: string,
+                                                                   encodedRepositoryName: string,
+                                                                   repositoryType: string,
+                                                                   branchName: string,
+                                                                   filePath: string,
+                                                                   serviceEndpointId: string,
+                                                                   token: string): Promise<AzureDevopsPipelineParameter[]> {
         let url = '';
         if (repositoryType === 'TfsGit') {
             url = `${CI_SERVER_INFO.CI_SERVER_DOMAIN}/${organizationName}/${projectName}/_apis/sourceProviders/${repositoryType}/filecontents?repository=${encodedRepositoryName}&commitOrBranch=${branchName}&path=${filePath}&${AzureDevOpsApiVersions.API_VERSION_7_1_PREVIEW}`
@@ -159,14 +159,14 @@ export class PipelineParametersService {
             const organizationName = new URL(buildDef.url).pathname.split('/')[1];
 
             const yamlParameters =
-                await this.fetchYamlFromSourceProvider(organizationName,
-                                                       projectName,
-                                                       encodedRepositoryName,
-                                                       repositoryType,
-                                                       branch,
-                                                       filePath,
-                                                       serviceEndpointId,
-                                                       token);
+                await this.fetchPipelineConfigurationFileFromSourceProvider(organizationName,
+                                                                            projectName,
+                                                                            encodedRepositoryName,
+                                                                            repositoryType,
+                                                                            branch,
+                                                                            filePath,
+                                                                            serviceEndpointId,
+                                                                            token);
             this.logger.info('The extracted pipeline parameters are: ' + JSON.stringify(yamlParameters));
 
             parameters.push(...yamlParameters.map(parameter =>
