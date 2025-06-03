@@ -316,9 +316,6 @@ export class BaseTask {
         const currentVersion = await this.getOctaneVersion(octaneSDKConnection);
         this.logger.info("Octane current version: " + currentVersion);
 
-        if(this.isVersionGreaterOrEquals(currentVersion,'16.1.18')){
-            this.experiments['run_azure_pipeline_with_parameters'] = true;
-        }
         if(this.isVersionGreaterOrEquals(currentVersion,'16.1.34')){
             this.experiments['support_azure_multi_branch'] = true;
         }
@@ -658,7 +655,6 @@ export class BaseTask {
         let pipeline;
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
 
-        if(this.experiments.run_azure_pipeline_with_parameters){
             const parameters =
                 await this.parametersService.getDefinedParametersWithBranch(api,
                                                                             this.buildId,
@@ -682,16 +678,6 @@ export class BaseTask {
                 'notification_track': false,
                    'notification_track_tester': false
             };
-
-        } else {
-             pipeline = {
-                'name': pipelineName,
-                'ci_server': {'type': EntityTypeConstants.CI_SERVER_ENTITY_TYPE, 'id': ciServer.id},
-                'root_job_name': rootJobName,
-                'notification_track': false,
-                'notification_track_tester': false
-            };
-        }
 
         if(this.experiments.support_azure_multi_branch){
             pipeline.multi_branch_type = 'PARENT';

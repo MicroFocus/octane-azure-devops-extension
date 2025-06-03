@@ -71,9 +71,8 @@ export class EndTask extends BaseTask {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
-                    const parameters:CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
+                    const parameters:CiParameter[] =
                             await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, this.experiments.support_azure_multi_branch?false:true, this.useAzureDevopsParametersOctaneParameter)
-                        :undefined;
 
                     let endEvent;
 
