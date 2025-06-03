@@ -36,7 +36,7 @@ import * as yaml from 'js-yaml';
 import {YamlProcess} from "azure-devops-node-api/interfaces/BuildInterfaces";
 import * as https from "https";
 import {AzureDevopsPipelineConfiguration} from "../../dto/parameters/AzureDevopsPipelineConfiguration";
-import {AzureDevOpsApiVersions, CI_SERVER_INFO} from "../../ExtensionConstants";
+import {AzureDevOpsApiVersions, SystemVariablesConstants} from "../../ExtensionConstants";
 import {AzureDevopsPipelineParameter} from "../../dto/parameters/AzureDevopsPipelineParameter";
 
 export class PipelineParametersService {
@@ -96,8 +96,7 @@ export class PipelineParametersService {
         return [];
     }
 
-    private async fetchPipelineConfigurationFileFromSourceProvider(organizationName: string,
-                                                                   projectName: string,
+    private async fetchPipelineConfigurationFileFromSourceProvider(projectName: string,
                                                                    encodedRepositoryName: string,
                                                                    repositoryType: string,
                                                                    branchName: string,
@@ -106,9 +105,9 @@ export class PipelineParametersService {
                                                                    token: string): Promise<AzureDevopsPipelineParameter[]> {
         let url = '';
         if (repositoryType === 'TfsGit') {
-            url = `${CI_SERVER_INFO.CI_SERVER_DOMAIN}/${organizationName}/${projectName}/_apis/sourceProviders/${repositoryType}/filecontents?repository=${encodedRepositoryName}&commitOrBranch=${branchName}&path=${filePath}&${AzureDevOpsApiVersions.API_VERSION_7_1_PREVIEW}`
+            url = `${this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI)}/${projectName}/_apis/sourceProviders/${repositoryType}/filecontents?repository=${encodedRepositoryName}&commitOrBranch=${branchName}&path=${filePath}&${AzureDevOpsApiVersions.API_VERSION_7_1_PREVIEW}`
         } else {
-            url = `${CI_SERVER_INFO.CI_SERVER_DOMAIN}/${organizationName}/${projectName}/_apis/sourceProviders/${repositoryType}/filecontents?repository=${encodedRepositoryName}&commitOrBranch=${branchName}&path=${filePath}&serviceEndpointId=${serviceEndpointId}&${AzureDevOpsApiVersions.API_VERSION_7_1_PREVIEW}`
+            url = `${this.tl.getVariable(SystemVariablesConstants.SYSTEM_TEAM_FOUNDATION_COLLECTION_URI)}/${projectName}/_apis/sourceProviders/${repositoryType}/filecontents?repository=${encodedRepositoryName}&commitOrBranch=${branchName}&path=${filePath}&serviceEndpointId=${serviceEndpointId}&${AzureDevOpsApiVersions.API_VERSION_7_1_PREVIEW}`
         }
         this.logger.debug('The called url is: ' + url);
         const headers = {
@@ -156,11 +155,9 @@ export class PipelineParametersService {
             const filePath = (buildDef.process as YamlProcess).yamlFilename;
             const branch = build.sourceBranch;
             const serviceEndpointId = buildDef.repository.properties.connectedServiceId;
-            const organizationName = new URL(buildDef.url).pathname.split('/')[1];
 
             const yamlParameters =
-                await this.fetchPipelineConfigurationFileFromSourceProvider(organizationName,
-                                                                            projectName,
+                await this.fetchPipelineConfigurationFileFromSourceProvider(projectName,
                                                                             encodedRepositoryName,
                                                                             repositoryType,
                                                                             branch,

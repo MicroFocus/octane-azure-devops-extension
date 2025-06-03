@@ -31,7 +31,6 @@
 export const enum CI_SERVER_INFO {
     CI_SERVER_TYPE = 'azure_devops',
     PLUGIN_VERSION = '1.0.0',
-    CI_SERVER_DOMAIN = 'https://dev.azure.com'
 }
 
 export enum InputConstants {
@@ -103,8 +102,4 @@ export enum AzureDevOpsApiVersions {
 export enum OctaneVariablesName {
     EXPERIMENTS ='ALMOctaneExperiments',
     OCTANE_VERSION = 'ALMOctaneVersion'
-}
-
-export enum OctaneParametersName {
-    USE_AZURE_DEVOPS_PARAMETERS = "USE_AZURE_DEVOPS_PARAMETERS"
 }

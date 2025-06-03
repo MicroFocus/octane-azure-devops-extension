@@ -153,7 +153,6 @@ export class TestRunnerStartTask extends BaseTask {
 
     protected async createCiJob(octaneSDKConnection) {
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
-        const octaneUseAzureDevopsParametersValue = await this.getOctaneParameter(octaneSDKConnection, this.workspaces[0]);
         const  parameters =
             await this.parametersService.getDefinedParametersWithBranch(api,
                                                                         this.buildId,
@@ -162,7 +161,7 @@ export class TestRunnerStartTask extends BaseTask {
                                                                         this.sourceBranch,
                                                                         this.experiments.support_azure_multi_branch ? false : true,
                                                                         this.authenticationService.getAzureAccessToken(),
-                                                                        octaneUseAzureDevopsParametersValue);
+                                                                        this.useAzureDevopsParametersOctaneParameter);
         const ciJob = {
             'name': this.buildDefinitionName + " " + this.sourceBranchName,
             'parameters': parameters,
@@ -261,11 +260,10 @@ export class TestRunnerStartTask extends BaseTask {
 
             const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
             const causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
-            const octaneUseAzureDevopsParametersValue = await this.getOctaneParameter(this.octaneSDKConnections[this.workspaces[0]], this.workspaces[0]);
 
             const parameters: CiParameter[] = this.experiments.run_azure_pipeline_with_parameters ?
                 await this.parametersService.getParametersWithBranch(api, this.definitionId, this.buildId, this.projectName,
-                    this.sourceBranch,this.experiments.support_azure_multi_branch?false:true, octaneUseAzureDevopsParametersValue)
+                    this.sourceBranch,this.experiments.support_azure_multi_branch?false:true, this.useAzureDevopsParametersOctaneParameter)
                 :undefined;
 
             const startEvent = new CiEvent(this.buildDefinitionName + " " + this.sourceBranchName,
