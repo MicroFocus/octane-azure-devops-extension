@@ -59,7 +59,7 @@ export class EndTask extends BaseTask {
                 if (this.isPipelineEndJob) {
                     const cucumberReportsPath = this.tl.getInput(InputConstants.CUCUMBER_REPORT_PATH);
 
-                    let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger,this.experiments.upgrade_azure_test_runs_paths);
+                    let testResults: string[] = await TestResultsBuilder.getTestsResultsByBuildId(api, this.projectName, parseInt(this.buildId), this.instanceId, this.jobFullName, cucumberReportsPath, this.logger);
                     for (const testResult of testResults) {
                         if (testResult && testResult.length > 0) {
                             testResultExpected = true;

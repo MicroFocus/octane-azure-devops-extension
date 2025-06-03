@@ -316,10 +316,6 @@ export class BaseTask {
         const currentVersion = await this.getOctaneVersion(octaneSDKConnection);
         this.logger.info("Octane current version: " + currentVersion);
 
-        if(this.isVersionGreaterOrEquals(currentVersion,'16.1.41')){
-            this.experiments['upgrade_azure_test_runs_paths'] = true;
-        }
-
         await this.updatePluginVersion(octaneSDKConnection);
         this.logger.info("Send plugin details to Octane.");
 
