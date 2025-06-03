@@ -72,19 +72,14 @@ export class EndTask extends BaseTask {
                     let buildResult = await this.getStatus(api);
                     let duration = await this.getDuration(api);
                     const parameters:CiParameter[] =
-                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, this.experiments.support_azure_multi_branch?false:true, this.useAzureDevopsParametersOctaneParameter)
+                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, false, this.useAzureDevopsParametersOctaneParameter)
 
                     let endEvent;
 
-                    if(this.experiments.support_azure_multi_branch){
-                        let jobCiId = this.getJobCiId();
-                         endEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName , CiEventType.FINISHED, this.buildId, this.buildId, jobCiId,
-                             buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
-                             causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch,testResultExpected);
-                    } else {
-                         endEvent = new CiEvent(this.agentJobName , CiEventType.FINISHED, this.buildId, this.buildId, this.jobFullName, buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes,parameters);
-
-                    }
+                    let jobCiId = this.getJobCiId();
+                    endEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName , CiEventType.FINISHED, this.buildId, this.buildId, jobCiId,
+                        buildResult, new Date().getTime(), null, duration, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
+                        causes,parameters,'CHILD',this.getParentJobCiId(), this.sourceBranch,testResultExpected);
 
                     await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
                 }

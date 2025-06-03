@@ -57,17 +57,12 @@ export class StartTask extends BaseTask {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
 
                     const parameters: CiParameter[] =
-                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch,this.experiments.support_azure_multi_branch?false:true, this.useAzureDevopsParametersOctaneParameter)
+                            await this.parametersService.getParametersWithBranch(api,this.definitionId,this.buildId,this.projectName,this.sourceBranch, false, this.useAzureDevopsParametersOctaneParameter)
 
                     let startEvent;
-                    if(this.experiments.support_azure_multi_branch){
-                        let jobCiId = this.getJobCiId();
-                        startEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName, CiEventType.STARTED, this.buildId, this.buildId, jobCiId, null, new Date().getTime(),
-                            null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters, 'CHILD',this.getParentJobCiId(), this.sourceBranch);
-                    } else{
-                        startEvent = new CiEvent(this.agentJobName, CiEventType.STARTED, this.buildId, this.buildId,this.jobFullName, null, new Date().getTime(),
-                            null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters)
-                    }
+                    let jobCiId = this.getJobCiId();
+                    startEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName, CiEventType.STARTED, this.buildId, this.buildId, jobCiId, null, new Date().getTime(),
+                        null, null, null, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL, causes, parameters, 'CHILD',this.getParentJobCiId(), this.sourceBranch);
 
                     await this.sendEvent(this.octaneSDKConnections[ws], startEvent);
                 }
@@ -76,14 +71,9 @@ export class StartTask extends BaseTask {
                     let scmData = await ScmBuilder.buildScmData(api, this.projectName, parseInt(this.buildId), this.sourceBranchName, this.tl, this.logger);
                     this.logger.debug(scmData);
                     let scmEvent;
-                    if(this.experiments.support_azure_multi_branch){
-                        let jobCiId = this.getJobCiId();
-                        scmEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName, CiEventType.SCM, this.buildId, this.buildId,jobCiId, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
+                    let jobCiId = this.getJobCiId();
+                    scmEvent = new CiEvent(this.buildDefinitionName + " " +this.sourceBranchName, CiEventType.SCM, this.buildId, this.buildId,jobCiId, null, new Date().getTime(), null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
 
-                    } else {
-                        scmEvent = new CiEvent(this.agentJobName, CiEventType.SCM, this.buildId, this.buildId,this.jobFullName, null, new Date().getTime(),null, null, scmData, this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL);
-
-                    }
                     await this.sendEvent(this.octaneSDKConnections[ws], scmEvent);
                 }
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough

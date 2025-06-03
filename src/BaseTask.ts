@@ -316,9 +316,6 @@ export class BaseTask {
         const currentVersion = await this.getOctaneVersion(octaneSDKConnection);
         this.logger.info("Octane current version: " + currentVersion);
 
-        if(this.isVersionGreaterOrEquals(currentVersion,'16.1.34')){
-            this.experiments['support_azure_multi_branch'] = true;
-        }
         if(this.isVersionGreaterOrEquals(currentVersion,'16.1.41')){
             this.experiments['upgrade_azure_test_runs_paths'] = true;
         }
@@ -417,19 +414,11 @@ export class BaseTask {
     }
 
     protected getJobCiId(){
-        if(this.experiments.support_azure_multi_branch){
-            return this.projectId + '.'+this.definitionId +'.' +this.sourceBranchName;
-        } else {
-            return this.jobFullName;
-        }
+        return this.projectId + '.'+this.definitionId +'.' +this.sourceBranchName;
     }
 
     protected getParentJobCiId(){
-        if(this.experiments.support_azure_multi_branch){
-            return  this.projectId + '.' + this.definitionId;
-        } else {
-            return this.projectFullName + '.' + this.buildDefinitionName;
-        }
+        return  this.projectId + '.' + this.definitionId;
     }
 
     protected async getPipeline(octaneSDKConnection, pipelineName, rootJobName, ciServer, workspaceId) {
@@ -548,28 +537,26 @@ export class BaseTask {
     }
 
 
-    protected  async upgradePipelinesIfNeeded(octaneSDKConnection,ciServer,workspaceId){
-        if(this.experiments.support_azure_multi_branch) {
-            //check if the parent exists in old format of ci_id:
-            const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.projectFullName + '.' + this.buildDefinitionName))
-                .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
-            const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
-                .fields('pipeline,definition_id')
-                .query(pipelineQuery).execute();
+    protected async upgradePipelinesIfNeeded(octaneSDKConnection, ciServer, workspaceId) {
+        //check if the parent exists in old format of ci_id:
+        const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.projectFullName + '.' + this.buildDefinitionName))
+            .and(Query.field(EntityTypeConstants.CI_SERVER_ENTITY_TYPE).equal(Query.field('id').equal(ciServer.id))).build();
+        const ciJobs = await octaneSDKConnection.get(EntityTypeRestEndpointConstants.CI_JOB_REST_API_NAME)
+            .fields('pipeline,definition_id')
+            .query(pipelineQuery).execute();
 
-            //if yes - should upgrade the parent
-            if (ciJobs && ciJobs.total_count > 0 && ciJobs.data) {
-                //should update the ciJobs with new id.
-                this.logger.info("start upgrade of ciJob and his pipelines");
-                await this.updateExistCIJobs(ciJobs.data, ciServer.id, workspaceId, octaneSDKConnection);
+        //if yes - should upgrade the parent
+        if (ciJobs && ciJobs.total_count > 0 && ciJobs.data) {
+            //should update the ciJobs with new id.
+            this.logger.info("start upgrade of ciJob and his pipelines");
+            await this.updateExistCIJobs(ciJobs.data, ciServer.id, workspaceId, octaneSDKConnection);
 
-                let pipelines = ciJobs.data.filter(ciJob => ciJob.pipeline).map(ciJob => ciJob.pipeline);
+            let pipelines = ciJobs.data.filter(ciJob => ciJob.pipeline).map(ciJob => ciJob.pipeline);
 
-                if (pipelines && pipelines.length > 0) {
-                    //should update the pipelines to be a multibranch parent
-                    this.logger.info("start upgrade of pipelines to be multibranch pipelines ");
-                    await this.upgradePipelines(pipelines, octaneSDKConnection);
-                }
+            if (pipelines && pipelines.length > 0) {
+                //should update the pipelines to be a multibranch parent
+                this.logger.info("start upgrade of pipelines to be multibranch pipelines ");
+                await this.upgradePipelines(pipelines, octaneSDKConnection);
             }
         }
     }
@@ -602,7 +589,7 @@ export class BaseTask {
                                                                             this.definitionId,
                                                                             this.projectName,
                                                                             this.sourceBranch,
-                                                                            this.experiments.support_azure_multi_branch ? false : true,
+                                                                            false,
                                                                             this.authenticationService.getAzureAccessToken(),
                                                                             this.useAzureDevopsParametersOctaneParameter);
             ciJobsToUpdate.push(this.createCiJobBody(ciJob,parameters))
@@ -661,7 +648,7 @@ export class BaseTask {
                                                                             this.definitionId,
                                                                             this.projectName,
                                                                             this.sourceBranch,
-                                                                            this.experiments.support_azure_multi_branch?false:true,
+                                                                            false,
                                                                             this.authenticationService.getAzureAccessToken(),
                                                                             this.useAzureDevopsParametersOctaneParameter);
 
@@ -679,9 +666,7 @@ export class BaseTask {
                    'notification_track_tester': false
             };
 
-        if(this.experiments.support_azure_multi_branch){
-            pipeline.multi_branch_type = 'PARENT';
-        }
+        pipeline.multi_branch_type = 'PARENT';
 
         let pipelines = [
             await octaneSDKConnection.create(EntityTypeRestEndpointConstants.PIPELINES_REST_API_NAME, pipeline).execute()
@@ -706,7 +691,7 @@ export class BaseTask {
                                                                         this.definitionId,
                                                                         this.projectName,
                                                                         this.sourceBranch,
-                                                                        !this.experiments.support_azure_multi_branch,
+                                                                        false,
                                                                         this.authenticationService.getAzureAccessToken(),
                                                                         this.useAzureDevopsParametersOctaneParameter);
         ciJob = {

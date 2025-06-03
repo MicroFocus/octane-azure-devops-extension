@@ -159,7 +159,7 @@ export class TestRunnerStartTask extends BaseTask {
                                                                         this.definitionId,
                                                                         this.projectName,
                                                                         this.sourceBranch,
-                                                                        this.experiments.support_azure_multi_branch ? false : true,
+                                                                        false,
                                                                         this.authenticationService.getAzureAccessToken(),
                                                                         this.useAzureDevopsParametersOctaneParameter);
         const ciJob = {
@@ -263,7 +263,7 @@ export class TestRunnerStartTask extends BaseTask {
 
             const parameters: CiParameter[] =
                 await this.parametersService.getParametersWithBranch(api, this.definitionId, this.buildId, this.projectName,
-                    this.sourceBranch,this.experiments.support_azure_multi_branch?false:true, this.useAzureDevopsParametersOctaneParameter)
+                    this.sourceBranch, false, this.useAzureDevopsParametersOctaneParameter)
 
             const startEvent = new CiEvent(this.buildDefinitionName + " " + this.sourceBranchName,
                 CiEventType.STARTED, this.buildId, this.buildId, this.getJobCiId(), null, new Date().getTime(),
