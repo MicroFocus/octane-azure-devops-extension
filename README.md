@@ -25,7 +25,9 @@ The extension will monitor and reflect the pipeline activity into the product.
     - [7.1. Configure pipeline variables](#71-configure-pipeline-variables)
 - [8. Useful Configurations](#8-useful-configurations)
     - [8.1. Running pipelines from the product](#81-running-pipelines-from-the-product)
-    - [8.2. Running pipelines with variables](#82-running-pipelines-with-variables)
+    - [8.2. Running pipelines with variables or parameters](#82-running-pipelines-with-variables-or-parameters)
+        - [8.2.1 Running pipelines with variables](#821-running-pipelines-with-variables)
+        - [8.2.2 Running pipelines with parameters](#822-running-pipelines-with-parameters)
     - [8.3. Activating debug messages](#83-activating-debug-messages) 
 - [9. Known issues and limitations](#9-known-issues-and-limitations)
 - [10. Change logs](#10-change-logs)
@@ -573,9 +575,26 @@ The **User Name** field does not have any correlation with any usernames that yo
 
 9. Now you can go back in the **Pipelines** in the product, select the **3 points icon** from the pipeline you want to run and then press **Run**. You should then be able to see your run in Azure DevOps.
 
-### 8.2. Running pipelines with variables
+### 8.2. Running pipelines with variables or parameters
 
-Azure DevOps pipelines support the use of variables to make workflows more dynamic, reusable, and configurable. Variables can be defined at multiple levels—pipeline, stage, job, or step—and passed between tasks or used to customize behavior at runtime. This section outlines how to declare, reference, and override variables when running pipelines. These variables in turn will be visible in the product and when running the pipeline from it, you will also be able to set their values accordingly.
+Azure DevOps pipelines support both parameters and variables to make your workflows more dynamic, reusable, and configurable: 
+
+- Parameters are defined at the top of a YAML template or pipeline and are evaluated at compile-time. They are strongly typed (string, boolean), can have default values, and must be supplied before the pipeline runs. Parameters are used to drive structural decisions like including or excluding stages, looping over lists, or selecting between complex configuration objects.
+- Variables are evaluated at runtime and can be defined or overridden at multiple scopes—pipeline, stage, job, or step. They’re ideal for values that may change between runs (connection strings, feature flags, credentials passed in securely, etc.) and for passing information from one task to another.
+
+This section walks through how to:
+
+1. Declare parameters and variables (with examples of typed inputs and defaults).
+2. Reference them in script steps, task inputs, and conditional expressions.
+3. Override their values when queuing a pipeline.
+
+> [!CAUTION]
+> When running a pipeline, you can define both variables and parameters. However, only one set will be sent to the product, depending on the value of the `USE_AZURE_DEVOPS_PARAMETERS` parameter value from the product. The value of this parameter can be changed only from the product. If the value is set to `true` the integration will send only the parameters, else it will send only the variables.
+
+#### 8.2.1 Running pipelines with variables
+
+> [!NOTE]
+> You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `false` in the product in order to see the variables reflected in it.
 
 1. Firstly you need to navigate to a pipeline and press the **Edit** button. Then near the **Run** button you will see the **Variables** button, which will open this interface. Press **New variable**
 
@@ -597,13 +616,46 @@ Azure DevOps pipelines support the use of variables to make workflows more dynam
 
 ![image](https://github.com/user-attachments/assets/7676332a-60bf-442a-80d6-4b154b6a36a3)
 
+#### 8.2.2 Running pipelines with parameters
+
+> [!NOTE]
+> You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `true` in the product in order to see the parameters reflected in it.
+
+1. When using parameters, you must define them at the top level of the pipeline or template, by following this convention:
+
+```yaml
+parameters:
+  - name: parameterName
+    type: string
+    default: clean test
+    displayName: "Display name of the parameter"
+    values:
+      - clean test
+      - other variable
+```
+For more information on parameters, Azure DevOps provides thorough documentation on parameter usage : https://learn.microsoft.com/en-us/azure/devops/pipelines/process/template-parameters?view=azure-devops
+
+2. When running the pipeline with parameters from the UI, if configured correctly, you will have to select one the predefined values you declared for your parameters(if no such values are provided a textbox will appear, where you will be able to input the value you want for your parameter)
+
+![image](https://github.com/user-attachments/assets/8d3af4cd-0ba1-4a2d-b4cb-86a67beb64bd)
+
+3. Press **Run**
+4. Now if you want to run your pipleine from the product you will be met with this prompt. Give a value to that parameter and then press **Run**. If you configured predefined values for your parameter, make sure the value you enter in the product is one of those predefined ones.
+
+![image](https://github.com/user-attachments/assets/351ef920-c3a1-443e-bd97-9d096846979a)
+
+> [!CAUTION]
+> If at any point after the first run of the pipeline, you modify the parameter configuration(either by adding another one, or modifying an existing one) and you want to run the pipeline from the product, make sure you first press the **Sync with CI** button from the product. This will ensure that the parameter modifications are up to date in the product as well and you will be able to run the pipeline without any problems.
+
+![image](https://github.com/user-attachments/assets/3d1a4911-2296-4e59-8bac-a9e67ea942a3)
+
 ### 8.3. Activating debug messages 
 
 A very useful feature is enabling debug messages, which not only gives you more insight into what happens behind the scenes, but it can also help you in figuring out what went wrong with a run. To enable this kind of messages, you need to create pipeline variable with the following values: 
 - `name = ALMOctaneLogLevel`
 - `value = DEBUG`
 
-If you're not sure how to create such varibales please refer to [8.2 Running pipelines with variables](#82-running-pipelines-with-variables)
+If you're not sure how to create such varibales please refer to [8.2.1 Running pipelines with variables](#821-running-pipelines-with-variables)
 
 ![image](https://github.com/user-attachments/assets/40c43390-3d70-4fff-ba89-69c2f4273b2e)
 
