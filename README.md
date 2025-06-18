@@ -681,9 +681,8 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 ## 10. Change logs
 ## 25.4.0 version Release notes 
 * Added support for running pipelines with parameters from the product
-## 1.0.0.9 version Release notes
 * Added support for aborted pipeline runs
-* Secret variables set in Azure DevOps will not be shown in Octane
+* Secret variables set in Azure DevOps will not be shown in the product
 ## 1.0.0.8 version Release notes
 * Added project name into pipeline name
 ## 1.0.0.7 version Release notes
