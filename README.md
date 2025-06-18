@@ -679,7 +679,8 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
 
 ## 10. Change logs
-
+## 25.4.0 version Release notes 
+* Added support for running pipelines with parameters from the product
 ## 1.0.0.9 version Release notes
 * Added support for aborted pipeline runs
 * Secret variables set in Azure DevOps will not be shown in Octane
