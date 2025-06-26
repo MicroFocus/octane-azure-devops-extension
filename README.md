@@ -23,14 +23,15 @@ The extension will monitor and reflect the pipeline activity into the product.
     - [6.2. Displaying Cucumber Gherkin test results into the product using classic editor](#62-displaying-cucumber-gherkin-test-results-into-the-product-using-classic-editor)
 - [7. Configuring test runner pipeline](#7-configuring-test-runner-pipeline)
     - [7.1. Configure pipeline variables](#71-configure-pipeline-variables)
-- [8. Useful Configurations](#8-useful-configurations)
-    - [8.1. Running pipelines from the product](#81-running-pipelines-from-the-product)
-    - [8.2. Running pipelines with variables or parameters](#82-running-pipelines-with-variables-or-parameters)
-        - [8.2.1 Running pipelines with variables](#821-running-pipelines-with-variables)
-        - [8.2.2 Running pipelines with parameters](#822-running-pipelines-with-parameters)
-    - [8.3. Activating debug messages](#83-activating-debug-messages) 
-- [9. Known issues and limitations](#9-known-issues-and-limitations)
-- [10. Change logs](#10-change-logs)
+- [8. Configuring Auto Action flow](#8-configuring-auto-action-flow)
+- [9. Useful Configurations](#9-useful-configurations)
+    - [9.1. Running pipelines from the product](#91-running-pipelines-from-the-product)
+    - [9.2. Running pipelines with variables or parameters](#92-running-pipelines-with-variables-or-parameters)
+        - [9.2.1 Running pipelines with variables](#921-running-pipelines-with-variables)
+        - [9.2.2 Running pipelines with parameters](#922-running-pipelines-with-parameters)
+    - [9.3. Activating debug messages](#93-activating-debug-messages) 
+- [10. Known issues and limitations](#10-known-issues-and-limitations)
+- [11. Change logs](#11-change-logs)
 
 
 ## 3. Requirements
@@ -533,10 +534,27 @@ If any of the previous steps failed and you aren't able to run the test runner p
 
 ![image](https://github.com/user-attachments/assets/dc3234a5-d722-4795-95e4-65b26a9e0d04)
 
+## 8. Configuring Auto Action flow
 
-## 8. Useful configurations
+In the product, you can add automatic actions to your release process that trigger common tasks, such as running your Azure DevOps pipeline from the product. For more details on how to configure such an auto action flow, please refer to https://admhelp.microfocus.com/valueedge/en/latest/Online/Content/UserGuide/release-process-autoactions.htm?
 
-### 8.1 Running pipelines from the product
+> [!CAUTION]
+> In order to successfully schedule such an auto action, you will need to configure the following parameter in your Azure pipeline configuration file
+
+```yaml
+  - name: octane_auto_action_execution_id
+    type: string
+    displayName: "Octane auto action execution id"
+    default: ''
+```
+
+This parameter is used in the background by the product for the pipeline results injection flow. You will notice that when configuring the auto action window, the parameter will not appear. This is intentional, because this parameter is not customizable or settable by the user, so it is hidden. In case the user will not configure this additional parameter, the following error message will appear:
+
+![image](https://github.com/user-attachments/assets/cedbb44c-54ad-4cda-965f-ce17c00e7b0c)
+
+## 9. Useful configurations
+
+### 9.1 Running pipelines from the product
 
 1. In order to start runs from the product, you need to do some additional configuration steps. First of all, in Azure DevOps you need to go to: User settings -> Personal access tokens:
 
@@ -575,7 +593,7 @@ The **User Name** field does not have any correlation with any usernames that yo
 
 9. Now you can go back in the **Pipelines** in the product, select the **3 points icon** from the pipeline you want to run and then press **Run**. You should then be able to see your run in Azure DevOps.
 
-### 8.2. Running pipelines with variables or parameters
+### 9.2. Running pipelines with variables or parameters
 
 Azure DevOps pipelines support both parameters and variables to make your workflows more dynamic, reusable, and configurable: 
 
@@ -591,7 +609,7 @@ This section walks through how to:
 > [!CAUTION]
 > When running a pipeline, you can define both variables and parameters. However, only one set will be sent to the product, depending on the value of the `USE_AZURE_DEVOPS_PARAMETERS` parameter value from the product. The value of this parameter can be changed only from the product. If the value is set to `true` the integration will send only the parameters, else it will send only the variables.
 
-#### 8.2.1 Running pipelines with variables
+#### 9.2.1 Running pipelines with variables
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `false` in the product in order to see the variables reflected in it.
@@ -616,7 +634,7 @@ This section walks through how to:
 
 ![image](https://github.com/user-attachments/assets/7676332a-60bf-442a-80d6-4b154b6a36a3)
 
-#### 8.2.2 Running pipelines with parameters
+#### 9.2.2 Running pipelines with parameters
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `true` in the product in order to see the parameters reflected in it.
@@ -649,13 +667,13 @@ For more information on parameters, Azure DevOps provides thorough documentation
 
 ![image](https://github.com/user-attachments/assets/3d1a4911-2296-4e59-8bac-a9e67ea942a3)
 
-### 8.3. Activating debug messages 
+### 9.3. Activating debug messages 
 
 A very useful feature is enabling debug messages, which not only gives you more insight into what happens behind the scenes, but it can also help you in figuring out what went wrong with a run. To enable this kind of messages, you need to create pipeline variable with the following values: 
 - `name = ALMOctaneLogLevel`
 - `value = DEBUG`
 
-If you're not sure how to create such varibales please refer to [8.2.1 Running pipelines with variables](#821-running-pipelines-with-variables)
+If you're not sure how to create such varibales please refer to [9.2.1 Running pipelines with variables](#921-running-pipelines-with-variables)
 
 ![image](https://github.com/user-attachments/assets/40c43390-3d70-4fff-ba89-69c2f4273b2e)
 
@@ -663,7 +681,7 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 
 ![image](https://github.com/user-attachments/assets/822e181a-ced5-44bb-93b7-11a22071e8c8)
 
-## 9. Known issues and limitations
+## 10. Known issues and limitations
 
 1.	ALM Octane Connection Verifier is non-functional. This will be removed in a future version.
 2.	When creating the pipeline with YAML and adding the ALM Octane tasks, the label is not displayed properly (octanestarttask)
@@ -678,7 +696,7 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
 
-## 10. Change logs
+## 11. Change logs
 ## 25.4.0 version Release notes 
 * Added support for running pipelines with parameters from the product
 * Added support for aborted pipeline runs
