@@ -464,7 +464,7 @@ Besides pipeline runs, you can also configure test runners using this extension,
 
 ![Screenshot 2025-05-15 152824](https://github.com/user-attachments/assets/fa2c6665-e7f9-48f5-ae88-536bea0be868)
 
-2. Choose your desired source cod repository option, but keep in mind that there might be different steps to execute, depending on the repository type you selected.
+2. Choose your desired source code repository option, but keep in mind that there might be different steps to execute, depending on the repository type you selected.
 
 ![image](https://github.com/user-attachments/assets/e34ac479-f86f-41f8-922d-5a928a7106c1)
 
@@ -511,7 +511,7 @@ Normally you should end up with something like this. The end task remains the sa
 1. Ensure the following variables are defined in your Azure DevOps pipeline for automated test execution:
 
 > [!NOTE]
-> If you are having trouble configuring variables, please refer to [8.2 Running pipelines with variables](#82-running-pipelines-with-variables)
+> If you are having trouble configuring variables, please refer to [9.2.1 Running pipelines with variables](#921-running-pipelines-with-variables)
 
  - `testsToRun` (type: string)
  - `suiteId` (type: number)
