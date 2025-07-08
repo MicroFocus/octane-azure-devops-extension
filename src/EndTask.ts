@@ -113,22 +113,24 @@ export class EndTask extends BaseTask {
     private async areIntermediateJobsAllSkipped(records: TimelineRecord[]): Promise<boolean> {
         //TODO: edit to octanestarttaskprivate when testing
         const startTask= records.find(r => r.name === 'octanestarttask');
+        const testRunnerStartTask = records.find(r => r.name === 'octanetestrunnerstarttask');
         const endTask= records.find(r => r.name === 'octaneendtask');
-        if (!startTask || !endTask) {
+        if ((!startTask && !testRunnerStartTask) || !endTask) {
             throw new Error(
                 `Could not find ${!startTask ? 'octanestarttask' : 'octaneendtask'} in the provided records.`
             );
         }
-        const startTime= new Date(startTask.startTime!).getTime();
-        const endTime= new Date(endTask.startTime!).getTime();
-
-        const intermediateTasks = records.filter(record => {
-            if (!(record.type === 'Task' || record.type === 'Job') || !record.startTime) return false;
-            const time = new Date(record.startTime).getTime();
-            return time > startTime && time < endTime;
-        });
-
-        return intermediateTasks.every(r => r.result === TaskResult.Skipped);
+        if(startTask){
+            const startTime= new Date(startTask.startTime!).getTime();
+            const endTime= new Date(endTask.startTime!).getTime();
+            const intermediateTasks = records.filter(record => {
+                if (!(record.type === 'Task' || record.type === 'Job') || !record.startTime) return false;
+                const time = new Date(record.startTime).getTime();
+                return time > startTime && time < endTime;
+            });
+            return intermediateTasks.every(r => r.result === TaskResult.Skipped);
+        }
+        return false;
     }
 
     private async getDuration(api: WebApi) {
