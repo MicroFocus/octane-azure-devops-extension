@@ -697,6 +697,8 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
 
 ## 11. Change logs
+## 25.4.1 version Release notes
+* Added Node 20 support for task runners with fallback to Node 16; removes EOL warning on modern agents.
 ## 25.4.0 version Release notes 
 * Added support for running pipelines with parameters from the product
 * Added support for aborted pipeline runs
