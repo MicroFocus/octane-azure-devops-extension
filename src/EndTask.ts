@@ -112,9 +112,9 @@ export class EndTask extends BaseTask {
 
     private async areIntermediateJobsAllSkipped(records: TimelineRecord[]): Promise<boolean> {
         //TODO: edit to octanestarttaskprivate when testing
-        const startTask= records.find(r => r.name === 'octanestarttask');
-        const testRunnerStartTask = records.find(r => r.name === 'octanetestrunnerstarttask');
-        const endTask= records.find(r => r.name === 'octaneendtask');
+        const startTask= records.find(r => r.name === 'octanestarttaskprivate');
+        const testRunnerStartTask = records.find(r => r.name === 'octanetestrunnerstarttaskprivate');
+        const endTask= records.find(r => r.name === 'octaneendtaskprivate');
         if ((!startTask && !testRunnerStartTask) || !endTask) {
             throw new Error(
                 `Could not find ${!startTask ? 'octanestarttask' : 'octaneendtask'} in the provided records.`
