@@ -133,7 +133,7 @@ export class EndTask extends BaseTask {
             return time > startTime && time < endTime;
         });
 
-        return intermediateTasks.every(r => r.result === TaskResult.Skipped);
+        return intermediateTasks.length > 0 && intermediateTasks.every(r => r.result === TaskResult.Skipped);
     }
 
     private async getDuration(api: WebApi) {
