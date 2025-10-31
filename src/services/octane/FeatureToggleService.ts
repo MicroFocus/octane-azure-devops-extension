@@ -86,10 +86,7 @@ export class FeatureToggleService {
         this.logger.debug("Octane endpoint that fetches USE_AZURE_DEVOPS_PARAMETERS parameter: " + url);
         const response = await octaneSDKConnection.executeCustomRequest(url, Octane.operationTypes.get);
 
-        const hasPropertyInResponse = Object.prototype.hasOwnProperty.call(
-            response,
-            OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS
-        );
+        const hasPropertyInResponse = OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS in response;
 
         const parameterValue = hasPropertyInResponse
             ? response[OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS]
