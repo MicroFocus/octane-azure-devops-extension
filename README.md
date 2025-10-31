@@ -695,9 +695,10 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 7.	After the Azure pipeline is created in ALM Octane, follow the next steps to be able to run the pipeline from the ALM Octane side, as described here: https://admhelp.microfocus.com/octane/en/25.1/Online/Content/AdminGuide/how_config_CI_plugin.htm#mt-item-5
 
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
-9. Older versions of the product (<25.4) will not be compatible with the latest plugin extension.
 
 ## 11. Change logs
+## 25.4.2 version Release notes
+* Fixed incompatibility between extension and older versions of the product (below 25.3.4)
 ## 25.4.1 version Release notes
 * Added Node 20 support for task runners with fallback to Node 16; removes EOL warning on modern agents.
 ## 25.4.0 version Release notes 
