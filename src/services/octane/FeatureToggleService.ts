@@ -95,7 +95,7 @@ export class FeatureToggleService {
             ? response[OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS]
             : false;
 
-        this.logger.debug(`Octane USE_AZURE_DEVOPS_PARAMETERS parameter value: ${JSON.stringify(parameterValue)}`);
+        this.logger.debug("Octane USE_AZURE_DEVOPS_PARAMETERS parameter value: " + JSON.stringify(parameterValue));
 
         this.useAzureDevopsParametersInOctane = parameterValue;
     }
