@@ -190,7 +190,8 @@ export class BaseTask {
     }
 
     private async prepareFeatureToggleService() {
-        this.featureToggleService = await FeatureToggleService.getInstance(this.tl, this.logger, this.sharedSpaceId, this.workspaces[0], this.octaneSDKConnections[this.workspaces[0]]);
+        const octaneVersion = await this.getOctaneVersion(this.octaneSDKConnections[this.workspaces[0]]);
+        this.featureToggleService = await FeatureToggleService.getInstance(this.tl, this.logger, this.sharedSpaceId, this.workspaces[0], this.octaneSDKConnections[this.workspaces[0]], octaneVersion);
     }
 
     private async populateOctaneConnections(): Promise<void> {
@@ -314,7 +315,7 @@ export class BaseTask {
 
         const azureTestingFrameworkSupportedVersion = '16.2.31';
         if(this.agentJobName === BaseTask.ALM_OCTANE_TEST_RUNNER_START &&
-            !this.isVersionGreaterOrEquals(currentVersion,azureTestingFrameworkSupportedVersion)) {
+            !OctaneConnectionUtils.isVersionGreaterOrEquals(currentVersion,azureTestingFrameworkSupportedVersion)) {
 
             throw new Error('Azure testing framework is not supported for Octane version less than ' + azureTestingFrameworkSupportedVersion +
                 '. Current Octane version is :' + currentVersion);
@@ -510,22 +511,6 @@ export class BaseTask {
         return extension?.version ? extension.version : "";
     }
 
-    private isVersionGreaterOrEquals(version1: string,version2: string): boolean{
-        if(!version1 || !version2){
-            return false;
-        }
-        const version1Spl = version1.split('.');
-        const version2Spl = version2.split('.');
-        for(let i = 0;i < version1Spl.length || i < version2Spl.length;i++){
-            const decrement = parseInt(version1Spl[i]) - parseInt(version2Spl[i]);
-            if(decrement !== 0){
-                return decrement > 0
-            }
-        }
-        return version1Spl.length >= version2Spl.length;
-    }
-
-
     protected async upgradePipelinesIfNeeded(octaneSDKConnection, ciServer, workspaceId) {
         //check if the parent exists in old format of ci_id:
         const pipelineQuery = Query.field('ci_id').equal(BaseTask.escapeOctaneQueryValue(this.projectFullName + '.' + this.buildDefinitionName))
@@ -712,6 +697,6 @@ export class BaseTask {
 
     private async doesOctaneSupportCreatingCIJobsDirectly(octaneSDKConnection) {
         let currentVersion = await this.getOctaneVersion(octaneSDKConnection);
-        return this.isVersionGreaterOrEquals(currentVersion, "16.2.100")
+        return OctaneConnectionUtils.isVersionGreaterOrEquals(currentVersion, "16.2.100")
     }
 }

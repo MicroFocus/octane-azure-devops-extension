@@ -31,22 +31,25 @@
 
 import {LogUtils} from "../../LogUtils";
 import {Octane} from "@microfocus/alm-octane-js-rest-sdk";
+import {OctaneConnectionUtils} from "../../OctaneConnectionUtils";
 
 export class FeatureToggleService {
     private readonly tl: any;
     private readonly logger: LogUtils;
     private ciInternalAzureApiUrlPart: string;
     private useAzureDevopsParametersInOctane: boolean;
+    private readonly octaneVersion: string;
 
     private readonly AZURE_FEATURE_TOGGLES : string = '/azure_feature_toggles';
 
-    private constructor(tl: any, logger: LogUtils) {
+    private constructor(tl: any, logger: LogUtils, octaneVersion: string) {
         this.tl = tl;
         this.logger = logger;
+        this.octaneVersion = octaneVersion;
     }
 
-    public static async getInstance(tl, logger: LogUtils, sharedSpaceId: string, workspaceId: string, octaneSDKConnection) : Promise<FeatureToggleService> {
-        let featureToggleService = new FeatureToggleService(tl, logger);
+    public static async getInstance(tl, logger: LogUtils, sharedSpaceId: string, workspaceId: string, octaneSDKConnection, octaneVersion: string) : Promise<FeatureToggleService> {
+        let featureToggleService = new FeatureToggleService(tl, logger, octaneVersion);
         await featureToggleService.init(octaneSDKConnection, sharedSpaceId, workspaceId);
         return featureToggleService;
     }
@@ -54,8 +57,15 @@ export class FeatureToggleService {
     protected async init(octaneSDKConnection, sharedSpaceId: string, workspaceId: string) {
         await new Promise<void>(async (resolve, reject) => {
             try {
-                this.initCiInternalAzureApiUrl(sharedSpaceId, workspaceId);
-                await this.getUseAzureDevopsParametersOctaneParameter(octaneSDKConnection);
+                if(OctaneConnectionUtils.isVersionGreaterOrEquals(this.octaneVersion, "25.3.24")){
+                    this.initCiInternalAzureApiUrl(sharedSpaceId, workspaceId);
+                    await this.getUseAzureDevopsParametersOctaneParameter(octaneSDKConnection);
+                }
+                else
+                {
+                    this.logger.debug("Octane version is lower than 25.3.24, setting USE_AZURE_DEVOPS_PARAMETERS to false by default.");
+                    this.useAzureDevopsParametersInOctane = false;
+                }
                 resolve();
             } catch (ex) {
                 reject(ex);
@@ -75,8 +85,18 @@ export class FeatureToggleService {
         const url = this.ciInternalAzureApiUrlPart + this.AZURE_FEATURE_TOGGLES;
         this.logger.debug("Octane endpoint that fetches USE_AZURE_DEVOPS_PARAMETERS parameter: " + url);
         const response = await octaneSDKConnection.executeCustomRequest(url, Octane.operationTypes.get);
-        const parameterValue = response[OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS];
-        this.logger.debug("Octane USE_AZURE_DEVOPS_PARAMETERS parameter value: " + JSON.stringify(parameterValue));
+
+        const hasPropertyInResponse = Object.prototype.hasOwnProperty.call(
+            response,
+            OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS
+        );
+
+        const parameterValue = hasPropertyInResponse
+            ? response[OctaneParametersName.USE_AZURE_DEVOPS_PARAMETERS]
+            : false;
+
+        this.logger.debug(`Octane USE_AZURE_DEVOPS_PARAMETERS parameter value: ${JSON.stringify(parameterValue)}`);
+
         this.useAzureDevopsParametersInOctane = parameterValue;
     }
 

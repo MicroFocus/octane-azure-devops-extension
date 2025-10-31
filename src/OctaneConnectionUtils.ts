@@ -56,4 +56,19 @@ export class OctaneConnectionUtils {
             }
         });
     }
+
+    public static isVersionGreaterOrEquals(version1: string,version2: string): boolean{
+        if(!version1 || !version2){
+            return false;
+        }
+        const version1Spl = version1.split('.');
+        const version2Spl = version2.split('.');
+        for(let i = 0;i < version1Spl.length || i < version2Spl.length;i++){
+            const decrement = parseInt(version1Spl[i]) - parseInt(version2Spl[i]);
+            if(decrement !== 0){
+                return decrement > 0
+            }
+        }
+        return version1Spl.length >= version2Spl.length;
+    }
 }
