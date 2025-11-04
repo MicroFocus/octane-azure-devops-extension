@@ -128,7 +128,7 @@ export class EndTask extends BaseTask {
                 const time = new Date(record.startTime).getTime();
                 return time > startTime && time < endTime;
             });
-            return intermediateTasks.every(r => r.result === TaskResult.Skipped);
+            return intermediateTasks.length > 0 && intermediateTasks.every(r => r.result === TaskResult.Skipped);
         }
         return false;
     }
