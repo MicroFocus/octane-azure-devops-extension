@@ -697,6 +697,8 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
 
 ## 11. Change logs
+## 25.4.3 version Release notes
+* Fixed pipeline displaying "**aborted**" status in the product when user only had **octanestarttask** and **octaneendtask** in the pipeline configuration file.
 ## 25.4.2 version Release notes
 * Fixed incompatibility between extension and older versions of the product (below 25.3.4)
 ## 25.4.1 version Release notes
