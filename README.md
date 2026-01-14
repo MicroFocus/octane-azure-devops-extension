@@ -695,7 +695,39 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 7.	After the Azure pipeline is created in ALM Octane, follow the next steps to be able to run the pipeline from the ALM Octane side, as described here: https://admhelp.microfocus.com/octane/en/25.1/Online/Content/AdminGuide/how_config_CI_plugin.htm#mt-item-5
 
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
+9. The Octane Azure DevOps extension does not currently support direct execution or injection of **NUnit** test results. .NET pipelines produce test results in **TRX** format, while the integration expects JUnit results published to Azure DevOps. However, a workaround which involves converting TRX files to JUnit format and explicitly publishing them in the pipeline, is possible, by adding the following tasks to your pipeline:
 
+Install the TRX-to-Junit conversion tool:
+```yaml
+- script: |
+    dotnet tool install --global trx2junit
+  displayName: 'Install trx2junit'
+```
+
+Execute NUnit tests and outputs TRX results:
+```yaml
+- script: |
+    dotnet test path/to/Project.csproj --results-directory $(Build.SourcesDirectory)\TestResults --logger "trx;LogFileName=results.trx"
+  displayName: 'Run tests (TRX)'
+  continueOnError: true
+```
+Convert the TRX file to JUnit XML for Octane:
+```yaml
+- script: |
+    trx2junit TestResults\results.trx
+  displayName: 'Convert TRX to JUnit'
+```
+Publish the JUnit test results to Azure DevOps:
+```yaml
+- task: PublishTestResults@2
+  displayName: 'Publish JUnit results'
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/*.xml'
+    searchFolder: '$(Build.SourcesDirectory)/TestResults'
+    mergeTestResults: true
+    failTaskOnFailedTests: false
+```
 ## 11. Change logs
 ## 25.4.3 version Release notes
 * Fixed pipeline displaying "**aborted**" status in the product when user only had **octanestarttask** and **octaneendtask** in the pipeline configuration file.
