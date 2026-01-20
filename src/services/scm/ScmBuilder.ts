@@ -96,7 +96,7 @@ export class ScmBuilder {
                 return null;
             } else if (build.repository.type === 'TfsGit') {
                 //TfsGit always brings ALL changes for each build
-                //it works for Azure DevOps Server 2020 and doeas not for 2019
+                //it works for Azure DevOps Server 2020 and does not for 2019
                 //not working because header API version is not correct and result is not returning
                 buildChanges = await buildApi.getChangesBetweenBuilds(projectName, from.id, toBuild,defaultNumberToFetch);
                 if(!buildChanges) {

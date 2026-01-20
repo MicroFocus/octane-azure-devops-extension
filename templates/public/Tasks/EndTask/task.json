@@ -33,6 +33,20 @@
       "helpMarkDown": "Comma separated list of target Octane workspaces"
     },
     {
+      "name": "Framework",
+      "type": "pickList",
+      "label": "Framework Type",
+      "required": true,
+      "helpMarkDown": "Select the testing framework whose format you want to convert from.\n",
+      "options": {
+        "testNG": "Test NG",
+        "cucumber": "Cucumber-JVM over Maven",
+        "bddScenario": "BDD Scenario",
+        "junit": "JUnit",
+        "uft": "UFT One"
+      }
+    },
+    {
       "name": "CucumberReportPath",
       "type": "string",
       "label": "Cucumber report destination path",

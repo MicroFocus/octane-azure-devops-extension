@@ -44,6 +44,7 @@ export enum InputConstants {
     EXECUTION_ID = 'executionId',
     SUITE_RUN_ID = 'suiteRunId',
     CREATE_PIPELINE = 'CreatePipelineCheckbox',
+    REPO_URL = "GitRepositoryURL",
 
     PIPELINE_NAME = 'PipelineNameCreated',
     IS_FULL_PATHNAME = 'UseFullPipelinePath'
