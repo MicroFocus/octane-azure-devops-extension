@@ -8,11 +8,31 @@ import {AuthenticationService} from "./services/security/AuthenticationService";
 export class GetParamsTask {
     private readonly tl: any;
     private readonly logger: LogUtils;
+    private readonly OCTANE_CLIENT_ID_VAR = "octaneClientId";
+    private readonly OCTANE_CLIENT_SECRET_VAR = "octaneClientSecret";
+    private readonly OCTANE_URL_VAR = "octaneUrl";
+    private readonly OCTANE_SHARED_SPACE_ID_VAR = "octaneSharedSpaceId";
 
     constructor(tl: any) {
         this.tl = tl;
         let logLevel = this.tl.getVariable('ALMOctaneLogLevel');
         this.logger = new LogUtils(logLevel);
+    }
+
+    public async run() {
+        const octaneServiceConnection = this.tl.getInput(InputConstants.OCTANE_SERVICE_CONNECTION, true);
+
+        const authentication =  await this.prepareAuthenticationService(octaneServiceConnection);
+
+        const octaneUrl = this.getOctaneUrl(octaneServiceConnection);
+        const sharedSpaceId = this.getSharedSpaceId(octaneServiceConnection);
+        const clientId = authentication.clientId;
+        const clientSecret = authentication.clientSecret;
+
+        this.tl.setVariable(this.OCTANE_CLIENT_ID_VAR, clientId);
+        this.tl.setVariable(this.OCTANE_CLIENT_SECRET_VAR, clientSecret);
+        this.tl.setVariable(this.OCTANE_URL_VAR, octaneUrl);
+        this.tl.setVariable(this.OCTANE_SHARED_SPACE_ID_VAR, sharedSpaceId);
     }
 
     private async prepareAuthenticationService(octaneServiceConnection: any) {
@@ -38,22 +58,6 @@ export class GetParamsTask {
         const sharedSpaceId = SharedSpaceUtils.validateOctaneUrlAndExtractSharedSpaceId(url);
         this.logger.info("Shared Space ID for discovery: " + sharedSpaceId);
         return sharedSpaceId;
-    }
-
-    public async run() {
-        const octaneServiceConnection = this.tl.getInput(InputConstants.OCTANE_SERVICE_CONNECTION, true);
-
-        const authentication =  await this.prepareAuthenticationService(octaneServiceConnection);
-
-        const octaneUrl = this.getOctaneUrl(octaneServiceConnection);
-        const sharedSpaceId = this.getSharedSpaceId(octaneServiceConnection);
-        const clientId = authentication.clientId;
-        const clientSecret = authentication.clientSecret;
-
-        this.tl.setVariable("octaneClientId", clientId);
-        this.tl.setVariable("octaneClientSecret", clientSecret);
-        this.tl.setVariable("octaneUrl", octaneUrl);
-        this.tl.setVariable("sharedSpaceId", sharedSpaceId);
     }
 }
 
