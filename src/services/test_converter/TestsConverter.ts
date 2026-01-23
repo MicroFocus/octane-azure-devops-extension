@@ -46,9 +46,15 @@ export class TestsConverter {
     this.logger.debug("ALMOctaneLogLevel: " + logLevel);
   }
 
-  public convert(testToConverts: string, framework: string): string {
-    this.logger.info("testToConverts is: " + testToConverts);
-    const testToRunData = this.parseTests(testToConverts);
+    /**
+     * Convert the testsToConvert string from Octane XML to the format required by the selected framework. This way the tests will be in the right format and can be executed.
+     * @param testsToConvert - the selected tests from Octane which will be converted and run by the test runner.
+     * @param framework - the selected framework by the user to which the tests will be converted to.
+     * @return - the converted tests string in the format required by the selected framework.
+     */
+  public convert(testsToConvert: string, framework: string): string {
+    this.logger.info("testToConverts is: " + testsToConvert);
+    const testToRunData = this.parseTests(testsToConvert);
 
     let testsConvertedStr = "";
     switch (framework) {
@@ -219,19 +225,7 @@ export class TestsConverter {
                   testToRunData.parameters[paramSplit[0]] = paramSplit[1];
           }
         }
-        this.logger.info(
-          "test data:" +
-            testToRunData.packageName +
-            "." +
-            testToRunData.className +
-            "." +
-            testToRunData.testName +
-            ", parameters: " +
-            testToRunData.parameters &&
-            Object.keys(testToRunData.parameters)
-              .map((param) => param + "=" + testToRunData.parameters[param])
-              .join(",")
-        );
+        this.logger.info(`Test data: ${JSON.stringify(testToRunData)}`);
 
         testToRunList.push(testToRunData);
       });

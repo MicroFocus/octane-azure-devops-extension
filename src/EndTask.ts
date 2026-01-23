@@ -114,39 +114,7 @@ export class EndTask extends BaseTask {
                         return;
                     }
 
-                    if (cucumberReportsPath) {
-                        const xml = fs.readFileSync(cucumberReportsPath, "utf8").replace(/^\uFEFF/, '');
-                        const converted = convertGherkinXMLToOctaneXML(xml, buildConfig, FrameworkType.BDDScenario);
-                        testResults.push(converted);
-                    } else {
-                        for (const file of files) {
-                            const xml = fs.readFileSync(file, "utf-8");
-                            const converted = convertJUnitXMLToOctaneXML(xml, buildConfig, frameworkType);
-
-                            if (framework === "uft") {
-                                const jsonObj = parser.parse(converted);
-                                const testFields = Array.isArray(jsonObj.test_result.test_fields.test_field) ? jsonObj.test_result.test_fields.test_field : [jsonObj.test_result.test_fields.test_field];
-                                testFields.push({
-                                        type: "Testing_Tool_Type",
-                                        value: "UFT One"
-                                })
-                                const testRuns = Array.isArray(jsonObj.test_result.test_runs.test_run) ? jsonObj.test_result.test_runs.test_run : [jsonObj.test_result.test_runs.test_run];
-                                for (const run of testRuns) {
-                                    const classPath = run.class;
-                                    const testName = run.name;
-
-                                    const packageName = this.createPackageName(classPath);
-                                    run.class = this.createClasName(classPath, testName);
-                                    run.package = packageName;
-                                }
-
-                                const newXml = builder.build(jsonObj);
-                                testResults.push(newXml);
-                            } else {
-                                testResults.push(converted);
-                            }
-                        }
-                    }
+                    testResults = await this.handleTestResultInjection(cucumberReportsPath, files, buildConfig, framework, frameworkType);
                     this.logger.info("The converted test results to Octane XML are: " + testResults);
 
                     for (const testResult of testResults) {
@@ -159,54 +127,106 @@ export class EndTask extends BaseTask {
                         }
                     }
                 }
-                if (!this.isPipelineStartJob) {
-                    let causes = await CiEventCauseBuilder.buildCiEventCauses(
-                        this.isPipelineJob,
-                        api,
-                        this.projectName,
-                        this.rootJobFullName,
-                        parseInt(this.buildId)
-                    );
-                    let buildResult = await this.getStatus(api);
-                    let duration = await this.getDuration(api);
-                    const parameters: CiParameter[] =
-                        await this.parametersService.getParametersWithBranch(
-                            api,
-                            this.definitionId,
-                            this.buildId,
-                            this.projectName,
-                            this.sourceBranch,
-                            false,
-                            this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
-                        );
-
-                    let endEvent;
-
-                    let jobCiId = this.getJobCiId();
-                    endEvent = new CiEvent(
-                        this.buildDefinitionName + " " + this.sourceBranchName,
-                        CiEventType.FINISHED,
-                        this.buildId,
-                        this.buildId,
-                        jobCiId,
-                        buildResult,
-                        new Date().getTime(),
-                        null,
-                        duration,
-                        null,
-                        this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
-                        causes,
-                        parameters,
-                        "CHILD",
-                        this.getParentJobCiId(),
-                        this.sourceBranch,
-                        testResultExpected
-                    );
-
-                    await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
-                }
+                await this.buildCIAndSendCIEvent(api, ws, testResultExpected);
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
             }
+        }
+    }
+
+    /**
+     * This method handles the test result conversion to Octane XML format based on the provided framework and files.
+     * @param cucumberReportsPath - the path to the cucumber reports in case of BDD framework
+     * @param files - the files containing the test results
+     * @param buildConfig - the build configuration
+     * @param framework - the testing framework provided by the user
+     * @param frameworkType - the type of the testing framework after mapping the string to FrameworkType enum
+     * @returns An array representing the converted test results in Octane XML format based on the provided parameters. These test results are ready to be injected into Octane.
+     * @private
+     */
+    private async handleTestResultInjection(cucumberReportsPath: string | undefined, files: string[], buildConfig: TestResultBuildAttributes, framework: string, frameworkType: FrameworkType): Promise<string[]> {
+        const testResults = [];
+        if (cucumberReportsPath) {
+            const xml = fs.readFileSync(cucumberReportsPath, "utf8").replace(/^\uFEFF/, '');
+            const converted = convertGherkinXMLToOctaneXML(xml, buildConfig, FrameworkType.BDDScenario);
+            testResults.push(converted);
+        } else {
+            for (const file of files) {
+                const xml = fs.readFileSync(file, "utf-8");
+                const converted = convertJUnitXMLToOctaneXML(xml, buildConfig, frameworkType);
+
+                if (framework === "uft") {
+                    const jsonObj = parser.parse(converted);
+                    const testFields = Array.isArray(jsonObj.test_result.test_fields.test_field) ? jsonObj.test_result.test_fields.test_field : [jsonObj.test_result.test_fields.test_field];
+                    testFields.push({
+                        type: "Testing_Tool_Type",
+                        value: "UFT One"
+                    })
+                    const testRuns = Array.isArray(jsonObj.test_result.test_runs.test_run) ? jsonObj.test_result.test_runs.test_run : [jsonObj.test_result.test_runs.test_run];
+                    for (const run of testRuns) {
+                        const classPath = run.class;
+                        const testName = run.name;
+
+                        const packageName = this.createPackageName(classPath);
+                        run.class = this.createClassName(classPath, testName);
+                        run.package = packageName;
+                    }
+
+                    const newXml = builder.build(jsonObj);
+                    testResults.push(newXml);
+                } else {
+                    testResults.push(converted);
+                }
+            }
+        }
+        return testResults;
+    }
+
+    private async buildCIAndSendCIEvent(api: WebApi, ws: string, testResultExpected: boolean) {
+        if (!this.isPipelineStartJob) {
+            let causes = await CiEventCauseBuilder.buildCiEventCauses(
+                this.isPipelineJob,
+                api,
+                this.projectName,
+                this.rootJobFullName,
+                parseInt(this.buildId)
+            );
+            let buildResult = await this.getStatus(api);
+            let duration = await this.getDuration(api);
+            const parameters: CiParameter[] =
+                await this.parametersService.getParametersWithBranch(
+                    api,
+                    this.definitionId,
+                    this.buildId,
+                    this.projectName,
+                    this.sourceBranch,
+                    false,
+                    this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+                );
+
+            let endEvent;
+
+            let jobCiId = this.getJobCiId();
+            endEvent = new CiEvent(
+                this.buildDefinitionName + " " + this.sourceBranchName,
+                CiEventType.FINISHED,
+                this.buildId,
+                this.buildId,
+                jobCiId,
+                buildResult,
+                new Date().getTime(),
+                null,
+                duration,
+                null,
+                this.isPipelineJob ? PhaseType.POST : PhaseType.INTERNAL,
+                causes,
+                parameters,
+                "CHILD",
+                this.getParentJobCiId(),
+                this.sourceBranch,
+                testResultExpected
+            );
+
+            await this.sendEvent(this.octaneSDKConnections[ws], endEvent);
         }
     }
 
@@ -254,7 +274,7 @@ export class EndTask extends BaseTask {
         return packageName;
     }
 
-    private createClasName(className: string, testName: string): string {
+    private createClassName(className: string, testName: string): string {
         let newClassName: string;
         const rootDirectory = process.env.BUILD_SOURCESDIRECTORY;
         className = className.replace("file:///", "");
