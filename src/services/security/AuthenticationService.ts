@@ -110,9 +110,6 @@ export class AuthenticationService {
         let username = endpointAuth.parameters['username'];
         let password = endpointAuth.parameters['password'];
 
-        logger.debug('clientId = ' + username);
-        logger.debug('clientSecret = ' + CryptoUtils.obfuscate(password));
-
         return {
             scheme: AuthScheme.USERNAME_PASSWORD,
             parameters: {

@@ -42,8 +42,16 @@
         "testNG": "Test NG",
         "cucumber": "Cucumber-JVM over Maven",
         "bddScenario": "BDD Scenario",
-        "junit": "JUnit"
+        "junit": "JUnit",
+        "uft": "UFT One"
       }
+    },
+    {
+      "name": "GitRepositoryURL",
+      "type": "string",
+      "label": "Git Repository URL",
+      "required": false,
+      "helpMarkDown": "Git Repository URL e.g. https://github.com/username/repo"
     }
   ],
   "execution": {

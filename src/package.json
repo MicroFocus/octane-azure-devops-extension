@@ -10,10 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "@microfocus/alm-octane-js-rest-sdk": "24.2.1",
+    "@microfocus/alm-octane-test-result-convertion": "^25.2.3",
     "@types/node": "12.0.12",
     "@types/q": "1.5.2",
     "azure-devops-node-api": "11.0.0",
     "azure-pipelines-task-lib": "4.1.0",
+    "fast-xml-parser": "^5.3.3",
     "globby": "11.0.3",
     "js-yaml": "^4.1.0",
     "xml-escape": "1.1.0",
@@ -21,6 +23,8 @@
   },
   "devDependencies": {
     "@ltd/j-toml": "1.6.0",
+    "@opentext/sdp-sdm-tests-to-run-conversion": "^25.2.0",
+    "@types/glob": "^8.1.0",
     "@types/js-yaml": "^4.0.9"
   }
 }
