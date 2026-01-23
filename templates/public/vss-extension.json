@@ -113,6 +113,15 @@
       "properties": {
         "name": "Tasks/EndTask"
       }
+    },
+    {
+      "id": "octane-get-params-task",
+      "description": "ALM Octane Get Params Task",
+      "type": "ms.vss-distributed-task.task",
+      "targets": ["ms.vss-distributed-task.tasks"],
+      "properties": {
+        "name": "Tasks/GetParamsTask"
+      }
     }
   ],
   "files": [

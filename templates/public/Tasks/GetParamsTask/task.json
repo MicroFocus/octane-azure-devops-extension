@@ -1,0 +1,32 @@
+{
+  "id": "9356d524-77d8-4e52-ac29-5f5d130dd41d",
+  "name": "octane-get-params-task",
+  "friendlyName": "ALM Octane Get Parameters",
+  "description": "ALM Octane Get Params Task",
+  "author": "Open Text",
+  "category": "Build",
+  "visibility": ["Build", "Release"],
+  "demands": [],
+  "version": {
+    "Major": "",
+    "Minor": "",
+    "Patch": ""
+  },
+  "minimumAgentVersion": "2.170.1",
+  "instanceNameFormat": "ALM Octane Get Parameters",
+  "inputs": [
+    {
+      "name": "OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnection",
+      "label": "ALM Octane service/server end point",
+      "required": true,
+      "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"
+    }
+  ],
+  "execution": {
+    "Node16": {
+      "target": "task.js",
+      "argumentFormat": ""
+    }
+  }
+}

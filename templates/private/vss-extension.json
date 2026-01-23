@@ -26,9 +26,7 @@
       "id": "service-endpoint",
       "description": "Service endpoint type for ALM Octane Private Extension connections",
       "type": "ms.vss-endpoint.service-endpoint-type",
-      "targets": [
-        "ms.vss-endpoint.endpoint-types"
-      ],
+      "targets": ["ms.vss-endpoint.endpoint-types"],
       "properties": {
         "name": "OctaneServiceConnection",
         "displayName": "ALM Octane (private)",
@@ -84,9 +82,7 @@
       "id": "octane-start-task-private",
       "description": "ALM Octane Start Task (private)",
       "type": "ms.vss-distributed-task.task",
-      "targets": [
-        "ms.vss-distributed-task.tasks"
-      ],
+      "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {
         "name": "Tasks/StartTask"
       }
@@ -95,9 +91,7 @@
       "id": "octane-test-runner-start-task-private",
       "description": "ALM Octane Test Runner Start Task (private)",
       "type": "ms.vss-distributed-task.task",
-      "targets": [
-        "ms.vss-distributed-task.tasks"
-      ],
+      "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {
         "name": "Tasks/TestRunnerStartTask"
       }
@@ -106,11 +100,18 @@
       "id": "octane-end-task-private",
       "description": "ALM Octane End Task (private)",
       "type": "ms.vss-distributed-task.task",
-      "targets": [
-        "ms.vss-distributed-task.tasks"
-      ],
+      "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {
         "name": "Tasks/EndTask"
+      }
+    },
+    {
+      "id": "octane-get-params-task",
+      "description": "ALM Octane Get Params Task (private)",
+      "type": "ms.vss-distributed-task.task",
+      "targets": ["ms.vss-distributed-task.tasks"],
+      "properties": {
+        "name": "Tasks/GetParamsTask"
       }
     }
   ],

@@ -65,6 +65,7 @@ echo Copying source files
 xcopy /S /Y dist\* pkg\Tasks\StartTask\ >NUL || goto :error
 xcopy /S /Y dist\* pkg\Tasks\EndTask\ >NUL || goto :error
 xcopy /S /Y dist\* pkg\Tasks\TestRunnerStartTask\ >NUL || goto :error
+xcopy /S /Y dist\* pkg\Tasks\GetParamsTask\ >NUL || goto :error
 
 echo Copying source files DONE
 echo ======================================
