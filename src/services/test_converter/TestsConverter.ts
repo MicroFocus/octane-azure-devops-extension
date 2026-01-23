@@ -53,7 +53,7 @@ export class TestsConverter {
      * @return - the converted tests string in the format required by the selected framework.
      */
   public convert(testsToConvert: string, framework: string): string {
-    this.logger.info("testToConverts is: " + testsToConvert);
+    this.logger.info("testsToConvert is: " + testsToConvert);
     const testToRunData = this.parseTests(testsToConvert);
 
     let testsConvertedStr = "";
