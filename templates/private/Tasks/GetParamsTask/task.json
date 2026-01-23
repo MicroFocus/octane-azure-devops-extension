@@ -24,6 +24,7 @@
     }
   ],
   "execution": {
+    "Node20_1": { "target": "task.js" },
     "Node16": {
       "target": "task.js",
       "argumentFormat": ""

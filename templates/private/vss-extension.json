@@ -106,7 +106,7 @@
       }
     },
     {
-      "id": "octane-get-params-task",
+      "id": "octane-get-params-task-private",
       "description": "ALM Octane Get Params Task (private)",
       "type": "ms.vss-distributed-task.task",
       "targets": ["ms.vss-distributed-task.tasks"],
