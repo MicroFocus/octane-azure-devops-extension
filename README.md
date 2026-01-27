@@ -530,7 +530,14 @@ From here the the possibilities depend on your needs. For example, you can assig
 https://admhelp.microfocus.com/valueedge/en/latest/Online/Content/UserGuide/how_create_test_suites.htm
 
 > [!CAUTION]
-If any of the previous steps failed and you aren't able to run the test runner pipeline in Azure Devops, make sure that in Azure project settings, in the **Settings** tab, set "Limit variables that can be set at queue time" to **OFF**.
+If any of the previous steps failed, and you aren't able to run the test runner pipeline in Azure Devops, make sure that in Azure project settings, in the **Settings** tab, set "Limit variables that can be set at queue time" to **OFF**. This setting is used to enforce a "whitelist" mechanism that blocks calls from external sources if they contain variables that are not added to the whitelist. In the eventuality that you aren't allowed to modify this setting, you will need to add all the following variables in your pipeline definition file and check the "Let users override this value when running this pipeline":
+> - octaneTestRunnerFramework
+> - octaneSpaceId
+> - octaneEnvironment
+> - octaneWorkspaceId
+> - octaneRunByUsername
+> 
+> These variables are automatically sent by the product to all other supported CI integrations, and if they are not whitelisted while this setting is enabled, the pipeline run will fail.
 
 ![image](https://github.com/user-attachments/assets/dc3234a5-d722-4795-95e4-65b26a9e0d04)
 
