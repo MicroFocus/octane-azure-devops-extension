@@ -98,7 +98,6 @@ export class TestRunnerStartTask extends BaseTask {
     await new Promise<void>(async (resolve, reject) => {
       try {
         this.prepareFramework();
-        this.prepareTestToConvert();
         resolve();
       } catch (ex) {
         reject(ex);
@@ -116,10 +115,6 @@ export class TestRunnerStartTask extends BaseTask {
 
   private prepareFramework(): void {
     this.framework = this.tl.getInput(InputConstants.FRAMEWORK, true);
-  }
-  private prepareTestToConvert(): void {
-    this.testToConvert = this.tl.getVariable("testsToRun");
-    this.logger.info("testsToRun: " + this.testToConvert);
   }
 
   protected async additionalConfig(octaneSDKConnection, ws) {
@@ -349,18 +344,28 @@ export class TestRunnerStartTask extends BaseTask {
   }
 
   public async run() {
-    const executionId = this.tl.getVariable("executionId");
-    const suiteRunId = this.tl.getVariable("suiteRunId");
+      const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+      const parameters: CiParameter[] =
+          await this.parametersService.getParametersWithBranch(
+              api,
+              this.definitionId,
+              this.buildId,
+              this.projectName,
+              this.sourceBranch,
+              false,
+              this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+          );
 
-    this.logger.info("executionId: " + executionId);
-    this.logger.info("suiteRunId: " + suiteRunId);
+      const executionId = parameters.find(parameter => parameter.name === 'executionId').value;
+      const suiteRunId = parameters.find(parameter => parameter.name === 'suiteRunId').value;
+      this.testToConvert = parameters.find(parameter => parameter.name === 'testsToRun').value;
+
+      this.logger.debug("testsToRun: " + this.testToConvert);
+      this.logger.info("executionId: " + executionId);
+      this.logger.info("suiteRunId: " + suiteRunId);
 
     // Run the converter functionality only in case we have the execution id and suite run id from Octane side
     if (executionId && suiteRunId) {
-      const api: WebApi = ConnectionUtils.getWebApiWithProxy(
-        this.collectionUri,
-        this.authenticationService.getAzureAccessToken()
-      );
       const causes = await CiEventCauseBuilder.buildCiEventCauses(
         this.isPipelineJob,
         api,
@@ -368,17 +373,6 @@ export class TestRunnerStartTask extends BaseTask {
         this.rootJobFullName,
         parseInt(this.buildId)
       );
-
-      const parameters: CiParameter[] =
-        await this.parametersService.getParametersWithBranch(
-          api,
-          this.definitionId,
-          this.buildId,
-          this.projectName,
-          this.sourceBranch,
-          false,
-          this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
-        );
 
       const startEvent = new CiEvent(
         this.buildDefinitionName + " " + this.sourceBranchName,
