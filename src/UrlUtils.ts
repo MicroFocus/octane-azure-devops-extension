@@ -46,4 +46,14 @@ export class UrlUtils {
             customWebContext: customWebContext
         }
     }
+
+    public static getUrlForDiscovery(octaneServiceConnectionData: any, tl: any, logger: LogUtils) {
+        let endpointUrl = tl.getEndpointUrl(octaneServiceConnectionData, false);
+        let url = new URL(endpointUrl);
+
+        const basePath = url.pathname.split("/ui")[0];
+
+        logger.info("The base path for discovery is: " + basePath);
+        return `${url.protocol}//${url.host}${basePath}`;
+    }
 }
