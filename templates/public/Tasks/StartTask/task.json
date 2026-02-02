@@ -1,8 +1,8 @@
 {
   "id": "20a0d920-f370-46e7-bda0-9d48b01b3e6e",
   "name": "octane-start-task",
-  "friendlyName": "ALM Octane Job Start",
-  "description": "ALM Octane Start Task",
+  "friendlyName": "CSDP/SDM Job Start",
+  "description": "CSDP/SDM Start Task",
   "author": "Open Text",
   "category": "Build",
   "visibility": [
@@ -16,7 +16,7 @@
     "Patch": "3"
   },
   "minimumAgentVersion": "2.170.1",
-  "instanceNameFormat": "ALM Octane Job Start",
+  "instanceNameFormat": "CSDP/SDM Job Start",
   "groups" : [
     {
       "name": "PipelineNaming",
@@ -28,16 +28,16 @@
     {
       "name": "OctaneServiceConnection",
       "type": "connectedService:OctaneServiceConnection2",
-      "label": "ALM Octane service/server end point",
+      "label": "CSDP/SDM service/server end point",
       "required": true,
-      "helpMarkDown": "Select the the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"
+      "helpMarkDown": "Select the the CSDP/SDM endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'CSDP/SDM'"
     },
     {
       "name": "WorkspaceList",
       "type": "string",
-      "label": "Target ALM Octane workspaces",
+      "label": "Target CSDP/SDM workspaces",
       "required": true,
-      "helpMarkDown": "Comma separated list of target Octane workspaces"
+      "helpMarkDown": "Comma separated list of target CSDP/SDM workspaces"
     },
     {
       "name": "GithubRepositoryConnection",
@@ -49,9 +49,9 @@
     {
       "name": "CreatePipelineCheckbox",
       "type": "boolean",
-      "label": "Create ALM Octane pipeline",
+      "label": "Create CSDP/SDM pipeline",
       "required": true,
-      "helpMarkDown": "When checked, a pipeline is created in ALM Octane. For versions 16.2.100 and higher, selecting the checkbox creates a pipeline, while clearing it prevents pipeline creation. Prior versions always create a pipeline, irrespective of the checkbox. Clearing the checkbox does not remove an existing pipeline.",
+      "helpMarkDown": "When checked, a pipeline is created in CSDP/SDM. For versions 16.2.100 and higher, selecting the checkbox creates a pipeline, while clearing it prevents pipeline creation. Prior versions always create a pipeline, irrespective of the checkbox. Clearing the checkbox does not remove an existing pipeline.",
       "defaultValue": true,
       "groupName" : "PipelineNaming"
     },
@@ -60,16 +60,16 @@
       "type": "boolean",
       "label": "Use full pipeline path as a name",
       "required": false,
-      "helpMarkDown": "Create a pipeline with the name of the full pipeline path. As the pipeline name in ALM Octane must be unique, use this option to differentiate between pipelines that have the same name. This value only applies to new pipelines. It does not affect existing ones.",
+      "helpMarkDown": "Create a pipeline with the name of the full pipeline path. As the pipeline name in CSDP/SDM must be unique, use this option to differentiate between pipelines that have the same name. This value only applies to new pipelines. It does not affect existing ones.",
       "defaultValue": false,
       "groupName" : "PipelineNaming"
     },
     {
       "name": "PipelineNameCreated",
       "type": "String",
-      "label": "ALM Octane Pipeline name",
+      "label": "CSDP/SDM Pipeline name",
       "required": false,
-      "helpMarkDown": "The name of the new pipeline in ALM Octane. This value only applies to new pipelines and does not affect existing pipelines. Leave the field empty to use the pipeline’s name in Azure DevOps, as its name for ALM Octane.",
+      "helpMarkDown": "The name of the new pipeline in CSDP/SDM. This value only applies to new pipelines and does not affect existing pipelines. Leave the field empty to use the pipeline’s name in Azure DevOps, as its name for ALM Octane.",
       "visibleRule": "UseFullPipelinePath == false",
       "groupName" : "PipelineNaming"
     }

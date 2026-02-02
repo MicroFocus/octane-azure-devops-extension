@@ -2,14 +2,14 @@
   "manifestVersion": 1,
   "id": "alm-octane-integration",
   "version": "0.4.2.112",
-  "name": "ALM Octane Integration Private Extension",
-  "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with ALM Octane.",
+  "name": "CSDP/SDM Integration Private Extension",
+  "description": "Beta version. An Azure DevOps extension that supplies the required entities for establishing an integration with CSDP/SDM.",
   "publisher": "almoctane",
   "categories": [
     "Azure Pipelines"
   ],
   "icons": {
-    "default": "Icons/icon_logo.png"
+    "default": "Icons/new_logo.png"
   },
   "targets": [
     {
@@ -24,15 +24,15 @@
   "contributions": [
     {
       "id": "service-endpoint",
-      "description": "Service endpoint type for ALM Octane Private Extension connections",
+      "description": "Service endpoint type for CSDP/SDM Private Extension connections",
       "type": "ms.vss-endpoint.service-endpoint-type",
       "targets": ["ms.vss-endpoint.endpoint-types"],
       "properties": {
         "name": "OctaneServiceConnection",
-        "displayName": "ALM Octane (private)",
+        "displayName": "CSDP/SDM (private)",
         "url": {
           "displayName": "Server Url",
-          "helpText": "ALM Octane Url"
+          "helpText": "CSDP/SDM Url"
         },
         "authenticationSchemes": [
           {
@@ -41,7 +41,7 @@
               {
                 "id": "username",
                 "name": "Client ID",
-                "description": "ALM Octane API client ID",
+                "description": "CSDP/SDM API client ID",
                 "inputMode": "textbox",
                 "isConfidential": false,
                 "validation": {
@@ -52,7 +52,7 @@
               {
                 "id": "password",
                 "name": "Client Secret",
-                "description": "ALM Octane API client secret",
+                "description": "CSDP/SDM API client secret",
                 "inputMode": "passwordbox",
                 "isConfidential": true,
                 "validation": {
@@ -67,7 +67,7 @@
           {
             "id": "instance_id",
             "name": "Instance ID",
-            "description": "Unique ID representing current Azure DevOps project in ALM Octane",
+            "description": "Unique ID representing current Azure DevOps project in CSDP/SDM",
             "inputMode": "textbox",
             "validation": {
               "isRequired": true,
@@ -80,7 +80,7 @@
     },
     {
       "id": "octane-start-task-private",
-      "description": "ALM Octane Start Task (private)",
+      "description": "CSDP/SDM Start Task (private)",
       "type": "ms.vss-distributed-task.task",
       "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {
@@ -89,7 +89,7 @@
     },
     {
       "id": "octane-test-runner-start-task-private",
-      "description": "ALM Octane Test Runner Start Task (private)",
+      "description": "CSDP/SDM Test Runner Start Task (private)",
       "type": "ms.vss-distributed-task.task",
       "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {
@@ -98,7 +98,7 @@
     },
     {
       "id": "octane-end-task-private",
-      "description": "ALM Octane End Task (private)",
+      "description": "CSDP/SDM End Task (private)",
       "type": "ms.vss-distributed-task.task",
       "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {
@@ -107,7 +107,7 @@
     },
     {
       "id": "octane-get-params-task-private",
-      "description": "ALM Octane Get Params Task (private)",
+      "description": "CSDP/SDM Get Params Task (private)",
       "type": "ms.vss-distributed-task.task",
       "targets": ["ms.vss-distributed-task.tasks"],
       "properties": {
