@@ -11,27 +11,32 @@ The extension will monitor and reflect the pipeline activity into the product.
 - [2. Table of Contents](#2-table-of-contents)
 - [3. Requirements](#3-requirements)
 - [4. Extension configuration](#4-extension-configuration)
-    - [4.1. How to install the Azure DevOps ALM Octane extension from Marketplace](#41-how-to-install-the-azure-devops-alm-octane-extension-from-marketplace)
+    - [4.1. How to install the Azure DevOps CSDP/SDM extension from Marketplace](#41-how-to-install-the-azure-devops-csdpsdm-extension-from-marketplace)
     - [4.2. How to add an API Access Key in the product for Azure Service Connection ](#42-how-to-add-an-api-access-key-in-the-product-for-azure-service-connection)
     - [4.3. How to create a new service connection](#43-how-to-create-a-new-service-connection)
 - [5. Pipeline interaction](#5-pipeline-interaction)
-    - [5.1. Create a new pipeline with the Octane start and end tasks through YAML editing (implicit Azure job)](#51-create-a-new-pipeline-with-the-octane-start-and-end-tasks-through-yaml-editing-implicit-azure-job)
-    - [5.2. Create a new pipeline with the Octane start and end tasks through classic editor (implicit Azure job)](#52-create-a-new-pipeline-with-the-octane-start-and-end-tasks-through-classic-editor-implicit-azure-job)
-    - [5.3. Create a new pipeline with the Octane start and end tasks through YAML editing (explicit Azure jobs)](#53-create-a-new-pipeline-with-the-octane-start-and-end-tasks-through-yaml-editing-explicit-azure-jobs)
-- [6. Displaying Cucumber Gherkin test results into the product](#6-displaying-cucumber-gherkin-test-results-into-the-product)
-    - [6.1. Displaying Cucumber Gherkin test results into the product using yml editor](#61-displaying-cucumber-gherkin-test-results-into-the-product-using-yml-editor)
-    - [6.2. Displaying Cucumber Gherkin test results into the product using classic editor](#62-displaying-cucumber-gherkin-test-results-into-the-product-using-classic-editor)
-- [7. Configuring test runner pipeline](#7-configuring-test-runner-pipeline)
-    - [7.1. Configure pipeline variables](#71-configure-pipeline-variables)
-- [8. Configuring Auto Action flow](#8-configuring-auto-action-flow)
-- [9. Useful Configurations](#9-useful-configurations)
-    - [9.1. Running pipelines from the product](#91-running-pipelines-from-the-product)
-    - [9.2. Running pipelines with variables or parameters](#92-running-pipelines-with-variables-or-parameters)
-        - [9.2.1 Running pipelines with variables](#921-running-pipelines-with-variables)
-        - [9.2.2 Running pipelines with parameters](#922-running-pipelines-with-parameters)
-    - [9.3. Activating debug messages](#93-activating-debug-messages) 
-- [10. Known issues and limitations](#10-known-issues-and-limitations)
-- [11. Change logs](#11-change-logs)
+    - [5.1. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (implicit Azure job)](#51-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-yaml-editing-implicit-azure-job)
+    - [5.2. Create a new pipeline with the CSDP/SDM start and end tasks through classic editor (implicit Azure job)](#52-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-classic-editor-implicit-azure-job)
+    - [5.3. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (explicit Azure jobs)](#53-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-yaml-editing-explicit-azure-jobs)
+- [6. Pipeline configuration for executing UFT One Tests](#6-pipeline-configuration-for-executing-uft-one-tests)
+- [7. Displaying JUnit/UFT One/NUnit test results into the product](#7-displaying-junituft-onenunit-test-results-into-the-product)
+    - [7.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor](#71-displaying-junituft-onenunit-test-results-into-the-product-using-yml-editor)
+    - [7.2 Displaying JUnit/UFT One/NUnit test results into the product using classic editor](#72-displaying-junituft-onenunit-test-results-into-the-product-using-classic-editor)
+- [8. Displaying Cucumber Gherkin test results into the product](#8-displaying-cucumber-gherkin-test-results-into-the-product)
+    - [8.1. Displaying Cucumber Gherkin test results into the product using yml editor](#81-displaying-cucumber-gherkin-test-results-into-the-product-using-yml-editor)
+    - [8.2. Displaying Cucumber Gherkin test results into the product using classic editor](#82-displaying-cucumber-gherkin-test-results-into-the-product-using-classic-editor)
+- [9. Configuring test runner pipeline](#9-configuring-test-runner-pipeline)
+    - [9.1. Configure pipeline variables](#91-configure-pipeline-variables)
+- [10. Extracting parameters from CSDP/SDM service connection](#10-extracting-parameters-from-csdpsdm-service-connection)
+- [11. Configuring Auto Action flow](#11-configuring-auto-action-flow)
+- [12. Useful Configurations](#12-useful-configurations)
+    - [12.1. Running pipelines from the product](#121-running-pipelines-from-the-product)
+    - [12.2. Running pipelines with variables or parameters](#122-running-pipelines-with-variables-or-parameters)
+        - [12.2.1. Running pipelines with variables](#1221-running-pipelines-with-variables)
+        - [12.2.2. Running pipelines with parameters](#1222-running-pipelines-with-parameters)
+    - [12.3. Activating debug messages](#123-activating-debug-messages) 
+- [13. Known issues and limitations](#13-known-issues-and-limitations)
+- [14. Change logs](#14-change-logs)
 
 
 ## 3. Requirements
@@ -41,9 +46,9 @@ The extension will monitor and reflect the pipeline activity into the product.
 - The product version should be **16.1.200** or **higher**
 - API access to the product with **CI/CD Integration** or **DevOps Admin** roles
 
-## 4. Extension configuration  
+## 4. Extension configuration
 
-### 4.1. How to install the Azure DevOps ALM Octane extension from Marketplace
+### 4.1. How to install the Azure DevOps CSDP/SDM extension from Marketplace
 
 1. In Azure DevOps, click on "Manage extensions":
 
@@ -99,15 +104,15 @@ Before you can add a new service connection, please make sure you have a valid A
 
 ![image](https://github.com/user-attachments/assets/0bbe0394-3288-45c6-9172-da17cc1bd7cc)
 
-4. Select the ALM Octane connection type: 
+4. Select the CSDP/SDM connection type: 
 
-![image](https://github.com/user-attachments/assets/0c1f9425-8d75-4125-a95b-2725d68e11c9)
+![image](assets/img26.png)
 
 5. Fill in all fields required in the form which appears, as follows:
 
 ![image](https://github.com/user-attachments/assets/5c719141-b5f1-4025-b403-ac617505d154)
 
-**Server Url** - the URL of the Octane the service connection will point to. Make sure to include the sharedspace/workspace query parameter (p=1002/1002)
+**Server Url** - the URL of the CSDP/SDM the service connection will point to. Make sure to include the sharedspace/workspace query parameter (p=1002/1002)
 
 **Instance ID** - the name you expect to see in CI Servers grid in DEVOPS tab for a specific space, like in the example: 
 
@@ -121,7 +126,7 @@ Before you can add a new service connection, please make sure you have a valid A
 
 ## 5. Pipeline interaction
 
-### 5.1. Create a new pipeline with the Octane start and end tasks through YAML editing (implicit Azure job)
+### 5.1. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (implicit Azure job)
 
 1. Go to Pipelines and press Create Pipeline:
 
@@ -152,29 +157,29 @@ Before you can add a new service connection, please make sure you have a valid A
 
 ![image](https://github.com/user-attachments/assets/ad3a6d48-eb0a-42e5-bdc4-0e3d29221685)
 
-7. Add the ALM Octane Job Start and ALM Octane Job End. You must make sure to add them together because otherwise the pipelines will not show properly in the product. Job start is required in order to create the CI Server and Pipeline in the product and mark it as running. Job end is required in order to let the product know that the pipeline ended. This should be the last task inside your Azure DevOps pipeline. Make sure you put your cursor in the right location before adding the task as it will generate a YAML task entry directly in the position where your cursor was before you click on the task.
+7. Add the CSDP/SDM Job Start and CSDP/SDM Job End. You must make sure to add them together because otherwise the pipelines will not show properly in the product. Job start is required in order to create the CI Server and Pipeline in the product and mark it as running. Job end is required in order to let the product know that the pipeline ended. This should be the last task inside your Azure DevOps pipeline. Make sure you put your cursor in the right location before adding the task as it will generate a YAML task entry directly in the position where your cursor was before you click on the task.
 
-![image](https://github.com/user-attachments/assets/e59a6b74-b2a3-41d7-93fb-47f9752391ef)
+![image](assets/img1.png)
 
 8. You need to know your workspace ID(s) within the product where you want your pipeline to be created and updated. You can find it in two ways:
-    1. From the URL of the product instance you access, usually it is the second integer, as you can see from this example mock link: https://yourOctaneDomain.com/ui/?p=1001/1002
+    1. From the URL of the product instance you access, usually it is the second integer, as you can see from this example mock link: https://yourCSDPSDMDomain.com/ui/?p=1001/1002
     2. If you have shared space admin rights, go to Spaces within the product and press the Edit Workspace button
 
 ![image](https://github.com/user-attachments/assets/7b90e3b3-6479-4340-ac77-9188a199d38b)
 
 9. After finding the respective workspace id, make sure to paste it in the form that opens when you select either the start task or the end task.
 
-![image](https://github.com/user-attachments/assets/28b7b773-4f5a-4a66-b9b0-599795b08379)
+![image](assets/img2.png)
 
 10. In the end you should have in your YAML file something like below:
 
-![image](https://github.com/user-attachments/assets/398c519d-4e30-47e0-a9ab-ceebbff13c3b)
+![image](assets/img3.png)
 
 > [!CAUTION]
 > Make sure to add the following condition inside both the start task and the end task: **condition:always()**. This will make sure that if you cancel a pipeline run, the respective run will still be replicated into the product and will appear with the status set to "Aborted". After adding this condition, the tasks should look like this:
 
 ```yaml
-- task: octane-start-task@1
+- task: octane-start-task@25
   condition: always()
   inputs:
     OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
@@ -184,7 +189,7 @@ Before you can add a new service connection, please make sure you have a valid A
 and
 
 ```yaml
-- task: octane-end-task@1
+- task: octane-end-task@25
   condition: always()
   inputs:
     OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
@@ -215,7 +220,7 @@ and
 
 ![image](https://github.com/user-attachments/assets/609fefea-d69e-4628-a3a3-d5b3fc53335d)
 
-### 5.2. Create a new pipeline with the Octane start and end tasks through classic editor (implicit Azure job)
+### 5.2. Create a new pipeline with the CSDP/SDM start and end tasks through classic editor (implicit Azure job)
 
 1. Go to the Pipelines and find the hyperlink as below:
 
@@ -245,9 +250,9 @@ and
 
 7. Observe the execution results:
 
-![image](https://github.com/user-attachments/assets/f9f17b67-aa85-4c9b-b9ca-1b77daec451d)\
+![image](https://github.com/user-attachments/assets/f9f17b67-aa85-4c9b-b9ca-1b77daec451d)
 
-8. If you will go inside the pipeline, you can observe the following:
+8. If you go inside the pipeline, you can observe the following:
 
 ![image](https://github.com/user-attachments/assets/010e0f98-8bd9-4afb-8846-864fcd684777)
 
@@ -259,49 +264,49 @@ and
 
 ![image](https://github.com/user-attachments/assets/52d3c0ff-eca9-40dc-9bcf-8bef47c94291)
 
-11. The next step is to add the ALM Octane tasks. Go back and press “Edit” in order to edit the pipeline and add the Octane tasks:
+11. The next step is to add the CSDP/SDM tasks. Go back and press “Edit” in order to edit the pipeline and add the CSDP/SDM tasks:
 
 ![image](https://github.com/user-attachments/assets/749d9830-58f7-4fe4-9ff3-235325095337)
 
 12. In the newly displayed view, press the plus sign on the right of “Agent Job 1” in order to reveal all possible tasks to be added: 
 
-![image](https://github.com/user-attachments/assets/25aa20e8-8645-446c-a832-9757198dce3f)
+![image](assets/img15.png)
 
 13. Add the start task:
 
-![image](https://github.com/user-attachments/assets/c3c029dd-c773-40f6-9e40-53be241adfbf)
+![image](assets/img16.png)
 
 14. The task should be added to the end of the list, and now you should position it before all other tasks. Additionally, you need to configure it:
 
-![image](https://github.com/user-attachments/assets/83eba98c-8b43-4cae-87ac-7959525dc5f0)
+![image](assets/img17.png)
 
 15. Click on the button on the right and configure the task:
 
-![image](https://github.com/user-attachments/assets/3818e771-a770-4305-90ba-61fafa6d65b5)
+![image](assets/img18.png)
 
-16. Drag and drop the ALM Octane Job Start and position it first in the list:
+16. Drag and drop the CSDP/SDM Job Start and position it first in the list:
 
-![image](https://github.com/user-attachments/assets/af92226e-50c7-4059-b50c-5d30b56ab38c)
+![image](assets/img19.png)
 
-17. Do the same thing for the ALM Octane Job End, so that you end up with the following pipeline. Press “Save & queue”:
+17. Do the same thing for the CSDP/SDM Job End, so that you end up with the following pipeline. Press “Save & queue”:
 
-![image](https://github.com/user-attachments/assets/ee6ceadb-5c4d-41de-b89e-00511d2dca05)
+![image](assets/img20.png)
 
 18. Add a relevant comment to the save, and press the “Save and run” button:
 
-![image](https://github.com/user-attachments/assets/9d8f5222-ffa4-4a3a-b5d2-3daa2c1382d8)
+![image](assets/img21.png)
 
-19. Wait for the pipeline to run. Then, open “Agent Job 1” and observe that you have two additional ALM Octane tasks that were executed:
+19. Wait for the pipeline to run. Then, open “Agent Job 1” and observe that you have two additional CSDP/SDM tasks that will be executed:
 
-![image](https://github.com/user-attachments/assets/1712e4c0-87cd-4526-959a-d78931ebbe1f)
+![image](assets/img22.png)
 
 20. Now you can go to the product and verify that the pipeline was created and shows the results:
 
 ![image](https://github.com/user-attachments/assets/4f90cd3a-3528-4936-bde8-6f5c22d89f50)
 
-### 5.3. Create a new pipeline with the Octane start and end tasks through YAML editing (explicit Azure jobs)
+### 5.3. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (explicit Azure jobs)
 
-Previous chapters focused on the demonstration of how to create pipelines with Octane tasks inside them. This is ok if you do not need complex pipelines with multiple jobs inside them, or you are just testing how the extension might fit your needs. For more complex scenarios where multiple jobs are used and the pipelines already exist, tasks under existing jobs might not be a solution. Suppose you have the following YAML, which contains a simple task of building a maven project specified under an unnamed job (in theory you might have many jobs here, but for the sake of simplicity, we will work with only one):
+Previous chapters focused on the demonstration of how to create pipelines with CSDP/SDM tasks inside them. This is ok if you do not need complex pipelines with multiple jobs inside them, or you are just testing how the extension might fit your needs. For more complex scenarios where multiple jobs are used and the pipelines already exist, tasks under existing jobs might not be a solution. Suppose you have the following YAML, which contains a simple task of building a maven project specified under an unnamed job (in theory you might have many jobs here, but for the sake of simplicity, we will work with only one):
 
 ```yaml
 # Maven
@@ -328,31 +333,31 @@ jobs:
       goals: 'package'
 ```
 
-If you want ALM Octane Start Task and End Task to be included as separate jobs, do the following:
+If you want CSDP/SDM Start Task and End Task to be included as separate jobs, do the following:
 1.	Give a name to your existing job (or jobs, if multiple).
 2.	Add a new job at the same level as your existing job, and place your cursor on the next line after “steps:”:
    
-![image](https://github.com/user-attachments/assets/99b1b984-6017-4ea0-9fbc-fd032a482014)
+![image](assets/img5.png)
 
-3.	Press on the ALM Octane Job Start to be added:
+3.	Press on the CSDP/SDM Job Start to be added:
 
- ![image](https://github.com/user-attachments/assets/5cd4b407-66fd-4625-a9ef-14aa5f70cfd6)
+ ![image](assets/img6.png)
 
 4.	Fill in the required fields (refer to previous chapters for pre-requisites, explanation, and examples):
 
-![image](https://github.com/user-attachments/assets/a9aef6df-7bda-4f6d-860d-ca28f8aadceb)
+![image](assets/img2.png)
 
 5.	You should end up with the following block of code:
 
-![image](https://github.com/user-attachments/assets/626689e8-0cec-4719-8300-d714e2b1946c)
+![image](assets/img7.png)
 
-6.	Add the ALM Octane Job End in the same way as for start, with the difference that you need to have the “dependsOn” property set to the list of all existing jobs, including Octane Start Job. This is required because jobs might run in parallel, and to make sure that End job runs last, we need to set the dependencies on all other jobs:
+6.	Add the CSDP/SDM Job End in the same way as for start, with the difference that you need to have the “dependsOn” property set to the list of all existing jobs, including CSDP/SDM Start Job. This is required because jobs might run in parallel, and to make sure that End job runs last, we need to set the dependencies on all other jobs:
 
-![image](https://github.com/user-attachments/assets/dddca3c1-0230-46b8-9ef6-c7cf5029c0ce)
+![image](assets/img8.png)
 
-7.	As a last step, set “dependsOn” property of your jobs to depend on the AlmOctaneStartJob (or whatever name you’ve assigned to it), as follows:
+7.	As a last step, set “dependsOn” property of your jobs to depend on the CSDPSDMStartJob (or whatever name you’ve assigned to it), as follows:
 
-![image](https://github.com/user-attachments/assets/4eddbd11-11d3-40f8-a3f9-e7dc038bc7c9)
+![image](assets/img9.png)
 
 8.	In the end, you should have the YAML file similar to the one below:
 
@@ -363,71 +368,211 @@ If you want ALM Octane Start Task and End Task to be included as separate jobs, 
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
 trigger:
-- main
+  - master
 
 jobs:
-- job: MavenBuildJob
-  pool: 'Default'
-  dependsOn:
-  - AlmOctaneStartJob
-  steps:
-  - task: Maven@3
-    inputs:
-      mavenPomFile: 'pom.xml'
-      mavenOptions: '-Xmx3072m'
-      javaHomeOption: 'JDKVersion'
-      jdkVersionOption: '1.8'
-      jdkArchitectureOption: 'x64'
-      publishJUnitResults: true
-      testResultsFiles: '**/surefire-reports/TEST-*.xml'
-      goals: 'package'
-- job: AlmOctaneStartJob
-  condition: always()
-  pool: 'Default'
-  steps:
-  - task: octane-start-task@1
-    inputs:
-      OctaneServiceConnection: 'VMOctaneServiceConnection'
-      WorkspaceList: '1002'
-- job: AlmOctaneEndJob
-  condition: always()
-  pool: 'Default'
-  dependsOn:
-  - AlmOctaneStartJob
-  - MavenBuildJob
-  steps:
-  - task: octane-end-task@1
-    inputs:
-      OctaneServiceConnection: 'VMOctaneServiceConnection'
-      WorkspaceList: '1002'
+  - job: CSDPSDMStartJob
+    condition: always()
+    pool: 'Default'
+    steps:
+      - task: octane-start-task@25
+        inputs:
+          OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
+          WorkspaceList: '1002'
+          CreatePipelineCheckbox: true
+
+  - job: MavenBuildJob
+    pool: 'Default'
+    dependsOn: CSDPSDMStartJob
+    steps:
+      - task: Maven@4
+        inputs:
+          mavenPomFile: 'pom.xml'
+          goals: '${{ parameters.mavenGoals }}'
+          publishJUnitResults: true
+          testResultsFiles: '**/surefire-reports/TEST-*.xml'
+          javaHomeOption: 'JDKVersion'
+          mavenVersionOption: 'Default'
+          mavenAuthenticateFeed: false
+          effectivePomSkip: false
+          sonarQubeRunAnalysis: false
+
+  - job: CSDPSDMEndJob
+    condition: always()
+    dependsOn:
+      - CSDPSDMStartJob
+      - MavenBuildJob
+    steps:
+      - task: octane-end-task@25
+        inputs:
+          OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
+          WorkspaceList: '1002'
+          Framework: 'junit'
+
 ```
 
 9.	Save and run the pipeline, and you should see something similar to below:
  
-![image](https://github.com/user-attachments/assets/fb26e6d8-7122-4b2e-877c-7fb1c01eefe4)
+![image](assets/img10.png)
 
-10.	Because we specified the dependencies between the jobs, AlmOctaneStartJob should run first, MavenBuildJob second, and AlmOctaneEndJob should be last:
+10.	Because we specified the dependencies between the jobs, CSDPSDMStartJob should run first, MavenBuildJob second, and CSDPSDMEndJob should be last:
 
-![image](https://github.com/user-attachments/assets/c396b60c-02db-4a56-9d0c-b019c24a3d7e)
+![image](assets/img11.png)
 
 Now you can create complex scenarios with different jobs. Make sure you understand the dependencies and current limitations of the Azure DevOps pipeline and the extension.
 
-## 6. Displaying Cucumber Gherkin test results into the product
+## 6. Pipeline configuration for executing UFT One Tests
+For executing UFT One tests from Azure DevOps pipelines and displaying the results into the product, the following prerequisites must be met:
+1. OpenText Functional Testing application must be installed.
+2. FToolsLauncher.exe must be in the repository used by the pipeline.
+3. The following steps must be added to the pipeline between the CSDP/SDM Start and End tasks:
+```yaml
+- powershell: |
+    Write-Host "Current Directory:"
+    Get-Location
+    echo "Building..."
+    mkdir build
+    $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
+    Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
+    Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
+    Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR"
+    Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
+    Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
+    Get-Content -Path ./build/Props.txt
+  displayName: Building 
 
-### 6.1. Displaying Cucumber Gherkin test results into the product using yml editor
+- powershell: |
+    echo "Testing..."
+    echo $PWD
+    Test-Path "./build/Props.txt" -PathType leaf
+    Get-Content -Path ./build/Props.txt
+    Start-Process "FTToolsLauncher_net48.exe" -ArgumentList "-paramfile `"$(Get-Location)\build\Props.txt`"" -Wait
+    echo "Please check the [$PWD\build\Results.xml] file."
+  displayName: Testing
+```
+The "resultsFilename=build\\Results.xml" is the path where the test results will be stored on the agent machine, this can be modified as needed.
+The "Test1=$ESCAPED_DIR" is the path to the UFT One tests that will be executed, this should point to the location of the tests in the repository. This can also be modified as needed, for example,
+it can point to only a specific folder or test file or multiple test folder or files, as below:
+```yaml
+Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\my_folder1\test1"
+Add-Content -Path ./build/Props.txt -Value "Test2=$ESCAPED_DIR\my_folder2"
+```
+For the example above, only test1 from my_folder1 and all tests from my_folder2 will be executed.
+
+## 7. Displaying JUnit/UFT One/NUnit test results into the product
+
+### 7.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor
+
+1. Create a pipeline job for running tests.
+2. At the beginning of the pipeline, the following parameter needs to be added:
+```yaml
+- parameters:
+  - name: unitTestResultsGlobPattern
+    type: string
+    default: '**/surefire-reports/TEST-*.xml' # Path where the test results are stored
+```
+3. In the CSDP/SDM Job End task, we need to add the following environment variable:
+```yaml
+  env:
+    UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
+```
+4. In the end the pipeline should look like this:
+```yaml
+trigger:
+- master
+
+parameters:
+  - name: mavenGoals
+    type: string
+    default: clean test
+    values:
+      - clean test
+      - not clean test
+  - name: octane_auto_action_execution_id
+    type: string
+    default: 'value'
+  - name: unitTestResultsGlobPattern
+    type: string
+    default: '**/surefire-reports/TEST-*.xml'
+
+pool: Default
+
+steps:
+
+- task: octane-start-task@25
+  inputs:
+    OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
+    WorkspaceList: '5001'
+    CreatePipelineCheckbox: true
+
+- task: Maven@4
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: '${{ parameters.mavenGoals }}'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    javaHomeOption: 'JDKVersion'
+    mavenVersionOption: 'Default'
+    mavenAuthenticateFeed: false
+    effectivePomSkip: false
+    sonarQubeRunAnalysis: false
+  continueOnError: true
+
+- task: octane-end-task@25
+  inputs:
+    OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
+    WorkspaceList: '5001'
+    Framework: 'junit'
+  env: 
+    UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
+```
+> [!CAUTION]
+> The path give as a value for the UNIT_TEST_RESULTS_GLOB_PATTERN variable must be the same as the one specified in the test task, in the example above it is  "testResultsFiles: '**/surefire-reports/TEST-*.xml'". For UFT One tests, the path specified for the 'unitTestResultsGlobPattern' parameter should be the same as the one specified in the "resultsFilename" property in the Powershell task.
+> If the paths do not match, the results will not be displayed in the product.
+
+5. The results can be observed in the product in the Pipelines section:
+
+![image](assets/img12.png)
+
+### 7.2 Displaying JUnit/UFT One/NUnit test results into the product using classic editor
+
+1. Create the CSDP/SDM Start and End tasks as explained in the previous chapters.
+2. Click on the Variables tab and add new variable "unitTestResultsGlobPattern" and set its value to the path where the test results are stored, for example: '**/surefire-reports/TEST-*.xml'.
+
+![image](assets/img29.png)
+
+![image](assets/img30.png)
+
+3. In the Maven task, make sure that the path where the test results are stored is specified in the "Test results files" field, for example: '**/surefire-reports/TEST-*.xml'. This should have the same value as the one specified for the variable "unitTestResultsGlobPattern".
+
+![image](assets/img33.png)
+
+4. Then add a new Command Line task to set the environment variable for the End task, and make sure to position it before the End task:
+
+![image](assets/img31.png)
+
+5. In the command line task, add the following:
+
+![image](assets/img32.png)
+
+6. The results can be observed in the product in the Pipelines section:
+
+![image](assets/img34.png)
+
+## 8. Displaying Cucumber Gherkin test results into the product
+
+### 8.1. Displaying Cucumber Gherkin test results into the product using yml editor
 
 1.	Create a pipeline job for running the tests.
 2.	Make sure to configure the Maven task to use the OctaneGherkinFormatter when running the tests, and where to store the results as below. The formatter specifies the location and name of the generated xml file containing the report.
 
-![image](https://github.com/user-attachments/assets/709481d5-1d4c-4107-9d90-c8b21d4e7f91)
+![image](assets/img27.png)
 
-3.	Fill in the Cucumber report destination path field when configuring the ALM Octane Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the source code repo root directory.
+3.	Fill in the Cucumber report destination path field when configuring the CSDP/SDM Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the source code repo root directory.
 
-![image](https://github.com/user-attachments/assets/720ffed7-8471-4fd6-8308-ade492a03793)
+![image](assets/img28.png)
 
-4.	Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed as below:
-
-![image](https://github.com/user-attachments/assets/dd49dd32-7577-4820-8b86-be7a68de448f)
+4.	Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed.
 
 5.	The results can be observed in the product in the Pipelines section:
 
@@ -435,16 +580,16 @@ Now you can create complex scenarios with different jobs. Make sure you understa
 
 ![image](https://github.com/user-attachments/assets/3ae3f141-2fb5-4f07-88ae-777c098224db)
 
-### 6.2. Displaying Cucumber Gherkin test results into the product using classic editor
+### 8.2. Displaying Cucumber Gherkin test results into the product using classic editor
 
 1.	Create a pipeline job for running the tests.
 2.	Make sure to configure the Maven task to use the OctaneGherkinFormatter when running the tests, and where to store the results as below. The formatter specifies the location and name of the generated xml file containing the report.
 
-![image](https://github.com/user-attachments/assets/20e3560b-b339-4ae0-b2b1-ef2b8a29dda9)
+![image](assets/img23.png)
 
-3.	Fill in the Cucumber report destination path field when configuring the ALM Octane Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the root directory of the project.
+3.	Fill in the Cucumber report destination path field when configuring the CSDP/SDM Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the root directory of the project.
 
-![image](https://github.com/user-attachments/assets/44f4f554-b565-4981-a427-1ae24635ea2e)
+![image](assets/img24.png)
 
 4.	Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed like below:
 
@@ -456,7 +601,7 @@ Now you can create complex scenarios with different jobs. Make sure you understa
 
 ![image](https://github.com/user-attachments/assets/e28f6166-4c79-4def-b385-a17a85d4cdf3)
 
-## 7. Configuring test runner pipeline
+## 9. Configuring test runner pipeline
 
 Besides pipeline runs, you can also configure test runners using this extension, by making use of the **octane-test-runner-start-task@1**. Naturally you will not be creating another pipeline in the product, but rather a test runner that you can assign test suites to and run them from the product and see the results in both Azure DevOps and the product. To do that you need to follow the next steps:
 
@@ -486,32 +631,32 @@ Besides pipeline runs, you can also configure test runners using this extension,
 
 ![image](https://github.com/user-attachments/assets/b17e8093-81e9-4277-ada6-1acbd1327b85)
 
-7. Here is where things are a bit different. Instead of selecting the usual octane-start-task, make sure to select the **ALM Octane Test Runner Job Start** task. Make sure you put your cursor in the right location before adding the task as it will generate a YAML task entry directly in the position where your cursor was before you click on the task.
+7. Here is where things are a bit different. Instead of selecting the usual octane-start-task, make sure to select the **CSDP/SDM Test Runner Job Start** task. Make sure you put your cursor in the right location before adding the task as it will generate a YAML task entry directly in the position where your cursor was before you click on the task.
 
-![image](https://github.com/user-attachments/assets/bb3a7e2d-9677-4159-bdc5-0c44062371a5)
+![image](assets/img13.png)
 
 8. You will need to have an existing service connection, to know your workspace id and also select a framework convert type that best suits your needs:
 
-![image](https://github.com/user-attachments/assets/6361a452-082a-49b3-b98b-d751b6393a38)
+![image](assets/img14.png)
 
 Normally you should end up with something like this. The end task remains the same
 
 ```yaml
-- task: octane-test-runner-start-task@1
+- task: octane-test-runner-start-task@25
   inputs:
-    OctaneServiceConnection: 'octaneConnection'
-    WorkspaceList: '1002'
+    OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
+    WorkspaceList: '5001'
     Framework: 'junit'
 ```
 
 9. Make sure to save the modifications.
 
-### 7.1 Configure Pipeline Variables
+### 9.1 Configure Pipeline Variables
 
 1. Ensure the following variables are defined in your Azure DevOps pipeline for automated test execution:
 
 > [!NOTE]
-> If you are having trouble configuring variables, please refer to [9.2.1 Running pipelines with variables](#921-running-pipelines-with-variables)
+> If you are having trouble configuring variables, please refer to [11.2.1 Running pipelines with variables](#1121-running-pipelines-with-variables)
 
  - `testsToRun` (type: string)
  - `suiteId` (type: number)
@@ -541,7 +686,29 @@ If any of the previous steps failed, and you aren't able to run the test runner 
 
 ![image](https://github.com/user-attachments/assets/dc3234a5-d722-4795-95e4-65b26a9e0d04)
 
-## 8. Configuring Auto Action flow
+## 10. Extracting parameters from CSDP/SDM service connection
+
+In some cases, you might want to extract parameters from the service connection in order to use them in your pipeline. To do that, you can use the CSDP/SDM Get Parameters task.
+
+![image](assets/img25.png)
+
+This will extract the following parameters: URL, Client ID, Client Secret and Shared Space ID, and will make them available for usage in the subsequent tasks. For example, you can use the extracted URL and Client ID to trigger API calls to the product from your pipeline. The parameters will be extracted as environment variables with the following names:
+```yaml
+- task: octane-get-params-task@25
+  inputs:
+    OctaneServiceConnection: 'AzureExtensionPipelineServiceConnection'
+
+- script: |
+    echo $(octaneUrl)
+    echo $(octaneSharedSpaceId)
+    echo $(octaneClientId)
+    echo $(octaneClientSecret)
+```
+
+> ![NOTE]
+> The values for the Client ID and Client Secret will be masked in the logs for security reasons.
+
+## 11. Configuring Auto Action flow
 
 In the product, you can add automatic actions to your release process that trigger common tasks, such as running your Azure DevOps pipeline from the product. For more details on how to configure such an auto action flow, please refer to https://admhelp.microfocus.com/valueedge/en/latest/Online/Content/UserGuide/release-process-autoactions.htm?
 
@@ -559,9 +726,9 @@ This parameter is used in the background by the product for the pipeline results
 
 ![image](https://github.com/user-attachments/assets/cedbb44c-54ad-4cda-965f-ce17c00e7b0c)
 
-## 9. Useful configurations
+## 12. Useful configurations
 
-### 9.1 Running pipelines from the product
+### 12.1 Running pipelines from the product
 
 1. In order to start runs from the product, you need to do some additional configuration steps. First of all, in Azure DevOps you need to go to: User settings -> Personal access tokens:
 
@@ -600,7 +767,7 @@ The **User Name** field does not have any correlation with any usernames that yo
 
 9. Now you can go back in the **Pipelines** in the product, select the **3 points icon** from the pipeline you want to run and then press **Run**. You should then be able to see your run in Azure DevOps.
 
-### 9.2. Running pipelines with variables or parameters
+### 12.2. Running pipelines with variables or parameters
 
 Azure DevOps pipelines support both parameters and variables to make your workflows more dynamic, reusable, and configurable: 
 
@@ -616,7 +783,7 @@ This section walks through how to:
 > [!CAUTION]
 > When running a pipeline, you can define both variables and parameters. However, only one set will be sent to the product, depending on the value of the `USE_AZURE_DEVOPS_PARAMETERS` parameter value from the product. The value of this parameter can be changed only from the product. If the value is set to `true` the integration will send only the parameters, else it will send only the variables.
 
-#### 9.2.1 Running pipelines with variables
+#### 12.2.1 Running pipelines with variables
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `false` in the product in order to see the variables reflected in it.
@@ -641,7 +808,7 @@ This section walks through how to:
 
 ![image](https://github.com/user-attachments/assets/7676332a-60bf-442a-80d6-4b154b6a36a3)
 
-#### 9.2.2 Running pipelines with parameters
+#### 12.2.2 Running pipelines with parameters
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `true` in the product in order to see the parameters reflected in it.
@@ -674,13 +841,12 @@ For more information on parameters, Azure DevOps provides thorough documentation
 
 ![image](https://github.com/user-attachments/assets/3d1a4911-2296-4e59-8bac-a9e67ea942a3)
 
-### 9.3. Activating debug messages 
-
+### 12.3. Activating debug messages
 A very useful feature is enabling debug messages, which not only gives you more insight into what happens behind the scenes, but it can also help you in figuring out what went wrong with a run. To enable this kind of messages, you need to create pipeline variable with the following values: 
 - `name = ALMOctaneLogLevel`
 - `value = DEBUG`
 
-If you're not sure how to create such varibales please refer to [9.2.1 Running pipelines with variables](#921-running-pipelines-with-variables)
+If you're not sure how to create such varibales please refer to [11.2.1 Running pipelines with variables](#1121-running-pipelines-with-variables)
 
 ![image](https://github.com/user-attachments/assets/40c43390-3d70-4fff-ba89-69c2f4273b2e)
 
@@ -688,21 +854,21 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 
 ![image](https://github.com/user-attachments/assets/822e181a-ced5-44bb-93b7-11a22071e8c8)
 
-## 10. Known issues and limitations
+## 13. Known issues and limitations
 
-1.	ALM Octane Connection Verifier is non-functional. This will be removed in a future version.
-2.	When creating the pipeline with YAML and adding the ALM Octane tasks, the label is not displayed properly (octanestarttask)
-3.	The ALM Octane tasks might show as GREEN even if these have errors, like: 
+1.	CSDP/SDM Connection Verifier is non-functional. This will be removed in a future version.
+2.	When creating the pipeline with YAML and adding the CSDP/SDM tasks, the label is not displayed properly (octanestarttask)
+3.	The CSDP/SDM tasks might show as GREEN even if these have errors, like: 
     1.	If you specify a wrong URL, for example, like in the case http://192.168.1.129:9090/?p=1001/1002, meaning skipping /ui/ part.
-    2.	If Octane Server is down, you might see in the Octane start task log: “[ERROR]{"code":"ECONNREFUSED","errno":"ECONNREFUSED","syscall":"connect","address":"192.168.1.129","port":9090}”
-    3.	If you specified wrong credentials or the API key was revoked in Octane.
-4.	All tests which are running with surefire plugin, for example, regardless of their nature, will be published to Octane as Automated runs. 
-5.	In comparison with Jenkins, for example, currently the extension does not support injecting events of jobs/sub-jobs that are running in Azure. This means that you will have only one job injected in Octane which will be the Octane Start task, and which will show as completed with the related status when the pipeline ends with the Octane End Task. This behavior is limited because of the way Azure DevOps Pipelines currently work.
+    2.	If CSDP/SDM Server is down, you might see in the CSDP/SDM start task log: “[ERROR]{"code":"ECONNREFUSED","errno":"ECONNREFUSED","syscall":"connect","address":"192.168.1.129","port":9090}”
+    3.	If you specified wrong credentials or the API key was revoked in CSDP/SDM.
+4.	All tests which are running with surefire plugin, for example, regardless of their nature, will be published to the product as Automated runs. 
+5.	In comparison with Jenkins, for example, currently the extension does not support injecting events of jobs/sub-jobs that are running in Azure. This means that you will have only one job injected in CSDP/SDM which will be the CSDp/SDM Start task, and which will show as completed with the related status when the pipeline ends with the CSDP/SDM End Task. This behavior is limited because of the way Azure DevOps Pipelines currently work.
 6.	YAML is based on TABs, and as such, if you miss a TAB you might end up with a wrongly formatted YAML file and as such the pipeline will not work.
-7.	After the Azure pipeline is created in ALM Octane, follow the next steps to be able to run the pipeline from the ALM Octane side, as described here: https://admhelp.microfocus.com/octane/en/25.1/Online/Content/AdminGuide/how_config_CI_plugin.htm#mt-item-5
+7.	After the Azure pipeline is created in CSDP/SDM, follow the next steps to be able to run the pipeline from the product side, as described here: https://admhelp.microfocus.com/octane/en/25.1/Online/Content/AdminGuide/how_config_CI_plugin.htm#mt-item-5
 
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
-9. The Octane Azure DevOps extension does not currently support direct execution or injection of **NUnit** test results. .NET pipelines produce test results in **TRX** format, while the integration expects JUnit results published to Azure DevOps. However, a workaround which involves converting TRX files to JUnit format and explicitly publishing them in the pipeline, is possible, by adding the following tasks to your pipeline:
+9. The SCDP/SDM Azure DevOps extension does not currently support direct execution or injection of **NUnit** test results. .NET pipelines produce test results in **TRX** format, while the integration expects JUnit results published to Azure DevOps. However, a workaround which involves converting TRX files to JUnit format and explicitly publishing them in the pipeline, is possible, by adding the following tasks to your pipeline:
 
 Install the TRX-to-Junit conversion tool:
 ```yaml
@@ -718,7 +884,7 @@ Execute NUnit tests and outputs TRX results:
   displayName: 'Run tests (TRX)'
   continueOnError: true
 ```
-Convert the TRX file to JUnit XML for Octane:
+Convert the TRX file to JUnit XML for CSDP/SDM:
 ```yaml
 - script: |
     trx2junit TestResults\results.trx
@@ -735,7 +901,7 @@ Publish the JUnit test results to Azure DevOps:
     mergeTestResults: true
     failTaskOnFailedTests: false
 ```
-## 11. Change logs
+## 14. Change logs
 ## 25.4.3 version Release notes
 * Fixed pipeline displaying "**aborted**" status in the product when user only had **octanestarttask** and **octaneendtask** in the pipeline configuration file.
 ## 25.4.2 version Release notes
@@ -749,16 +915,16 @@ Publish the JUnit test results to Azure DevOps:
 ## 1.0.0.8 version Release notes
 * Added project name into pipeline name
 ## 1.0.0.7 version Release notes
-* Upgraded ALM Octane Js SDK Version
+* Upgraded CSDP/SDM Js SDK Version
 ## 1.0.0.6 version Release notes
 * Fix defects
 ## 1.0.0.5 version Release notes
-* Add option to define pipeline name create on ALM Octane or use it's full folder path.
-* Fix issue that not all test result was sent to ALM Octane.
+* Add option to define pipeline name create on CSDP/SDM or use it's full folder path.
+* Fix issue that not all test result was sent to the product.
 * Fix issue that test result was sent without escape characters.
 ## 1.0.0.4 version Release notes
-* Added support to Testing Framework for running test using test runners starting from version 23.4 of ALM Octane.
-* Added possibility to skip creation of ALM Octane pipelines starting from version 23.4 of ALM Octane.
+* Added support to Testing Framework for running test using test runners starting from version 23.4 of CSDP/SDM.
+* Added possibility to skip creation of CSDP/SDM pipelines starting from version 23.4 of CSDP/SDM.
 * Rebranding to Open Text
 ## 1.0.0.2 version Release notes
 * Fix defects
@@ -768,24 +934,24 @@ Publish the JUnit test results to Azure DevOps:
 ## 1.0.0.0 version Release notes
 * Updated to major version. The integration (previously tech preview) is now fully supported.
 ## 0.2.7.6 version Release notes
-* Fix test run report path that send to Octane, supported from version 16.1.100 of Octane
+* Fix test run report path that send to CSDP/SDM, supported from version 16.1.100 of CSDP/SDM
 ## 0.2.7.3 version Release notes
 * Fix defects
 * Added support for multi-branch pipelines:  
-  ALM Octane automatically creates a corresponding child pipeline whenever a new branch is built for the first time.   
+  CSDP/SDM automatically creates a corresponding child pipeline whenever a new branch is built for the first time.   
   Existing pipelines are upgraded to be multi-branch.
 ## 0.2.7.0 version Release notes
-* Send parameters structure to Octane, from version 16.1.18.
-* Send parameters values executed to Octane, from version 16.1.18.
+* Send parameters structure to CSDP/SDM, from version 16.1.18.
+* Send parameters values executed to CSDP/SDM, from version 16.1.18.
 * Fix defects
 ## 0.2.6.0 version Release notes
-* Update Octane CI Server plugin version.
-* Ability to run Azure DevOps pipelines from within ALM Octane, from version 16.0.400.
+* Update CSDP/SDM CI Server plugin version.
+* Ability to run Azure DevOps pipelines from within CSDP/SDM, from version 16.0.400.
 ## 0.2.5.7 version Release notes
-* Report to Octane duration of the pipeline run
+* Report to CSDP/SDM duration of the pipeline run
 ## 0.2.5.6 version Release notes
 * handle multi changes per commit
-* report to Octane max number of commits the Azure devops API return
+* report to CSDP/SDM max number of commits the Azure devops API return
 ## 0.2.5.5 version Release notes
 * Fix issue with unknown change type on commits, and added logs
 
