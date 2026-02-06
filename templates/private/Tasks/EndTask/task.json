@@ -1,14 +1,11 @@
 {
   "id": "d04f2db6-fcf1-4b55-8aa6-9a84910a3113",
   "name": "octane-end-task-private",
-  "friendlyName": "ALM Octane Job End v2 (private)",
-  "description": "ALM Octane End Task (private)",
+  "friendlyName": "CSDP/SDM Job End v2 (private)",
+  "description": "CSDP/SDM End Task (private)",
   "author": "Open Text",
   "category": "Build",
-  "visibility": [
-    "Build",
-    "Release"
-  ],
+  "visibility": ["Build", "Release"],
   "demands": [],
   "version": {
     "Major": "1",
@@ -16,21 +13,35 @@
     "Patch": "68"
   },
   "minimumAgentVersion": "2.170.1",
-  "instanceNameFormat": "ALM Octane Job End",
+  "instanceNameFormat": "CSDP/SDM Job End",
   "inputs": [
     {
       "name": "OctaneServiceConnection",
       "type": "connectedService:OctaneServiceConnection",
-      "label": "ALM Octane service/server end point",
+      "label": "CSDP/SDM service/server end point",
       "required": true,
-      "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"
+      "helpMarkDown": "Select the CSDP/SDM endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'CSDP/SDM'"
     },
     {
       "name": "WorkspaceList",
       "type": "string",
-      "label": "Target ALM Octane workspaces",
+      "label": "Target CSDP/SDM workspaces",
       "required": true,
-      "helpMarkDown": "Comma separated list of target Octane workspaces"
+      "helpMarkDown": "Comma separated list of target CSDP/SDM workspaces"
+    },
+    {
+      "name": "Framework",
+      "type": "pickList",
+      "label": "Framework Type",
+      "required": true,
+      "helpMarkDown": "Select the testing framework whose format you want to convert from.\n",
+      "options": {
+        "testNG": "Test NG",
+        "cucumber": "Cucumber-JVM over Maven",
+        "bddScenario": "BDD Scenario",
+        "junit": "JUnit",
+        "uft": "UFT One"
+      }
     },
     {
       "name": "CucumberReportPath",
@@ -48,6 +59,7 @@
     }
   ],
   "execution": {
+    "Node20_1": { "target": "task.js" },
     "Node16": {
       "target": "task.js",
       "argumentFormat": ""
