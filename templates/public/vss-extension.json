@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "alm-octane-integration-public",
-  "version": "25.4.3",
+  "version": "26.4.3",
   "name": "CSDP/SDM Integration Extension",
   "description": "An Azure DevOps extension that supplies the required entities for establishing an integration with CSDP/SDM.",
   "publisher": "almoctane",

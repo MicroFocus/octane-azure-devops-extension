@@ -8,9 +8,9 @@
   "visibility": ["Build", "Release"],
   "demands": [],
   "version": {
-    "Major": "",
-    "Minor": "",
-    "Patch": ""
+    "Major": "26",
+    "Minor": "4",
+    "Patch": "3"
   },
   "minimumAgentVersion": "2.170.1",
   "instanceNameFormat": "CSDP/SDM Get Parameters",
