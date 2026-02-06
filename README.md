@@ -80,15 +80,15 @@ Before you can add a new service connection, please make sure you have a valid A
 
 1. Firstly, go to the space and in the API Access tab press the "+ API access" button:
 
-![image](https://github.com/user-attachments/assets/a4e1f334-f3fa-443f-88c4-ac25b0e485a2)
+![image](assets/img35.png)
 
-2. Fill in all required data, like name, and don’t forget to select the role for CI/CD Integration in the required workspace: 
+2. Fill in all required data, like name, and you need to select Credential and you can also set an expiration date, but it is not mandatory. And don’t forget to select the role for CI/CD Integration in the required workspace: 
 
-![image](https://github.com/user-attachments/assets/b2249ae0-648c-4930-b805-3018877d342d)
+![image](assets/img36.png)
 
-3. In the displayed popup, press copy and save your newly created API Access, but be careful, after closing this prompt, you won't be able to visualise these variables again, so its highly recommended to save these values somewhere:
+3. In the displayed popup, press copy and save your newly created API Access, but be careful, after closing this prompt, you won't be able to visualise these variables again, so it's highly recommended to save these values somewhere:
 
-![image](https://github.com/user-attachments/assets/b6b64630-fb2a-475c-829a-bdd65f96e961)
+![image](assets/img37.png)
 
 ### 4.3. How to create a new service connection
 
@@ -110,13 +110,13 @@ Before you can add a new service connection, please make sure you have a valid A
 
 5. Fill in all fields required in the form which appears, as follows:
 
-![image](https://github.com/user-attachments/assets/5c719141-b5f1-4025-b403-ac617505d154)
+![image](assets/img38.png)
 
 **Server Url** - the URL of the CSDP/SDM the service connection will point to. Make sure to include the sharedspace/workspace query parameter (p=1002/1002)
 
 **Instance ID** - the name you expect to see in CI Servers grid in DEVOPS tab for a specific space, like in the example: 
 
-![image](https://github.com/user-attachments/assets/5d886c5c-1f1c-4c7f-92eb-172c44e0b36d)
+![image](assets/img39.png)
 
 **Authentication** - The API Access key and secret which are created inside the shared space, the creation of which was presented earlier in the guide.
 
@@ -165,7 +165,7 @@ Before you can add a new service connection, please make sure you have a valid A
     1. From the URL of the product instance you access, usually it is the second integer, as you can see from this example mock link: https://yourCSDPSDMDomain.com/ui/?p=1001/1002
     2. If you have shared space admin rights, go to Spaces within the product and press the Edit Workspace button
 
-![image](https://github.com/user-attachments/assets/7b90e3b3-6479-4340-ac77-9188a199d38b)
+![image](assets/img40.png)
 
 9. After finding the respective workspace id, make sure to paste it in the form that opens when you select either the start task or the end task.
 
@@ -216,9 +216,9 @@ and
     - That the pipeline was actually created
     - If you have shared space admin role, see that you have a new entry in the CI Servers grid, with the Instance ID matching the one you have previously configured: 
       
-![image](https://github.com/user-attachments/assets/58ad8272-ad73-433c-ac7f-a8d3b6debe90)
+![image](assets/img41.png)
 
-![image](https://github.com/user-attachments/assets/609fefea-d69e-4628-a3a3-d5b3fc53335d)
+![image](assets/img42.png)
 
 ### 5.2. Create a new pipeline with the CSDP/SDM start and end tasks through classic editor (implicit Azure job)
 
@@ -302,7 +302,7 @@ and
 
 20. Now you can go to the product and verify that the pipeline was created and shows the results:
 
-![image](https://github.com/user-attachments/assets/4f90cd3a-3528-4936-bde8-6f5c22d89f50)
+![image](assets/img43.png)
 
 ### 5.3. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (explicit Azure jobs)
 
@@ -463,6 +463,9 @@ For the example above, only test1 from my_folder1 and all tests from my_folder2 
 
 ### 7.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor
 
+> [!NOTE]
+> For running NUnit tests, the workaround presented in Chapter 13 (See [13. Known issues and limitations](#13-known-issues-and-limitations)), still needs to be applied, as the extension does not support NUnit framework natively.
+
 1. Create a pipeline job for running tests.
 2. At the beginning of the pipeline, the following parameter needs to be added:
 ```yaml
@@ -488,9 +491,6 @@ parameters:
     values:
       - clean test
       - not clean test
-  - name: octane_auto_action_execution_id
-    type: string
-    default: 'value'
   - name: unitTestResultsGlobPattern
     type: string
     default: '**/surefire-reports/TEST-*.xml'
@@ -527,7 +527,7 @@ steps:
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
 ```
 > [!CAUTION]
-> The path give as a value for the UNIT_TEST_RESULTS_GLOB_PATTERN variable must be the same as the one specified in the test task, in the example above it is  "testResultsFiles: '**/surefire-reports/TEST-*.xml'". For UFT One tests, the path specified for the 'unitTestResultsGlobPattern' parameter should be the same as the one specified in the "resultsFilename" property in the Powershell task.
+> The path given as a value for the UNIT_TEST_RESULTS_GLOB_PATTERN variable must be the same as the one specified in the test task, in the example above it is  "testResultsFiles: '**/surefire-reports/TEST-*.xml'". For UFT One tests, the path specified for the 'unitTestResultsGlobPattern' parameter should be the same as the one specified in the "resultsFilename" property in the Powershell task.
 > If the paths do not match, the results will not be displayed in the product.
 
 5. The results can be observed in the product in the Pipelines section:
@@ -576,9 +576,9 @@ steps:
 
 5.	The results can be observed in the product in the Pipelines section:
 
-![image](https://github.com/user-attachments/assets/77263adc-7fd4-4901-a5fe-6fcc7d89f8c7)
+![image](assets/img44.png)
 
-![image](https://github.com/user-attachments/assets/3ae3f141-2fb5-4f07-88ae-777c098224db)
+![image](assets/img45.png)
 
 ### 8.2. Displaying Cucumber Gherkin test results into the product using classic editor
 
@@ -591,15 +591,13 @@ steps:
 
 ![image](assets/img24.png)
 
-4.	Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed like below:
-
-![image](https://github.com/user-attachments/assets/ab152edd-9007-4010-96d0-2ca43648feb2)
+4.	Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed.
 
 5.	The results can be observed in the product in the Pipelines section:
 
-![image](https://github.com/user-attachments/assets/2db8b5a4-7458-427d-927d-1feb038be6e3)
+![image](assets/img44.png)
 
-![image](https://github.com/user-attachments/assets/e28f6166-4c79-4def-b385-a17a85d4cdf3)
+![image](assets/img45.png)
 
 ## 9. Configuring test runner pipeline
 
@@ -668,9 +666,9 @@ Normally you should end up with something like this. The end task remains the sa
 
 3. Run the pipeline. After the run was completed, you should see a new test runner instance in the product, in the Spaces tab, in your workspace in the DevOps tab:
 
-![image](https://github.com/user-attachments/assets/6c769baf-a2c2-4b00-8180-e3658cbe3648)
+![image](assets/img46.png)
 
-From here the the possibilities depend on your needs. For example, you can assign multiple tests to a test suite and assign that test suite to the test runner. This way, you can run those tests from the product via the test runner and see the results in Azure DevOps. For more details on how to do that, make sure to check the documentation on test suites and test runner: 
+From here the possibilities depend on your needs. For example, you can assign multiple tests to a test suite and assign that test suite to the test runner. This way, you can run those tests from the product via the test runner and see the results in Azure DevOps. For more details on how to do that, make sure to check the documentation on test suites and test runner: 
 
 https://admhelp.microfocus.com/valueedge/en/latest/Online/Content/UserGuide/how_create_test_suites.htm
 
