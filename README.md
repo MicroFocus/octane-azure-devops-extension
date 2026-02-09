@@ -176,6 +176,9 @@ Before you can add a new service connection, please make sure you have a valid A
 ![image](assets/img3.png)
 
 > [!CAUTION]
+> For successful test and test results injections an additional parameter/variable must be set in the End task. Please refer to Chapter 7 in case of Junit, UFT One or NUnit tests ([Chapter 7.](#7-displaying-junituft-onenunit-test-results-into-the-product)) or Chapter 8 for BDD, Cucumber tests ([Chapter 8.](#8-displaying-cucumber-gherkin-test-results-into-the-product)) for more details.
+
+> [!NOTE]
 > Make sure to add the following condition inside both the start task and the end task: **condition:always()**. This will make sure that if you cancel a pipeline run, the respective run will still be replicated into the product and will appear with the status set to "Aborted". After adding this condition, the tasks should look like this:
 
 ```yaml
@@ -467,19 +470,20 @@ For the example above, only test1 from my_folder1 and all tests from my_folder2 
 > For running NUnit tests, the workaround presented in Chapter 13 (See [13. Known issues and limitations](#13-known-issues-and-limitations)), still needs to be applied, as the extension does not support NUnit framework natively.
 
 1. Create a pipeline job for running tests.
-2. At the beginning of the pipeline, the following parameter needs to be added:
+2. Add the parameter/variable with the value of the path where the test results are stored. 
+- At the beginning of the pipeline, the following parameter needs to be added:
 ```yaml
 - parameters:
   - name: unitTestResultsGlobPattern
     type: string
     default: '**/surefire-reports/TEST-*.xml' # Path where the test results are stored
 ```
-3. In the CSDP/SDM Job End task, we need to add the following environment variable:
+-  In the CSDP/SDM Job End task, we need to add the following environment variable:
 ```yaml
   env:
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
 ```
-4. In the end the pipeline should look like this:
+-  In the end the pipeline should look like this:
 ```yaml
 trigger:
 - master
@@ -526,11 +530,24 @@ steps:
   env: 
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
 ```
+
+In case you wish to use variables, instead of parameters, you can do it as follows:
+
+- First, you need to define a variable with the path where the test results are stored, for example:
+
+![image](assets/img49.png)
+
+![image](assets/img47.png)
+
+- Then, you need to set the environment variable in the End task as follows:
+
+![image](assets/img48.png)
+
 > [!CAUTION]
 > The path given as a value for the UNIT_TEST_RESULTS_GLOB_PATTERN variable must be the same as the one specified in the test task, in the example above it is  "testResultsFiles: '**/surefire-reports/TEST-*.xml'". For UFT One tests, the path specified for the 'unitTestResultsGlobPattern' parameter should be the same as the one specified in the "resultsFilename" property in the Powershell task.
 > If the paths do not match, the results will not be displayed in the product.
 
-5. The results can be observed in the product in the Pipelines section:
+3. The results can be observed in the product in the Pipelines section:
 
 ![image](assets/img12.png)
 
