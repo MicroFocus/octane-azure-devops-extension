@@ -1,0 +1,33 @@
+{
+  "id": "9356d524-77d8-4e52-ac29-5f5d130dd41d",
+  "name": "octane-get-params-task",
+  "friendlyName": "CSDP/SDM Get Parameters",
+  "description": "CSDP/SDM Get Params Task",
+  "author": "Open Text",
+  "category": "Build",
+  "visibility": ["Build", "Release"],
+  "demands": [],
+  "version": {
+    "Major": "26",
+    "Minor": "1",
+    "Patch": "0"
+  },
+  "minimumAgentVersion": "2.170.1",
+  "instanceNameFormat": "CSDP/SDM Get Parameters",
+  "inputs": [
+    {
+      "name": "OctaneServiceConnection",
+      "type": "connectedService:OctaneServiceConnection",
+      "label": "CSDP/SDM service/server end point",
+      "required": true,
+      "helpMarkDown": "Select the CSDP/SDM endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'CSDP/SDM'"
+    }
+  ],
+  "execution": {
+    "Node20_1": { "target": "task.js" },
+    "Node16": {
+      "target": "task.js",
+      "argumentFormat": ""
+    }
+  }
+}

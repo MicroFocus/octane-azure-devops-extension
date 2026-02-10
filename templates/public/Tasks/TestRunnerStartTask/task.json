@@ -1,8 +1,8 @@
 {
   "id": "766879bd-f485-4690-93fb-f747643f5747",
   "name": "octane-test-runner-start-task",
-  "friendlyName": "ALM Octane Test Runner Job Start",
-  "description": "This task is intended to support execution of automated tests from Open Text ALM Octane.\n The task searches for the \"testsToRun\" parameter which is sent from ALM Octane as part of the execution framework.\nOnce it is found, its value is converted to the format of the selected testing framework and injected to the \"testsToRunConverted\" variable.\nLater, the variable can be used in the appropriate execution task.\nFor example: \nIn maven task you can use it: \noptions: '-Dtest=\"$(testsToRunConverted)\"'\n",
+  "friendlyName": "CSDP/SDM Test Runner Job Start",
+  "description": "This task is intended to support execution of automated tests from Open Text CSDP/SDM.\n The task searches for the \"testsToRun\" parameter which is sent from CSDP/SDM as part of the execution framework.\nOnce it is found, its value is converted to the format of the selected testing framework and injected to the \"testsToRunConverted\" variable.\nLater, the variable can be used in the appropriate execution task.\nFor example: \nIn maven task you can use it: \noptions: '-Dtest=\"$(testsToRunConverted)\"'\n",
   "author": "Open Text",
   "category": "Build",
   "visibility": [
@@ -11,26 +11,26 @@
   ],
   "demands": [],
   "version": {
-    "Major": "25",
-    "Minor": "4",
-    "Patch": "3"
+    "Major": "26",
+    "Minor": "1",
+    "Patch": "0"
   },
   "minimumAgentVersion": "2.170.1",
-  "instanceNameFormat": "ALM Octane Job Test Runner Start",
+  "instanceNameFormat": "CSDP/SDM Job Test Runner Start",
   "inputs": [
     {
       "name": "OctaneServiceConnection",
       "type": "connectedService:OctaneServiceConnection2",
-      "label": "ALM Octane service/server end point",
+      "label": "CSDP/SDM service/server end point",
       "required": true,
-      "helpMarkDown": "Select the ALM Octane endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'ALM Octane'"
+      "helpMarkDown": "Select the CSDP/SDM endpoint to use. If needed, click on 'manage', and add a new service endpoint of type 'CSDP/SDM'"
     },
     {
       "name": "WorkspaceList",
       "type": "string",
-      "label": "Target ALM Octane workspaces",
+      "label": "Target CSDP/SDM workspaces",
       "required": true,
-      "helpMarkDown": "Comma separated list of target Octane workspaces"
+      "helpMarkDown": "Comma separated list of target CSDP/SDM workspaces"
     },
     {
       "name": "Framework",

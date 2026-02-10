@@ -34,6 +34,7 @@ import tl = require('azure-pipelines-task-lib');
 import {StartTask} from "./StartTask";
 import * as TaskJson from "./task.json"
 import {TestRunnerStartTask} from "./TestRunnerStartTask";
+import {GetParamsTask} from "./GetParamsTask";
 
 async function runTask() : Promise<void> {
     if(TaskJson.name.includes('octane-start-task')) {
@@ -44,6 +45,8 @@ async function runTask() : Promise<void> {
         await runPipelinesOrchestrator();
     } else if(TaskJson.name.includes('octane-test-runner-start-task')) {
         await runTestRunnerStartTask();
+    } else if(TaskJson.name.includes("octane-get-params-task")) {
+        await runGetParamsTask();
     } else {
         throw Error('Wrong task.json file!');
     }
@@ -61,6 +64,11 @@ async function runStartTask() {
 async function runEndTask() {
     let endTask: EndTask = await EndTask.instance(tl);
     await endTask.run();
+}
+
+async function runGetParamsTask() {
+    let getParamsTask = new GetParamsTask(tl);
+    await getParamsTask.run();
 }
 
 async function runPipelinesOrchestrator() {
