@@ -2,7 +2,7 @@
 
 In the following documentation, the **OpenText Core Software Delivery Platform** and **OpenText Software Delivery Management** will collectively be referred to as 'the product'.
 
-This is a custom plugin which facilitates communication between Azure DevOps and the product (formally known as ALM Octane/ValueEdge) regarding CI/CD.
+This is a custom plugin which facilitates communication between Azure DevOps and the product (formerly known as ALM Octane/ValueEdge) regarding CI/CD.
 The extension will monitor and reflect the pipeline activity into the product.
 
 ## 2. Table of Contents
