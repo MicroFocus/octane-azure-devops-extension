@@ -45,6 +45,11 @@ import {glob} from 'glob';
 import {FrameworkType, stringToFrameworkType} from "@microfocus/alm-octane-test-result-convertion/dist/model/common/FrameworkType";
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import * as path from "path";
+import {CoverageReportType, parseCoverageReportType} from "./services/code_coverage/enums/CodeCoverageConstants";
+import {CoverageProviderFactory} from "./services/code_coverage/factory/CoverageProviderFactory";
+import {OctaneCoverageClient} from "./services/code_coverage/clients/OctaneCoverageClient";
+import {CodeCoverageOrchestrator} from "./services/code_coverage/orchestrator/CodeCoverageOrchestrator";
+import {ICoverageProvider} from "./services/code_coverage/providers/ICoverageProvider";
 
 const parser = new XMLParser({
     ignoreAttributes: false,
@@ -127,6 +132,35 @@ export class EndTask extends BaseTask {
                         }
                     }
                 }
+                this.logger.debug(`Code coverage report type set to: ${this.codeCoverageReportType}`);
+                const parsedReportType: CoverageReportType = parseCoverageReportType(this.codeCoverageReportType);
+                this.logger.debug(`Code coverage report type after conversion is set to: ${parsedReportType}`);
+
+                if (!parsedReportType) {
+                    this.logger.debug('Code coverage report type is not set or invalid, skipping code coverage processing.');
+                } else {
+                    const factory = new CoverageProviderFactory(api, this.projectName, parseInt(this.buildId), this.tl, this.logger);
+                    const provider: ICoverageProvider = await factory.create(parsedReportType);
+
+                    const octaneClient = new OctaneCoverageClient(
+                        this.octaneSDKConnections[ws],
+                        this.instanceId,
+                        this.analyticsCiInternalApiUrlPart,
+                        this.logger
+                    );
+
+                    const orchestrator = new CodeCoverageOrchestrator(
+                        provider,
+                        octaneClient,
+                        this.logger);
+
+                    await orchestrator.execute(
+                        this.buildId,
+                        this.getJobCiId(),
+                        this.codeCoverageReportType
+                    );
+                }
+
                 await this.buildCIAndSendCIEvent(api, ws, testResultExpected);
                 break; // events are sent to the sharedspace, thus sending event to a single connection is enough
             }
@@ -293,11 +327,11 @@ export class EndTask extends BaseTask {
         records: TimelineRecord[]
     ): Promise<boolean> {
         //TODO: edit to octanestarttaskprivate when testing, edit back to octanestarttask when not testing
-        const startTask = records.find((r) => r.name === "octanestarttask");
+        const startTask = records.find((r) => r.name === "octanestarttaskprivate");
         const testRunnerStartTask = records.find(
-            (r) => r.name === "octanetestrunnerstarttask"
+            (r) => r.name === "octanetestrunnerstarttaskprivate"
         );
-        const endTask = records.find((r) => r.name === "octaneendtask");
+        const endTask = records.find((r) => r.name === "octaneendtaskprivate");
         if ((!startTask && !testRunnerStartTask) || !endTask) {
             throw new Error(
                 `Could not find ${

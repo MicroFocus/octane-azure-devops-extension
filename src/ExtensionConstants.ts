@@ -45,6 +45,7 @@ export enum InputConstants {
     SUITE_RUN_ID = 'suiteRunId',
     CREATE_PIPELINE = 'CreatePipelineCheckbox',
     REPO_URL = "GitRepositoryURL",
+    CODE_COVERAGE_TYPE = 'CodeCoverageType',
 
     PIPELINE_NAME = 'PipelineNameCreated',
     IS_FULL_PATHNAME = 'UseFullPipelinePath'
@@ -67,7 +68,8 @@ export enum SystemVariablesConstants {
     AGENT_JOB_NAME = 'Agent.JobName',
     AGENT_JOB_STATUS = 'AGENT_JOBSTATUS',
     BUILD_DEFINITION_ID = 'System.DefinitionId',
-    BUILD_SOURCE_BRANCH = "Build.SourceBranch"
+    BUILD_SOURCE_BRANCH = "Build.SourceBranch",
+    SONARQUBE_SCANNER_PARAMS = 'SONARQUBE_SCANNER_PARAMS'
 }
 
 export enum EndpointDataConstants {
