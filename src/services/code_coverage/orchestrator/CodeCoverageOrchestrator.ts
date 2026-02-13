@@ -28,7 +28,7 @@ export class CodeCoverageOrchestrator {
     ): Promise<void> {
         try {
             this.logger.debug('Starting code coverage orchestration...');
-            const coverage = await this.provider.fetchCoverage();
+            const coverage: string = await this.provider.fetchCoverage();
             await this.octaneClient.sendCoverage(coverage, buildId, jobCiId, reportType);
         } catch (error: any) {
             this.logger.error(`Code coverage orchestration failed : ${error.message}`);
