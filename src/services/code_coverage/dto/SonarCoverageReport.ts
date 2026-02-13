@@ -29,9 +29,13 @@
  * limitations under the License.
  */
 
-import { ICoverageProvider } from '../providers/ICoverageProvider';
-import { CoverageReportType } from '../enums/CodeCoverageConstants';
-
-export interface ICoverageProviderFactory {
-    create(reportType: CoverageReportType): Promise<ICoverageProvider | null>;
+export interface SonarCoverageReport {
+    projectName: string;
+    totalCoverableLines: number;
+    sumOfCoveredLines: number;
+    fileCoverageList: Array<{
+        path: string;
+        totalCoverableLines: number;
+        sumOfCoveredLines: number;
+    }>;
 }
