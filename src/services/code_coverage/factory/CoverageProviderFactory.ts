@@ -49,7 +49,7 @@ export class CoverageProviderFactory implements ICoverageProviderFactory {
             case CoverageReportType.SONARQUBE:
                 this.logger.debug('Creating SonarCoverageProvider');
                 const sonarConfig = await this.buildSonarConfig();
-                // return new SonarCoverageProvider(sonarConfig, this.logger);
+                return new SonarCoverageProvider(sonarConfig, this.logger);
 
             default:
                 this.logger.debug('No coverage provider configured.');
