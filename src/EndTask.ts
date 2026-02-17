@@ -111,6 +111,7 @@ export class EndTask extends BaseTask {
 
                     if (files.length === 0) {
                         this.logger.warn("No test results");
+                        await this.buildCIAndSendCIEvent(api, ws, testResultExpected);
                         return;
                     }
 
