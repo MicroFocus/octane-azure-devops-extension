@@ -431,7 +431,7 @@ Now you can create complex scenarios with different jobs. Make sure you understa
 ## 6. Pipeline configuration for executing UFT One Tests
 For executing UFT One tests from Azure DevOps pipelines and displaying the results into the product, the following prerequisites must be met:
 
-1. The Azure DevOps agent must **not** be running as a service. I should be turned on using the `run.cmd` from the agent's folder.
+1. The Azure DevOps agent must **not** be running as a service. It should be turned on using the `run.cmd` from the agent's folder.
 1. OpenText Functional Testing application must be installed.
 2. FToolsLauncher.exe must be in the repository used by the pipeline.
 3. The following steps must be added to the pipeline between the CSDP/SDM Start and End tasks:
@@ -591,7 +591,7 @@ In case you wish to use variables, instead of parameters, you can do it as follo
 2. Needed steps based of the Cucumber version you are using:
 
 > [!IMPORTANT]
-> Starting with Cucumber JVM versions 4.8.1+ you should use the bdd2octane tool which supports multiple BDD frameworks including Cucumber 5.x and later. See https://github.com/MicroFocus/octane-cucumber-jvm/tree/master.
+> Starting with Cucumber JVM versions 4.8.1+ you should use the bdd2octane tool which supports multiple BDD frameworks including Cucumber 5.x and later. See https://github.com/MicroFocus/bdd2octane.
 
 If you are using 4.8.1+ versions, you need to have the following steps in the pipeline configuration:
 
@@ -599,7 +599,7 @@ If you are using 4.8.1+ versions, you need to have the following steps in the pi
 
 In the CSDP/SDM Job End task, you need to set the Cucumber report destination path with the same value as you have in the `-DresultFile`  in the previous step, as shown in the example above.
 
-In the edn your pipeline should look like this:
+In the end your pipeline should look like this:
 ```yaml
 trigger:
 - main
@@ -617,8 +617,6 @@ steps:
   inputs:
     mavenPomFile: 'pom.xml'
     goals: 'clean test'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/cucumber-jvm-result.xml'
 
 - script: |
     echo "Converting BDD results..."
@@ -660,7 +658,7 @@ Fill in the Cucumber report destination path field when configuring the CSDP/SDM
 2. Needed steps based of the Cucumber version you are using:
 
 > [!IMPORTANT]
-> Starting with Cucumber JVM versions 4.8.1+ you should use the bdd2octane tool which supports multiple BDD frameworks including Cucumber 5.x and later. See https://github.com/MicroFocus/octane-cucumber-jvm/tree/master.
+> Starting with Cucumber JVM versions 4.8.1+ you should use the bdd2octane tool which supports multiple BDD frameworks including Cucumber 5.x and later. See https://github.com/MicroFocus/bdd2octane.
 
 If you are using 4.8.1+ versions, you need to have the following steps in the pipeline configuration:
 First you need to add the Maven task:
@@ -913,7 +911,7 @@ $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
 ```
 
 > [!CAUTION]
-> The following step needs to be added only after the pipeline run successfully once with the other steps and the artifact with the last successful commit is published, otherwise the step will fail as there is no artifact to download.
+> The following step needs to be added only after the pipeline ran successfully once with the other steps and the artifact with the last successful commit is published, otherwise the step will fail as there is no artifact to download.
 
 ```yaml
 - task: DownloadPipelineArtifact@2
@@ -936,7 +934,7 @@ $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
   displayName: Detect changed files since last successful run
 ```
 
-- The next step is retrieving the of the parameters which will be used for the OpenText Functional Testing test discovery, using the CSDP/SDM Get Parameters task to securely retrieve the parameters from the earlier configured service connection:
+- The next step is retrieving the values of the parameters which will be used for the OpenText Functional Testing test discovery, using the CSDP/SDM Get Parameters task to securely retrieve the parameters from the earlier configured service connection:
 
 ```yaml
 - task: octane-get-params-task@25
