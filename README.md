@@ -26,17 +26,21 @@ The extension will monitor and reflect the pipeline activity into the product.
     - [8.1. Displaying Cucumber Gherkin test results into the product using yml editor](#81-displaying-cucumber-gherkin-test-results-into-the-product-using-yml-editor)
     - [8.2. Displaying Cucumber Gherkin test results into the product using classic editor](#82-displaying-cucumber-gherkin-test-results-into-the-product-using-classic-editor)
 - [9. Configuring test runner pipeline](#9-configuring-test-runner-pipeline)
-    - [9.1. Configure pipeline variables](#91-configure-pipeline-variables)
+    - [9.1 Test Runner for UFT One Tests](#91-test-runner-for-uft-one-tests)
+    - [9.2. Configure pipeline variables](#92-configure-pipeline-variables)
 - [10. Extracting parameters from CSDP/SDM service connection](#10-extracting-parameters-from-csdpsdm-service-connection)
-- [11. Configuring Auto Action flow](#11-configuring-auto-action-flow)
-- [12. Useful Configurations](#12-useful-configurations)
-    - [12.1. Running pipelines from the product](#121-running-pipelines-from-the-product)
-    - [12.2. Running pipelines with variables or parameters](#122-running-pipelines-with-variables-or-parameters)
-        - [12.2.1. Running pipelines with variables](#1221-running-pipelines-with-variables)
-        - [12.2.2. Running pipelines with parameters](#1222-running-pipelines-with-parameters)
-    - [12.3. Activating debug messages](#123-activating-debug-messages) 
-- [13. Known issues and limitations](#13-known-issues-and-limitations)
-- [14. Change logs](#14-change-logs)
+- [11. Discovery flow for UFT One tests](#11-discovery-flow-for-uft-one-tests)
+    - [11.1 Storing some steps in a separate powershell file for better readability](#111-storing-some-steps-in-a-separate-powershell-file-for-better-readability)
+    - [11.2 Keeping all the steps in the pipeline](#112-keeping-all-the-steps-in-the-pipeline)
+- [12. Configuring Auto Action flow](#12-configuring-auto-action-flow)
+- [13. Useful Configurations](#13-useful-configurations)
+    - [13.1. Running pipelines from the product](#131-running-pipelines-from-the-product)
+    - [13.2. Running pipelines with variables or parameters](#132-running-pipelines-with-variables-or-parameters)
+        - [13.2.1. Running pipelines with variables](#1321-running-pipelines-with-variables)
+        - [13.2.2. Running pipelines with parameters](#1322-running-pipelines-with-parameters)
+    - [13.3. Activating debug messages](#133-activating-debug-messages) 
+- [14. Known issues and limitations](#14-known-issues-and-limitations)
+- [15. Change logs](#15-change-logs)
 
 
 ## 3. Requirements
@@ -426,6 +430,8 @@ Now you can create complex scenarios with different jobs. Make sure you understa
 
 ## 6. Pipeline configuration for executing UFT One Tests
 For executing UFT One tests from Azure DevOps pipelines and displaying the results into the product, the following prerequisites must be met:
+
+1. The Azure DevOps agent must **not** be running as a service. It should be turned on using the `run.cmd` from the agent's folder.
 1. OpenText Functional Testing application must be installed.
 2. FToolsLauncher.exe must be in the repository used by the pipeline.
 3. The following steps must be added to the pipeline between the CSDP/SDM Start and End tasks:
@@ -580,18 +586,67 @@ In case you wish to use variables, instead of parameters, you can do it as follo
 
 ### 8.1. Displaying Cucumber Gherkin test results into the product using yml editor
 
-1.	Create a pipeline job for running the tests.
-2.	Make sure to configure the Maven task to use the OctaneGherkinFormatter when running the tests, and where to store the results as below. The formatter specifies the location and name of the generated xml file containing the report.
+1. Create a pipeline job for running the tests.
+
+2. Needed steps based of the Cucumber version you are using:
+
+> [!IMPORTANT]
+> Starting with Cucumber JVM versions 4.8.1+ you should use the bdd2octane tool which supports multiple BDD frameworks including Cucumber 5.x and later. See https://github.com/MicroFocus/bdd2octane.
+
+If you are using 4.8.1+ versions, you need to have the following steps in the pipeline configuration:
+
+![image](assets/img50.png)
+
+In the CSDP/SDM Job End task, you need to set the Cucumber report destination path with the same value as you have in the `-DresultFile`  in the previous step, as shown in the example above.
+
+In the end your pipeline should look like this:
+```yaml
+trigger:
+- main
+
+pool: Default
+
+steps:
+- task: octane-start-task@25
+  inputs:
+    OctaneServiceConnection: 'bddPConnection'
+    WorkspaceList: '1002'
+    CreatePipelineCheckbox: true
+
+- task: Maven@4
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean test'
+
+- script: |
+    echo "Converting BDD results..."
+    mvn com.microfocus.adm.almoctane.bdd:bdd2octane:run ^
+      "-DreportFiles=**/target/surefire-reports/*.xml" ^
+      "-DfeatureFiles=**/src/test/resources/calculator_features/*.feature" ^
+      "-Dframework=cucumber-jvm" ^
+      "-DresultFile=target/surefire-reports/cucumber-jvm-result.xml"
+    echo 
+  displayName: 'Convert BDD Results'
+
+- task: octane-end-task@25
+  inputs:
+    OctaneServiceConnection: 'bddPConnection'
+    WorkspaceList: '1002'
+    Framework: 'bddScenario'
+    CucumberReportPath: 'target/surefire-reports/cucumber-jvm-result.xml'
+```
+
+If you are using older versions of Cucumber, you can use the OctaneGherkinFormatter, and for that you need to have the following steps in the pipeline configuration, containing the Maven task to use the OctaneGherkinFormatter when running the tests, and where to store the results as below. The formatter specifies the location and name of the generated xml file containing the report.
 
 ![image](assets/img27.png)
 
-3.	Fill in the Cucumber report destination path field when configuring the CSDP/SDM Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the source code repo root directory.
+Fill in the Cucumber report destination path field when configuring the CSDP/SDM Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the source code repo root directory.
 
 ![image](assets/img28.png)
 
-4.	Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed.
+3. Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed.
 
-5.	The results can be observed in the product in the Pipelines section:
+4. The results can be observed in the product in the Pipelines section:
 
 ![image](assets/img44.png)
 
@@ -600,17 +655,37 @@ In case you wish to use variables, instead of parameters, you can do it as follo
 ### 8.2. Displaying Cucumber Gherkin test results into the product using classic editor
 
 1.	Create a pipeline job for running the tests.
-2.	Make sure to configure the Maven task to use the OctaneGherkinFormatter when running the tests, and where to store the results as below. The formatter specifies the location and name of the generated xml file containing the report.
+2. Needed steps based of the Cucumber version you are using:
+
+> [!IMPORTANT]
+> Starting with Cucumber JVM versions 4.8.1+ you should use the bdd2octane tool which supports multiple BDD frameworks including Cucumber 5.x and later. See https://github.com/MicroFocus/bdd2octane.
+
+If you are using 4.8.1+ versions, you need to have the following steps in the pipeline configuration:
+First you need to add the Maven task:
+
+![image](assets/img51.png)
+
+Then you need to add a Command Line task to convert the results using the bdd2octane tool:
+
+![image](assets/img52.png)
+
+In the CSDP/SDM Job End task, you need to set the Cucumber report destination path with the same value as you have in the `-DresultFile`  in the previous step, as shown in the example below:
+
+![image](assets/img53.png)
+
+If you are using older versions of Cucumber, you can use the OctaneGherkinFormatter, and for that you need to have the following steps in the pipeline configuration, containing the Maven task to use the OctaneGherkinFormatter when running the tests, and where to store the results as below. The formatter specifies the location and name of the generated xml file containing the report.
+
+Make sure to configure the Maven task to use the OctaneGherkinFormatter when running the tests, and where to store the results as below. The formatter specifies the location and name of the generated xml file containing the report.
 
 ![image](assets/img23.png)
 
-3.	Fill in the Cucumber report destination path field when configuring the CSDP/SDM Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the root directory of the project.
+Fill in the Cucumber report destination path field when configuring the CSDP/SDM Job End task. This must point to the same directory as specified for the GherkinFormatter. Note that the path must be filled in starting with the root directory of the project.
 
 ![image](assets/img24.png)
 
-4.	Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed.
+3. Run the pipeline and check if all steps have been completed successfully. The End Job task should display the fact that the test results have been found and processed.
 
-5.	The results can be observed in the product in the Pipelines section:
+4. The results can be observed in the product in the Pipelines section:
 
 ![image](assets/img44.png)
 
@@ -666,12 +741,43 @@ Normally you should end up with something like this. The end task remains the sa
 
 9. Make sure to save the modifications.
 
-### 9.1 Configure Pipeline Variables
+### 9.1 Test Runner for UFT One Tests
+
+In case you are configuring the CSDP/SDM Test Runner Job Start task for UFT One tests, you need to do two additional steps:
+
+1. You need to complete the "Git Repository URL" input field with the URL of the repository where your tests are located. 
+```yaml
+- task: octane-test-runner-start-task@25
+  inputs:
+    OctaneServiceConnection: 'AzureDevOpsExtensionPipelineServiceConnection'
+    WorkspaceList: '1002'
+    Framework: 'uft'
+    GitRepositoryURL: 'https://github.com/username/repository'
+```
+
+2. In the step configuring the Props.txt file you need to add two additional lines to only run the selected tests from the product:
+```yaml
+- powershell: |
+      Write-Host "Current Directory:"
+      Get-Location
+      echo "Building..."
+      mkdir build
+      $ESCAPED_DIR = $Env:BUILD_SOURCESDIRECTORY.Replace('\', '\\')
+      Set-Content -Path "./build/testsToRun.mtbx" -Value $env:testsToRunConverted -Encoding UTF8
+      Set-Content -Path ./build/Props.txt -Value "runType=FileSystem"
+      Add-Content -Path ./build/Props.txt -Value "resultsFilename=build\\Results.xml"
+      Add-Content -Path ./build/Props.txt -Value "Test1=$ESCAPED_DIR\\build\\testsToRun.mtbx"
+      Add-Content -Path ./build/Props.txt -Value "resultUnifiedTestClassname=true"
+      Add-Content -Path ./build/Props.txt -Value "resultTestNameOnly=true"
+      Get-Content -Path ./build/Props.txt
+```
+
+### 9.2 Configure Pipeline Variables
 
 1. Ensure the following variables are defined in your Azure DevOps pipeline for automated test execution:
 
 > [!NOTE]
-> If you are having trouble configuring variables, please refer to [11.2.1 Running pipelines with variables](#1121-running-pipelines-with-variables)
+> If you are having trouble configuring variables, please refer to [13.2.1 Running pipelines with variables](#1321-running-pipelines-with-variables)
 
  - `testsToRun` (type: string)
  - `suiteId` (type: number)
@@ -723,7 +829,244 @@ This will extract the following parameters: URL, Client ID, Client Secret and Sh
 > ![NOTE]
 > The values for the Client ID and Client Secret will be masked in the logs for security reasons.
 
-## 11. Configuring Auto Action flow
+## 11. Discovery flow for UFT One tests
+
+The discovery of UFT One tests means scanning the given repository for UFT One tests and data tables and then creating them in the product. 
+This can be done by using the "@opentext/sdp-sdm-test-runner-utilities" tool, which provides a function for the discovery of UFT One tests. For more details refer the documentation [here](https://github.com/MicroFocus/sdp-sdm-test-runner-utilities).
+
+> [!CAUTION]
+> When the first scan is performed for a repository, before running the tool, you need to run the CSDP/SDM Test Runner Job Start task (See [here](#9-configuring-test-runner-pipeline)) for a successful discovery of OpenText Functional Testing tests and data tables.
+
+In order to be able to get the changes between commits, you need to track the changed files between commits, publish an artifact at the end of the pipeline with the last successful commit and download it at the beginning of the file.
+The steps to achieve this behavior are presented below, and you can choose to implement them in the same pipeline file or store some of the steps in a separate powershell file for better readability.
+The two options for pipeline configuration are presented in the sections below:
+
+### 11.1 Storing some steps in a separate powershell file for better readability
+
+1. You need to create a new folder in your repository and add a new powershell file, for example: `eng/detect-changed-files.ps1`.
+2. The content of the file should be the following:
+
+```bash
+Write-Host "=== Detect changed files since last successful run ==="
+
+$workspace     = $env:PIPELINE_WORKSPACE
+$currentCommit = $env:BUILD_SOURCEVERSION.Trim()  # trim whitespace
+
+$artifactPath = Join-Path $workspace "last-successful"
+$commitFile   = Join-Path $artifactPath "last_successful_commit.txt"
+
+# resolve baseline commit
+if (Test-Path $commitFile) {
+    $lastCommit = (Get-Content $commitFile -Raw).Trim()  # trim whitespace/newlines
+    Write-Host "Found last successful commit: $lastCommit"
+}
+else {
+    $lastCommit = "$currentCommit^"
+    Write-Host "No previous successful run found. Using fallback commit: $lastCommit"
+}
+
+Write-Host "##vso[task.setvariable variable=LAST_SUCCESSFUL_COMMIT]$lastCommit"
+
+# ensure full git history
+git fetch --all --prune
+
+Write-Host "Diffing $lastCommit -> HEAD"
+
+$files = git diff --name-status -M -z $lastCommit HEAD
+if (-not $files) { $files = "" }
+
+$path = "$env:PIPELINE_WORKSPACE/modified_files.bin"
+
+# write safely
+[System.IO.File]::WriteAllBytes(
+    $path,
+    [Text.Encoding]::UTF8.GetBytes($files)
+)
+
+Write-Host "Modified files written to $path"
+
+# persist current commit for next run
+$currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
+
+```
+
+3. In the pipeline you should have the following steps:
+
+- First, you need to run the CSDP/SDM Test Runner Job Start task to create the test runner and the SCM repository in **the product**:
+
+```yaml
+- task: octane-test-runner-start-task@25
+  inputs:
+    OctaneServiceConnection: "octaneConnectionForDiscovery"
+    WorkspaceList: "1002"
+    Framework: "uft"
+    GitRepositoryURL: "https://github.com/username/repository"
+```
+
+- Checkout the repository and download the complete Git history:
+
+```yaml
+- checkout: self
+  fetchDepth: 0
+```
+
+> [!CAUTION]
+> The following step needs to be added only after the pipeline ran successfully once with the other steps and the artifact with the last successful commit is published, otherwise the step will fail as there is no artifact to download.
+
+```yaml
+- task: DownloadPipelineArtifact@2
+  inputs:
+    buildType: "specific"
+    project: "$(System.TeamProjectId)"
+    definition: "$(System.DefinitionId)"
+    buildVersionToDownload: "latestFromBranch"
+    branchName: "$(Build.SourceBranch)"
+    artifactName: "last-successful"
+    downloadPath: "$(Pipeline.Workspace)\\last-successful"
+  displayName: "Download last successful commit SHA"
+```
+
+- After downloading the artifact (in the following runs after the first successful run), you can run the powershell file created at the previous steps to get the list of changed files between the last successful commit and the current commit.
+
+```yaml
+- powershell: |
+    ./eng/detect-changed-files.ps1
+  displayName: Detect changed files since last successful run
+```
+
+- The next step is retrieving the values of the parameters which will be used for the OpenText Functional Testing test discovery, using the CSDP/SDM Get Parameters task to securely retrieve the parameters from the earlier configured service connection:
+
+```yaml
+- task: octane-get-params-task@25
+  inputs:
+    OctaneServiceConnection: "octaneConnectionForDiscovery"
+```
+
+- Then we will run the tool with the parameters provided in the previous step and also with the MODIFIED_FILES_PATH and REPOURL environment variables which are **required** for the tool to be able to read the changed files and the repository URL:
+
+```yaml
+- powershell: |
+    npx @opentext/sdp-sdm-test-runner-utilities --action="discoverTests" --isFullScan=true --path="$env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(octaneSharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)"
+  env:
+    MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
+    REPOURL: $(Build.Repository.Uri)
+  displayName: Discovery
+```
+
+- The next step is storing the current commit SHA as the last successful commit in the `last_successful_commit.txt` file. The SHA of the current commit will be stored in the last_successful_commit.txt which will be published as an artifact. Then in the next run, it will be downloaded and compared to the current commits SHA to get the changed files.
+
+```yaml
+- powershell: |
+    echo $(Build.SourceVersion) > last_successful_commit.txt
+  displayName: "Store current commit SHA"
+```
+
+- The last step to conclude the discovery process is publishing the artifact with the last successful commit.
+
+```yaml
+- publish: last_successful_commit.txt
+  artifact: last-successful
+  displayName: "Publish last successful commit SHA"
+```
+
+### 11.2 Keeping all the steps in the pipeline
+
+For keeping all the steps in the pipeline, you can follow the same steps as in the previous section, but instead of storing some of the steps in a separate powershell file, you can keep them all in the pipeline, like in the example below:
+
+> [!IMPORTANT]
+> The step downloading the artifact with the last successful commit needs to be added only after the pipeline run successfully once with the other steps and the artifact with the last successful commit is published, otherwise the step will fail as there is no artifact to download.
+
+```yaml
+trigger:
+  - main
+
+pool: Default
+
+steps:
+  - task: octane-test-runner-start-task@25
+    inputs:
+      OctaneServiceConnection: "octaneConnectionForDiscovery"
+      WorkspaceList: "1002"
+      Framework: "uft"
+      GitRepositoryURL: "https://github.com/username/repository"
+
+  - checkout: self
+    fetchDepth: 0
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: "specific"
+      project: "$(System.TeamProjectId)"
+      definition: "$(System.DefinitionId)"
+      buildVersionToDownload: "latestFromBranch"
+      branchName: "$(Build.SourceBranch)"
+      artifactName: "last-successful"
+      downloadPath: "$(Pipeline.Workspace)\\last-successful"
+    displayName: "Download last successful commit SHA"
+
+  - powershell: |
+      Write-Host "=== Detect changed files since last successful run ==="
+
+      $workspace     = $env:PIPELINE_WORKSPACE
+      $currentCommit = $env:BUILD_SOURCEVERSION.Trim()
+
+      $artifactPath = Join-Path $workspace "last-successful"
+      $commitFile   = Join-Path $artifactPath "last_successful_commit.txt"
+
+      # resolve baseline commit
+      if (Test-Path $commitFile) {
+          $lastCommit = (Get-Content $commitFile -Raw).Trim()
+          Write-Host "Found last successful commit: $lastCommit"
+      }
+      else {
+          $lastCommit = "$currentCommit^"
+          Write-Host "No previous successful run found. Using fallback commit: $lastCommit"
+      }
+
+      Write-Host "##vso[task.setvariable variable=LAST_SUCCESSFUL_COMMIT]$lastCommit"
+
+      # Ensure full git history
+      git fetch --all --prune
+
+      Write-Host "Diffing $lastCommit -> HEAD"
+
+      $files = git diff --name-status -M -z $lastCommit HEAD
+      if (-not $files) { $files = "" }
+
+      $path = "$env:PIPELINE_WORKSPACE/modified_files.bin"
+
+      [System.IO.File]::WriteAllBytes(
+          $path,
+          [Text.Encoding]::UTF8.GetBytes($files)
+      )
+
+      Write-Host "Modified files written to $path"
+
+      # Persist current commit for next run
+      $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
+    displayName: "Detect changed files since last successful run"
+
+  - task: octane-get-params-task@25
+    inputs:
+      OctaneServiceConnection: "octaneConnectionForDiscovery"
+
+  - powershell: |
+      npx @opentext/sdp-sdm-test-runner-utilities --action="discoverTests" --isFullScan=true --path="$env:BUILD_SOURCESDIRECTORY" --octaneUrl="$(octaneUrl)" --sharedSpace="$(octaneSharedSpaceId)" --workspace="$env:WORKSPACE" --clientSecret="$(octaneClientSecret)" --clientId="$(octaneClientId)"
+    env:
+      MODIFIED_FILES_PATH: $(Pipeline.Workspace)/modified_files.bin
+      REPOURL: $(Build.Repository.Uri)
+    displayName: Discovery
+
+  - powershell: |
+      echo $(Build.SourceVersion) > last_successful_commit.txt
+    displayName: "Store current commit SHA"
+
+  - publish: last_successful_commit.txt
+    artifact: last-successful
+    displayName: "Publish last successful commit SHA"
+```
+
+## 12. Configuring Auto Action flow
 
 In the product, you can add automatic actions to your release process that trigger common tasks, such as running your Azure DevOps pipeline from the product. For more details on how to configure such an auto action flow, please refer to https://admhelp.microfocus.com/valueedge/en/latest/Online/Content/UserGuide/release-process-autoactions.htm?
 
@@ -741,9 +1084,9 @@ This parameter is used in the background by the product for the pipeline results
 
 ![image](https://github.com/user-attachments/assets/cedbb44c-54ad-4cda-965f-ce17c00e7b0c)
 
-## 12. Useful configurations
+## 13. Useful configurations
 
-### 12.1 Running pipelines from the product
+### 13.1 Running pipelines from the product
 
 1. In order to start runs from the product, you need to do some additional configuration steps. First of all, in Azure DevOps you need to go to: User settings -> Personal access tokens:
 
@@ -782,7 +1125,7 @@ The **User Name** field does not have any correlation with any usernames that yo
 
 9. Now you can go back in the **Pipelines** in the product, select the **3 points icon** from the pipeline you want to run and then press **Run**. You should then be able to see your run in Azure DevOps.
 
-### 12.2. Running pipelines with variables or parameters
+### 13.2. Running pipelines with variables or parameters
 
 Azure DevOps pipelines support both parameters and variables to make your workflows more dynamic, reusable, and configurable: 
 
@@ -798,7 +1141,7 @@ This section walks through how to:
 > [!CAUTION]
 > When running a pipeline, you can define both variables and parameters. However, only one set will be sent to the product, depending on the value of the `USE_AZURE_DEVOPS_PARAMETERS` parameter value from the product. The value of this parameter can be changed only from the product. If the value is set to `true` the integration will send only the parameters, else it will send only the variables.
 
-#### 12.2.1 Running pipelines with variables
+#### 13.2.1 Running pipelines with variables
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `false` in the product in order to see the variables reflected in it.
@@ -823,7 +1166,7 @@ This section walks through how to:
 
 ![image](https://github.com/user-attachments/assets/7676332a-60bf-442a-80d6-4b154b6a36a3)
 
-#### 12.2.2 Running pipelines with parameters
+#### 13.2.2 Running pipelines with parameters
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `true` in the product in order to see the parameters reflected in it.
@@ -856,7 +1199,7 @@ For more information on parameters, Azure DevOps provides thorough documentation
 
 ![image](https://github.com/user-attachments/assets/3d1a4911-2296-4e59-8bac-a9e67ea942a3)
 
-### 12.3. Activating debug messages
+### 13.3. Activating debug messages
 A very useful feature is enabling debug messages, which not only gives you more insight into what happens behind the scenes, but it can also help you in figuring out what went wrong with a run. To enable this kind of messages, you need to create pipeline variable with the following values: 
 - `name = ALMOctaneLogLevel`
 - `value = DEBUG`
@@ -869,7 +1212,7 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 
 ![image](https://github.com/user-attachments/assets/822e181a-ced5-44bb-93b7-11a22071e8c8)
 
-## 13. Known issues and limitations
+## 14. Known issues and limitations
 
 1.	CSDP/SDM Connection Verifier is non-functional. This will be removed in a future version.
 2.	When creating the pipeline with YAML and adding the CSDP/SDM tasks, the label is not displayed properly (octanestarttask)
@@ -916,7 +1259,10 @@ Publish the JUnit test results to Azure DevOps:
     mergeTestResults: true
     failTaskOnFailedTests: false
 ```
-## 14. Change logs
+## 15. Change logs
+## 26.1.0 version Release notes
+* Added new Get Parameters Task
+* Added support for running OpenText Functional Testing tests from Azure DevOps pipelines and displaying the results into the product
 ## 25.4.3 version Release notes
 * Fixed pipeline displaying "**aborted**" status in the product when user only had **octanestarttask** and **octaneendtask** in the pipeline configuration file.
 ## 25.4.2 version Release notes
@@ -977,7 +1323,7 @@ Publish the JUnit test results to Azure DevOps:
 ## 0.2.3.1 version Release notes
 * Fixed 401 error in tasks not showing as failed
 * Homogenized public and private extensions. Currently, besides Azure DevOps required manifests and versions there will not be any difference between the private and the public extension.
-* Other non functional improvements
+* Other non-functional improvements
 
 
 
