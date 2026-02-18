@@ -431,10 +431,14 @@ Now you can create complex scenarios with different jobs. Make sure you understa
 ## 6. Pipeline configuration for executing UFT One Tests
 For executing UFT One tests from Azure DevOps pipelines and displaying the results into the product, the following prerequisites must be met:
 
-1. The Azure DevOps agent must **not** be running as a service. It should be turned on using the `run.cmd` from the agent's folder.
-1. OpenText Functional Testing application must be installed.
-2. FToolsLauncher.exe must be in the repository used by the pipeline.
-3. The following steps must be added to the pipeline between the CSDP/SDM Start and End tasks:
+> [!NOTE]
+> For executing UFT One tests, it is required that the Azure DevOps agent is running in interactive Windows session to execute tests.
+Agents running as services operate in a non-interactive session (Session 0), so the tests cannot run. Also, Microsoft hosted agents do not support running interactive tests, so for executing UFT One tests, self-hosted agents are required.
+
+1. The Azure DevOps agent must **not** be running as a service. It should be turned on using the `run.cmd` with Admin privileges from the agent's folder to run the agent in interactive mode, which is required for running UFT One tests.
+2. OpenText Functional Testing application must be installed.
+3. FToolsLauncher.exe must be in the repository used by the pipeline.
+4. The following steps must be added to the pipeline between the CSDP/SDM Start and End tasks:
 ```yaml
 - powershell: |
     Write-Host "Current Directory:"
