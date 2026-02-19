@@ -84,12 +84,13 @@ export class BaseTask {
     protected definitionId: number;
     protected sourceBranch: string;
     protected createPipelineRequired: boolean;
+    protected codeCoverageReportType: string;
 
     private octaneServiceConnectionData: any;
     protected url: URL;
     protected sharedSpaceId: string;
     protected workspaces: any;
-    private analyticsCiInternalApiUrlPart: string;
+    protected analyticsCiInternalApiUrlPart: string;
     private ciInternalAzureApiUrlPart: string;
     protected experiments: {[name:string]: boolean} = {};
     protected parametersService: PipelineParametersService;
@@ -122,6 +123,7 @@ export class BaseTask {
                 this.setJobNames();
                 this.prepareWorkspaces();
                 this.prepareParametersService();
+                this.prepareCodeCoverageType();
                 this.prepareCreatePipelineRequired();
 
                 await this.populateOctaneConnections();
@@ -215,6 +217,10 @@ export class BaseTask {
 
     private prepareParametersService() {
         this.parametersService = new PipelineParametersService(this.tl, this.logger);
+    }
+
+    private prepareCodeCoverageType() {
+        this.codeCoverageReportType = this.tl.getInput(InputConstants.CODE_COVERAGE_TYPE);
     }
 
     private prepareCreatePipelineRequired() {
