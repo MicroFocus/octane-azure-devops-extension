@@ -749,6 +749,9 @@ Normally you should end up with something like this. The end task remains the sa
 
 In case you are configuring the CSDP/SDM Test Runner Job Start task for UFT One tests, you need to do two additional steps:
 
+> [!NOTE]
+> The `GitRepositoryURL` input is required even if you are using an Azure DevOps repository, as it is used by the product to link the test runner to the repository. It needs to be added as shown in the example below.
+
 1. You need to complete the "Git Repository URL" input field with the URL of the repository where your tests are located. 
 ```yaml
 - task: octane-test-runner-start-task@25
@@ -756,7 +759,7 @@ In case you are configuring the CSDP/SDM Test Runner Job Start task for UFT One 
     OctaneServiceConnection: 'AzureDevOpsExtensionPipelineServiceConnection'
     WorkspaceList: '1002'
     Framework: 'uft'
-    GitRepositoryURL: 'https://github.com/username/repository'
+    GitRepositoryURL: $(Build.Repository.Uri)
 ```
 
 2. In the step configuring the Props.txt file you need to add two additional lines to only run the selected tests from the product:
@@ -898,13 +901,16 @@ $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
 
 - First, you need to run the CSDP/SDM Test Runner Job Start task to create the test runner and the SCM repository in **the product**:
 
+> [!NOTE]
+> The `GitRepositoryURL` input is required even if you are using an Azure DevOps repository, as it is used by the product to link the test runner to the repository. It needs to be added as shown in the example below.
+
 ```yaml
 - task: octane-test-runner-start-task@25
   inputs:
     OctaneServiceConnection: "octaneConnectionForDiscovery"
     WorkspaceList: "1002"
     Framework: "uft"
-    GitRepositoryURL: "https://github.com/username/repository"
+    GitRepositoryURL: $(Build.Repository.Uri)
 ```
 
 - Checkout the repository and download the complete Git history:
@@ -980,6 +986,9 @@ For keeping all the steps in the pipeline, you can follow the same steps as in t
 > [!IMPORTANT]
 > The step downloading the artifact with the last successful commit needs to be added only after the pipeline run successfully once with the other steps and the artifact with the last successful commit is published, otherwise the step will fail as there is no artifact to download.
 
+> [!NOTE]
+> The `GitRepositoryURL` input is required even if you are using an Azure DevOps repository, as it is used by the product to link the test runner to the repository. It needs to be added as shown in the example below.
+
 ```yaml
 trigger:
   - main
@@ -992,7 +1001,7 @@ steps:
       OctaneServiceConnection: "octaneConnectionForDiscovery"
       WorkspaceList: "1002"
       Framework: "uft"
-      GitRepositoryURL: "https://github.com/username/repository"
+      GitRepositoryURL: $(Build.Repository.Uri)
 
   - checkout: self
     fetchDepth: 0
