@@ -336,7 +336,7 @@ export class TestRunnerStartTask extends BaseTask {
   public async run() {
       const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
 
-      const definedParameters =  await this.getDefinedParameters(api);
+      const definedParameters: CiParameter[] =  await this.getDefinedParameters(api);
 
       const parameters: CiParameter[] =
           await this.parametersService.getParametersWithBranch(

@@ -56,7 +56,7 @@ export class StartTask extends BaseTask {
                 if (!this.isPipelineEndJob) {
                     let causes = await CiEventCauseBuilder.buildCiEventCauses(this.isPipelineJob, api, this.projectName, this.rootJobFullName, parseInt(this.buildId));
 
-                    const definedParameters =  await this.getDefinedParameters(api);
+                    const definedParameters: CiParameter[] =  await this.getDefinedParameters(api);
 
                     const parameters: CiParameter[] =
                             await this.parametersService.getParametersWithBranch(
