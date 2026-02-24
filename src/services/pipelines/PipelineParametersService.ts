@@ -68,7 +68,7 @@ export class PipelineParametersService {
                 const templateParameters: { [name: string]: any } = build.templateParameters || {};
                 this.logger.debug('templateParameters payload:' + JSON.stringify(templateParameters));
                 Object.entries(templateParameters).forEach(([paramKey, paramVal]) => {
-                    const defaultValue: string = definedParameters.find(param => param.name === paramKey).defaultValue;
+                    const defaultValue: string = definedParameters.find(param => param.name === paramKey)?.defaultValue || "";
                     this.logger.debug("The parameter value for " + paramKey + " is: " + paramVal + " and the default value is: " + defaultValue);
                     parameters.push(
                         this.createParameter(paramKey, defaultValue, true, paramVal)
