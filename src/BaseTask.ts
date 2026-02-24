@@ -52,6 +52,7 @@ import {PipelineParametersService} from "./services/pipelines/PipelineParameters
 import {Octane, Query} from '@microfocus/alm-octane-js-rest-sdk';
 import * as ba from "azure-devops-node-api/BuildApi";
 import {FeatureToggleService} from "./services/octane/FeatureToggleService";
+import {CiParameter} from "./dto/events/CiParameter";
 
 export class BaseTask {
     public static ALM_OCTANE_PIPELINE_START = 'AlmOctanePipelineStart';
@@ -166,6 +167,19 @@ export class BaseTask {
             Octane.operationTypes.create, testResult, options.headers);
 
         this.logger.debug('sendTestResult response:' + ret.status + ', result: ' + ret.result);
+    }
+
+    public async getDefinedParameters(api: WebApi): Promise<CiParameter[]> {
+        return await this.parametersService.getDefinedParametersWithBranch(
+            api,
+            this.buildId,
+            this.definitionId,
+            this.projectName,
+            this.sourceBranch,
+            false,
+            this.authenticationService.getAzureAccessToken(),
+            this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+        );
     }
 
     private buildAnalyticsCiInternalApiUrlPart() {
@@ -557,15 +571,8 @@ export class BaseTask {
         let ciJobsToUpdate = [];
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
         for(const ciJob of ciJobs){
-            const parameters =
-                await this.parametersService.getDefinedParametersWithBranch(api,
-                                                                            this.buildId,
-                                                                            this.definitionId,
-                                                                            this.projectName,
-                                                                            this.sourceBranch,
-                                                                            false,
-                                                                            this.authenticationService.getAzureAccessToken(),
-                                                                            this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled());
+            const parameters: CiParameter[] = await this.getDefinedParameters(api);
+
             ciJobsToUpdate.push(this.createCiJobBody(ciJob,parameters))
         }
 
@@ -616,15 +623,7 @@ export class BaseTask {
         let pipeline;
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
 
-            const parameters =
-                await this.parametersService.getDefinedParametersWithBranch(api,
-                                                                            this.buildId,
-                                                                            this.definitionId,
-                                                                            this.projectName,
-                                                                            this.sourceBranch,
-                                                                            false,
-                                                                            this.authenticationService.getAzureAccessToken(),
-                                                                            this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled());
+            const parameters: CiParameter[] = await this.getDefinedParameters(api);
 
             pipeline = {
                 'name': pipelineName,
@@ -659,15 +658,8 @@ export class BaseTask {
         let ciJob;
         const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
 
-        const parameters =
-            await this.parametersService.getDefinedParametersWithBranch(api,
-                                                                        this.buildId,
-                                                                        this.definitionId,
-                                                                        this.projectName,
-                                                                        this.sourceBranch,
-                                                                        false,
-                                                                        this.authenticationService.getAzureAccessToken(),
-                                                                        this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled());
+        const parameters: CiParameter[] = await this.getDefinedParameters(api);
+
         ciJob = {
             'name': this.agentJobName,
             'ci_id': this.getParentJobCiId(),

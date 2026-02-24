@@ -48,16 +48,16 @@ export class PipelineParametersService {
         this.logger = logger;
     }
 
-    public async getParametersWithBranch(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string, withBranch:boolean, octaneUseAzureDevopsParametersValue: boolean): Promise<CiParameter[]> {
+    public async getParametersWithBranch(connection: WebApi, definitionId: number, buildId: string, projectName: string, branchName: string, withBranch:boolean, octaneUseAzureDevopsParametersValue: boolean, definedParameters: CiParameter[]): Promise<CiParameter[]> {
 
-        let parameters: CiParameter[] = await this.getParameters(connection, definitionId, buildId, projectName, octaneUseAzureDevopsParametersValue);
+        let parameters: CiParameter[] = await this.getParameters(connection, definitionId, buildId, projectName, octaneUseAzureDevopsParametersValue, definedParameters);
         if(withBranch) {
             parameters.push(this.createParameter('branch', '', true, branchName));
         }
         return parameters
     }
 
-    public async getParameters(connection: WebApi, definitionId: number, buildId: string, projectName: string, octaneUseAzureDevopsParametersValue: boolean): Promise<CiParameter[]> {
+    public async getParameters(connection: WebApi, definitionId: number, buildId: string, projectName: string, octaneUseAzureDevopsParametersValue: boolean, definedParameters: CiParameter[]): Promise<CiParameter[]> {
         try {
             const buildApi: ba.IBuildApi = await connection.getBuildApi();
             const buildDef = await buildApi.getDefinition(projectName, definitionId);
@@ -68,8 +68,10 @@ export class PipelineParametersService {
                 const templateParameters: { [name: string]: any } = build.templateParameters || {};
                 this.logger.debug('templateParameters payload:' + JSON.stringify(templateParameters));
                 Object.entries(templateParameters).forEach(([paramKey, paramVal]) => {
+                    const defaultValue: string = definedParameters.find(param => param.name === paramKey)?.defaultValue || "";
+                    this.logger.debug("The parameter value for " + paramKey + " is: " + paramVal + " and the default value is: " + defaultValue);
                     parameters.push(
-                        this.createParameter(paramKey, '', true, paramVal)
+                        this.createParameter(paramKey, defaultValue, true, paramVal)
                     );
                 });
             }

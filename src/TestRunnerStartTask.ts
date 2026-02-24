@@ -192,17 +192,7 @@ export class TestRunnerStartTask extends BaseTask {
       this.collectionUri,
       this.authenticationService.getAzureAccessToken()
     );
-    const parameters =
-      await this.parametersService.getDefinedParametersWithBranch(
-        api,
-        this.buildId,
-        this.definitionId,
-        this.projectName,
-        this.sourceBranch,
-        false,
-        this.authenticationService.getAzureAccessToken(),
-        this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
-      );
+    const parameters = this.getDefinedParameters(api);
     const ciJob = {
       name: this.buildDefinitionName + " " + this.sourceBranchName,
       parameters: parameters,
@@ -345,6 +335,9 @@ export class TestRunnerStartTask extends BaseTask {
 
   public async run() {
       const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+
+      const definedParameters: CiParameter[] =  await this.getDefinedParameters(api);
+
       const parameters: CiParameter[] =
           await this.parametersService.getParametersWithBranch(
               api,
@@ -353,7 +346,8 @@ export class TestRunnerStartTask extends BaseTask {
               this.projectName,
               this.sourceBranch,
               false,
-              this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+              this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled(),
+              definedParameters
           );
 
       const executionId = parameters.find(parameter => parameter.name === 'executionId').value;
