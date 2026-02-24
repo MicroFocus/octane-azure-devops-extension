@@ -193,6 +193,9 @@ export class EndTask extends BaseTask {
             );
             let buildResult = await this.getStatus(api);
             let duration = await this.getDuration(api);
+
+            const definedParameters =  await this.getDefinedParameters(api);
+
             const parameters: CiParameter[] =
                 await this.parametersService.getParametersWithBranch(
                     api,
@@ -201,7 +204,8 @@ export class EndTask extends BaseTask {
                     this.projectName,
                     this.sourceBranch,
                     false,
-                    this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+                    this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled(),
+                    definedParameters
                 );
 
             let endEvent;

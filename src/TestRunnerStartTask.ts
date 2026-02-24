@@ -345,6 +345,9 @@ export class TestRunnerStartTask extends BaseTask {
 
   public async run() {
       const api: WebApi = ConnectionUtils.getWebApiWithProxy(this.collectionUri, this.authenticationService.getAzureAccessToken());
+
+      const definedParameters =  await this.getDefinedParameters(api);
+
       const parameters: CiParameter[] =
           await this.parametersService.getParametersWithBranch(
               api,
@@ -353,7 +356,8 @@ export class TestRunnerStartTask extends BaseTask {
               this.projectName,
               this.sourceBranch,
               false,
-              this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+              this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled(),
+              definedParameters
           );
 
       const executionId = parameters.find(parameter => parameter.name === 'executionId').value;
