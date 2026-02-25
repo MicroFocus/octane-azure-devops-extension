@@ -332,11 +332,11 @@ export class EndTask extends BaseTask {
         records: TimelineRecord[]
     ): Promise<boolean> {
         //TODO: edit to octanestarttaskprivate when testing, edit back to octanestarttask when not testing
-        const startTask = records.find((r) => r.name === "octanestarttaskprivate");
+        const startTask = records.find((r) => r.name === "octanestarttask");
         const testRunnerStartTask = records.find(
-            (r) => r.name === "octanetestrunnerstarttaskprivate"
+            (r) => r.name === "octanetestrunnerstarttask"
         );
-        const endTask = records.find((r) => r.name === "octaneendtaskprivate");
+        const endTask = records.find((r) => r.name === "octaneendtask");
         if ((!startTask && !testRunnerStartTask) || !endTask) {
             throw new Error(
                 `Could not find ${
