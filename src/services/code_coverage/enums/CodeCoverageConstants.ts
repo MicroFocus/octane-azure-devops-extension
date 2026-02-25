@@ -35,17 +35,17 @@ export enum CoverageReportType {
     SONARQUBE = "sonar_report",
 }
 
-export function parseCoverageReportType(value: string): CoverageReportType | null {
-    if (!value) {
+export function parseCoverageReportType(rawType: string): CoverageReportType | null {
+    if (!rawType) {
         return null;
     }
 
-    const normalized = value.toLowerCase();
+    const normalizedType : string = rawType.toLowerCase();
 
-    const values = Object.values(CoverageReportType);
+    const validReportTypes : CoverageReportType[] = Object.values(CoverageReportType);
 
-    return values.includes(normalized as CoverageReportType)
-        ? (normalized as CoverageReportType)
+    return validReportTypes.includes(normalizedType as CoverageReportType)
+        ? (normalizedType as CoverageReportType)
         : null;
 }
 
