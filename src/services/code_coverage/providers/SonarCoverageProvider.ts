@@ -35,6 +35,7 @@ import {ICoverageProvider} from "./ICoverageProvider";
 import {SonarCoverageReport} from "../dto/SonarCoverageReport";
 import {SonarCodeCoverageFetchParameters} from "../enums/CodeCoverageConstants";
 import axios from "axios";
+import {SonarComponent, SonarComponentTreeResponse, SonarMeasure, SonarPaging} from "../dto/SonarComponentTreeResponse";
 
 export class SonarCoverageProvider implements ICoverageProvider {
 
@@ -68,15 +69,20 @@ export class SonarCoverageProvider implements ICoverageProvider {
         };
 
         let hasMorePages = true;
+        const MAX_PAGES = 1000;
 
-        while (hasMorePages) {
+        while (hasMorePages && pageIndex < MAX_PAGES) {
             pageIndex++;
             this.logger.debug('Page Index = ' + pageIndex);
-            const pageData = await this.getPageFromSonar(this.config.sonarHostUrl, this.config.projectKey, this.config.sonarAuthToken, pageIndex);
+            const pageData: SonarComponentTreeResponse = await this.getPageFromSonar(this.config.sonarHostUrl, this.config.projectKey, this.config.sonarAuthToken, pageIndex);
 
             this.mergeSonarCoverageReport(buildCoverageReport, pageData);
             hasMorePages = this.sonarReportHasAnotherPage(pageIndex, pageData);
             this.logger.debug('Has more pages: ' + hasMorePages);
+            if(pageIndex >= MAX_PAGES) {
+                this.logger.error("Reached maximum page limit while fetching SonarQube coverage data. Stopping pagination to prevent infinite loop.");
+                throw new Error('Sonar pagination exceeded safe limit. Aborting to prevent infinite loop.');
+            }
         }
 
         this.logger.debug('Build coverage report final object: ' + JSON.stringify(buildCoverageReport, null, 2));
@@ -95,7 +101,7 @@ export class SonarCoverageProvider implements ICoverageProvider {
      * @param {string} projectKey - The unique identifier of the project in SonarQube
      * @param {string} sonarToken - The authentication token for SonarQube API access
      * @param {number} pageIndex - The page number to fetch
-     * @returns {Promise<any>} A promise that resolves to the JSON response containing component tree data with coverage metrics
+     * @returns {Promise<SonarComponentTreeResponse>} A promise that resolves to the JSON response containing component tree data with coverage metrics
      * @throws {Error} If authentication fails (401) or the API request fails
      * @private
      */
@@ -104,12 +110,12 @@ export class SonarCoverageProvider implements ICoverageProvider {
         projectKey: string,
         sonarToken: string,
         pageIndex: number
-    ): Promise<any> {
-        const urlString = await this.buildSonarFetchUrl(sonarHostUrl, projectKey, pageIndex);
+    ): Promise<SonarComponentTreeResponse> {
+        const sonarUrl = await this.buildSonarFetchUrl(sonarHostUrl, projectKey, pageIndex);
         const authHeader = 'Basic ' + Buffer.from(`${sonarToken}:`).toString('base64');
 
         try {
-            const response = await axios.get(urlString, {
+            const response = await axios.get(sonarUrl, {
                 headers: {
                     'Authorization': authHeader,
                     'Accept': 'application/json'
@@ -178,11 +184,11 @@ export class SonarCoverageProvider implements ICoverageProvider {
      * file list.
      *
      * @param {SonarCoverageReport} buildCoverageReport - The accumulated coverage report to merge data into
-     * @param {any} jsonReport - The JSON response from SonarQube API containing component tree and coverage metrics
+     * @param {SonarComponentTreeResponse} jsonReport - The JSON response from SonarQube API containing component tree and coverage metrics
      * @returns {void}
      * @private
      */
-    private mergeSonarCoverageReport(buildCoverageReport: SonarCoverageReport, jsonReport: any): void {
+    private mergeSonarCoverageReport(buildCoverageReport: SonarCoverageReport, jsonReport: SonarComponentTreeResponse): void {
         if (!buildCoverageReport.projectName) {
             const baseComponent = jsonReport.baseComponent;
             buildCoverageReport.projectName = baseComponent.name;
@@ -206,11 +212,11 @@ export class SonarCoverageProvider implements ICoverageProvider {
      * parses its value as an integer, and returns it. Returns 0 if the metric is not found.
      *
      * @param {string} metricKey - The metric identifier to search for (e.g., 'lines_to_cover', 'uncovered_lines')
-     * @param {any[]} measures - Array of measure objects from SonarQube API response
+     * @param {SonarMeasure[]} measures - Array of measure objects from SonarQube API response
      * @returns {number} The parsed integer value of the metric, or 0 if not found
      * @private
      */
-    private getValueFromMeasuresArray(metricKey: string, measures: any[]): number {
+    private getValueFromMeasuresArray(metricKey: string, measures: SonarMeasure[]): number {
         const measure = measures.find(m => m.metric === metricKey);
         return measure ? parseInt(measure.value, 10) : 0;
     }
@@ -223,13 +229,13 @@ export class SonarCoverageProvider implements ICoverageProvider {
      * uncovered lines) and converts them into the internal coverage format
      * expected by Octane.
      *
-     * @param component - A SonarQube component object containing coverage measures.
+     * @param {SonarComponent} component - A SonarQube component object containing coverage measures.
      * @returns An object containing:
      *  - path: The file path (or component key if path is not available)
      *  - totalCoverableLines: Total number of lines that can be covered
      *  - sumOfCoveredLines: Number of lines effectively covered
      */
-    private getFileCoverageFromJson(component: any) {
+    private getFileCoverageFromJson(component: SonarComponent) {
         const measures = component.measures || [];
         const linesToCover = this.getValueFromMeasuresArray(SonarCodeCoverageFetchParameters.LINES_TO_COVER, measures);
         const uncoveredLines = this.getValueFromMeasuresArray(SonarCodeCoverageFetchParameters.UNCOVERED_LINES, measures);
@@ -249,14 +255,14 @@ export class SonarCoverageProvider implements ICoverageProvider {
      * the total number of items to determine if pagination should continue.
      *
      * @param {number} pageIndex - The current page number (1-based index)
-     * @param {any} jsonContent - The JSON response from SonarQube API containing paging metadata
+     * @param {SonarComponentTreeResponse} jsonContent - The JSON response from SonarQube API containing paging metadata
      * @returns {boolean} True if there are more pages to fetch, false otherwise
      * @private
      */
-    private sonarReportHasAnotherPage(pageIndex: number, jsonContent: any): boolean {
-        const pagingNode = jsonContent.paging;
-        const pageSize = pagingNode.pageSize;
-        const total = pagingNode.total;
+    private sonarReportHasAnotherPage(pageIndex: number, jsonContent: SonarComponentTreeResponse): boolean {
+        const pagingNode: SonarPaging = jsonContent.paging;
+        const pageSize: number = pagingNode.pageSize;
+        const total: number = pagingNode.total;
         return pageSize * pageIndex < total;
     }
 }
