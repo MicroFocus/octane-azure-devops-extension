@@ -56,6 +56,18 @@
       "label": "Github repository connection",
       "required": false,
       "helpMarkDown": "Github repository connection"
+    },
+    {
+      "name": "CodeCoverageType",
+      "type": "pickList",
+      "label": "Code coverage report file type",
+      "required": false,
+      "helpMarkDown": "Select which kind of report file should the integration look for.\n",
+      "options": {
+        "JACOCOXML": "JACOCO",
+        "LCOV": "LCOV",
+        "SONAR_REPORT": "SONAR"
+      }
     }
   ],
   "execution": {
