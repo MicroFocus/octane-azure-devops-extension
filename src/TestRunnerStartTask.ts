@@ -192,7 +192,18 @@ export class TestRunnerStartTask extends BaseTask {
       this.collectionUri,
       this.authenticationService.getAzureAccessToken()
     );
-    const parameters = this.getDefinedParameters(api);
+      const parameters =
+          await this.parametersService.getDefinedParametersWithBranch(
+              api,
+              this.buildId,
+              this.definitionId,
+              this.projectName,
+              this.sourceBranch,
+              false,
+              this.authenticationService.getAzureAccessToken(),
+              this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+          );
+
     const ciJob = {
       name: this.buildDefinitionName + " " + this.sourceBranchName,
       parameters: parameters,
