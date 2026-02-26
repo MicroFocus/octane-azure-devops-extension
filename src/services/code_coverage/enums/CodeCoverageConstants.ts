@@ -83,3 +83,5 @@ export enum SonarCodeCoverageFetchParameters {
     TRK = 'TRK', // base component qualifier
     PAGE_SIZE = '500'
 }
+
+export const SONARQUBE_AUTH_SCHEME = 'UsernamePassword';

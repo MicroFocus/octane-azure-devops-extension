@@ -112,6 +112,7 @@ export class SonarCoverageProvider implements ICoverageProvider {
         pageIndex: number
     ): Promise<SonarComponentTreeResponse> {
         const sonarUrl = await this.buildSonarFetchUrl(sonarHostUrl, projectKey, pageIndex);
+        this.logger.debug(`Sonar Token length: ${sonarToken?.length}`);
         const authHeader = 'Basic ' + Buffer.from(`${sonarToken}:`).toString('base64');
 
         try {
