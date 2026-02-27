@@ -188,21 +188,9 @@ export class TestRunnerStartTask extends BaseTask {
   }
 
   protected async createCiJob(octaneSDKConnection) {
-    const api: WebApi = ConnectionUtils.getWebApiWithProxy(
-      this.collectionUri,
-      this.authenticationService.getAzureAccessToken()
-    );
-      const parameters =
-          await this.parametersService.getDefinedParametersWithBranch(
-              api,
-              this.buildId,
-              this.definitionId,
-              this.projectName,
-              this.sourceBranch,
-              false,
-              this.authenticationService.getAzureAccessToken(),
-              this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
-          );
+    const api: WebApi = this.getApi();
+
+    const parameters: CiParameter[] = await this.getParameters(api);
 
     const ciJob = {
       name: this.buildDefinitionName + " " + this.sourceBranchName,
@@ -225,6 +213,7 @@ export class TestRunnerStartTask extends BaseTask {
     if (ciJobs.length === 1) {
       this.ciJobId = ciJobs[0].data[0].id;
       this.logger.info("CI job created " + this.ciJobId + " created");
+      this.logger.debug("The ci job is:" + JSON.stringify(ciJob));
     } else {
       this.logger.error("CI job failed to create", this.logger.getCaller());
     }
@@ -241,6 +230,10 @@ export class TestRunnerStartTask extends BaseTask {
       const frameworkId = await this.getFrameworkId(this.framework);
       const repositoryUrl = this.tl.getInput(InputConstants.REPO_URL);
 
+      const api: WebApi = this.getApi();
+
+      const parameters: CiParameter[] = await this.getParameters(api);
+
       const uft_test_runner = {
                   "name": this.buildDefinitionName + " " + this.sourceBranch,
                   "subtype": "uft_test_runner",
@@ -256,6 +249,7 @@ export class TestRunnerStartTask extends BaseTask {
                       "id": this.ciJobId,
                       "type": EntityTypeConstants.CI_JOB_ENTITY_TYPE,
                   },
+                  "parameters": parameters,
                   "jobCiId": this.getJobCiId(),
                   "scm_type": 2,
                   "scm_url": repositoryUrl
@@ -342,6 +336,26 @@ export class TestRunnerStartTask extends BaseTask {
         this.logger.debug("No framework selected. Setting to default junit.");
         return "list_node.je.framework.junit";
     }
+  }
+
+  private async getParameters(api: WebApi): Promise<CiParameter[]> {
+      return await this.parametersService.getDefinedParametersWithBranch(
+          api,
+          this.buildId,
+          this.definitionId,
+          this.projectName,
+          this.sourceBranch,
+          false,
+          this.authenticationService.getAzureAccessToken(),
+          this.featureToggleService.isUseAzureDevopsParametersInOctaneEnabled()
+      );
+  }
+
+  private getApi(): WebApi {
+      return ConnectionUtils.getWebApiWithProxy(
+          this.collectionUri,
+          this.authenticationService.getAzureAccessToken()
+      );
   }
 
   public async run() {
