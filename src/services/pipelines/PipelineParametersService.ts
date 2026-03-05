@@ -35,6 +35,7 @@ import {LogUtils} from "../../LogUtils";
 import * as yaml from 'js-yaml';
 import {YamlProcess} from "azure-devops-node-api/interfaces/BuildInterfaces";
 import * as https from "https";
+import * as http from "http";
 import {AzureDevopsPipelineConfiguration} from "../../dto/parameters/AzureDevopsPipelineConfiguration";
 import {AzureDevOpsApiVersions, SystemVariablesConstants} from "../../ExtensionConstants";
 import {AzureDevopsPipelineParameter} from "../../dto/parameters/AzureDevopsPipelineParameter";
@@ -117,7 +118,8 @@ export class PipelineParametersService {
         };
 
         return new Promise((resolve, reject) => {
-            https.get(url, {headers}, (res) => {
+            const protocol = url.startsWith('https') ? https : http;
+            protocol.get(url, {headers}, (res) => {
                 let body: Buffer[] = [];
 
                 this.logger.debug('Status code: ' + res.statusCode);
