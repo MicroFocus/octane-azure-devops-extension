@@ -69,7 +69,8 @@ export enum SystemVariablesConstants {
     AGENT_JOB_STATUS = 'AGENT_JOBSTATUS',
     BUILD_DEFINITION_ID = 'System.DefinitionId',
     BUILD_SOURCE_BRANCH = "Build.SourceBranch",
-    SONARQUBE_SCANNER_PARAMS = 'SONARQUBE_SCANNER_PARAMS'
+    SONARQUBE_SCANNER_PARAMS = 'SONARQUBE_SCANNER_PARAMS',
+    SONARQUBE_SERVICE_CONNECTION = 'SonarQubeServiceConnection'
 }
 
 export enum EndpointDataConstants {
