@@ -379,15 +379,13 @@ export class TestRunnerStartTask extends BaseTask {
       const suiteRunIdCIParameter = parameters.find(parameter => parameter.name === 'suiteRunId');
       const testsToConvert = parameters.find(parameter => parameter.name === 'testsToRun');
 
-      let executionId: string;
-      let suiteRunId: string;
       if (executionIdCIParameter === undefined || suiteRunIdCIParameter === undefined || testsToConvert === undefined) {
           this.logger.info("Missing executionId or suiteRunId or testsToRun parameters, meaning that the task was not triggered by a suite run action from Octane.");
-      } else {
-          executionId = executionIdCIParameter.value;
-          suiteRunId = suiteRunIdCIParameter.value;
-          this.testToConvert = testsToConvert.value;
       }
+
+      let executionId: string = executionIdCIParameter === undefined ? undefined : executionIdCIParameter.value;
+      let suiteRunId: string =  suiteRunIdCIParameter === undefined ? undefined : suiteRunIdCIParameter.value;
+      this.testToConvert = testsToConvert === undefined ? undefined : testsToConvert.value;
 
       this.logger.debug("testsToRun: " + this.testToConvert);
       this.logger.info("executionId: " + executionId);
