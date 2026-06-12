@@ -36,7 +36,7 @@ import {ConnectionUtils} from "./ConnectionUtils";
 import {CiEventCauseBuilder} from "./services/events/CiEventCauseBuilder";
 import * as ba from "azure-devops-node-api/BuildApi";
 import {TaskResult, TimelineRecord,} from "azure-devops-node-api/interfaces/BuildInterfaces";
-import {InputConstants} from "./ExtensionConstants";
+import {InputConstants, PATH_SEPARATOR_SLASH, TEST_RESULT_XML_REPORT_GLOB} from "./ExtensionConstants";
 import {CiParameter} from "./dto/events/CiParameter";
 import {TestResultBuildAttributes} from "./dto/test_results/TestResultBuildAttributes";
 import {convertGherkinXMLToOctaneXML, convertJUnitXMLToOctaneXML,} from "@microfocus/alm-octane-test-result-convertion";
@@ -114,7 +114,7 @@ export class EndTask extends BaseTask {
                     const files = glob.sync(globPattern);
                     this.logger.info("The test result files are: " + files + " with length: " + files.length);
 
-                    if (files.length === 0) {
+                    if (files.length === 0 && !cucumberReportsPath) {
                         this.logger.warn("No test results");
                         await this.buildCIAndSendCIEvent(api, ws, testResultExpected);
                         return;
@@ -181,9 +181,17 @@ export class EndTask extends BaseTask {
     private async handleTestResultInjection(cucumberReportsPath: string | undefined, files: string[], buildConfig: TestResultBuildAttributes, framework: string, frameworkType: FrameworkType): Promise<string[]> {
         const testResults = [];
         if (cucumberReportsPath) {
-            const xml = fs.readFileSync(cucumberReportsPath, "utf8").replace(/^\uFEFF/, '');
-            const converted = convertGherkinXMLToOctaneXML(xml, buildConfig, FrameworkType.BDDScenario);
-            testResults.push(converted);
+            const cucumberFiles = this.resolveReportFilePaths(cucumberReportsPath);
+            if (cucumberFiles.length === 0) {
+                this.logger.warn(`No cucumber report files found for path: ${cucumberReportsPath}`);
+                return testResults;
+            }
+
+            for (const cucumberFile of cucumberFiles) {
+                const xml = fs.readFileSync(cucumberFile, "utf8").replace(/^\uFEFF/, '');
+                const converted = convertGherkinXMLToOctaneXML(xml, buildConfig, FrameworkType.BDDScenario);
+                testResults.push(converted);
+            }
         } else {
             for (const file of files) {
                 const xml = fs.readFileSync(file, "utf-8");
@@ -214,6 +222,65 @@ export class EndTask extends BaseTask {
             }
         }
         return testResults;
+    }
+
+    /**
+     * Resolves a report path into a list of concrete XML file paths.
+     *
+     * The input may be:
+     * - a direct file path, which is returned as-is,
+     * - a directory path, which is expanded to matching `*.xml` files,
+     * - or a glob pattern, which is resolved and then filtered to files only.
+     *
+     * @param reportPath - The cucumber/test report path, directory, or glob pattern.
+     * @returns A list of existing XML file paths ready to be read.
+     */
+    private resolveReportFilePaths(reportPath: string): string[] {
+        if (!reportPath) {
+            return [];
+        }
+
+        if (this.isExistingFile(reportPath)) {
+            return [reportPath];
+        }
+
+        if (this.isExistingDirectory(reportPath)) {
+            const dirPattern = path.join(reportPath, TEST_RESULT_XML_REPORT_GLOB).replace(/\\/g, PATH_SEPARATOR_SLASH);
+            return glob.sync(dirPattern).filter((filePath) => this.isExistingFile(filePath));
+        }
+
+        return glob.sync(reportPath).filter((filePath) => this.isExistingFile(filePath));
+    }
+
+    /**
+     * Checks whether the given path exists and points to a regular file.
+     * Used to avoid attempting to read directories or missing paths with `fs.readFileSync()`.
+     *
+     * @param filePath - The path to validate.
+     * @returns `true` when the path exists and is a file; otherwise `false`.
+     */
+    private isExistingFile(filePath: string): boolean {
+        try {
+            return fs.statSync(filePath).isFile();
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Checks whether the given path exists and points to a directory.
+     * This is used to decide whether `reportPath` should be expanded recursively
+     * into XML files before reading them.
+     *
+     * @param filePath - The path to validate.
+     * @returns `true` when the path exists and is a directory; otherwise `false`.
+     */
+    private isExistingDirectory(filePath: string): boolean {
+        try {
+            return fs.statSync(filePath).isDirectory();
+        } catch {
+            return false;
+        }
     }
 
     private async buildCIAndSendCIEvent(api: WebApi, ws: string, testResultExpected: boolean) {

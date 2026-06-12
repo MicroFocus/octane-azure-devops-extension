@@ -33,6 +33,9 @@ export const enum CI_SERVER_INFO {
     PLUGIN_VERSION = '1.0.0',
 }
 
+export const TEST_RESULT_XML_REPORT_GLOB = '*.xml';
+export const PATH_SEPARATOR_SLASH = '/';
+
 export enum InputConstants {
     OCTANE_SERVICE_CONNECTION = 'OctaneServiceConnection',
     GITHUB_REPOSITORY_CONNECTION = 'GithubRepositoryConnection',
