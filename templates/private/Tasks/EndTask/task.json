@@ -68,6 +68,13 @@
         "LCOV": "LCOV",
         "SONAR_REPORT": "SONAR"
       }
+    },
+    {
+      "name": "SonarQubeServiceConnection",
+      "type": "connectedService:sonarqube",
+      "label": "SonarQube service connection",
+      "required": false,
+      "helpMarkDown": "SonarQube service connection used for SONAR_REPORT coverage retrieval"
     }
   ],
   "execution": {
