@@ -942,6 +942,21 @@ $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
   displayName: "Download last successful commit SHA"
 ```
 
+> [!NOTE]
+> In case you are using Azure DevOps On-Premise, you need to use this version for the download task:
+```yaml
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'specific'
+      project: '$(System.TeamProject)'
+      pipeline: '$(System.DefinitionId)'
+      buildVersionToDownload: 'latestFromBranch'
+      downloadType: 'single'
+      artifactName: 'last-successful'
+      downloadPath: '$(Build.SourcesDirectory)\artifacts'
+    displayName: "Download last successful commit SHA"
+```
+
 - After downloading the artifact (in the following runs after the first successful run), you can run the powershell file created at the previous steps to get the list of changed files between the last successful commit and the current commit.
 
 ```yaml
@@ -983,6 +998,17 @@ $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
 - publish: last_successful_commit.txt
   artifact: last-successful
   displayName: "Publish last successful commit SHA"
+```
+
+> [!NOTE]
+> In case you are using Azure DevOps On-Premise, you need to use this version for the publishing task:
+```yaml
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: 'last_successful_commit.txt'
+      ArtifactName: 'last-successful'
+      publishLocation: 'Container'
+    displayName: "Publish last successful commit SHA"
 ```
 
 ### 11.2 Keeping all the steps in the pipeline
