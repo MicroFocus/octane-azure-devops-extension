@@ -1402,7 +1402,7 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 7.	After the Azure pipeline is created in CSDP/SDM, follow the next steps to be able to run the pipeline from the product side, as described here: https://admhelp.microfocus.com/octane/en/25.1/Online/Content/AdminGuide/how_config_CI_plugin.htm#mt-item-5
 
 8. If you cancel a pipeline run, before the initialization job takes place, you will not see that particular run in the product with the status "Aborted". This behaviour is expected since neither the start task or the end task have time to execute, given the quick cancelation of the run.
-9. The SCDP/SDM Azure DevOps extension does not currently support direct execution or injection of **NUnit** test results. .NET pipelines produce test results in **TRX** format, while the integration expects JUnit results published to Azure DevOps. However, a workaround which involves converting TRX files to JUnit format and explicitly publishing them in the pipeline, is possible, by adding the following tasks to your pipeline:
+9. The CSDP/SDM Azure DevOps extension does not currently support direct execution or injection of **NUnit** test results. .NET pipelines produce test results in **TRX** format, while the integration expects JUnit results published to Azure DevOps. However, a workaround which involves converting TRX files to JUnit format and explicitly publishing them in the pipeline, is possible, by adding the following tasks to your pipeline:
 
 Install the TRX-to-Junit conversion tool:
 ```yaml
@@ -1435,6 +1435,25 @@ Publish the JUnit test results to Azure DevOps:
     mergeTestResults: true
     failTaskOnFailedTests: false
 ```
+
+10. Azure DevOps organizations created before Microsoft migrated to the `dev.azure.com` domain may have
+`System.TeamFoundationCollectionUri` — the predefined pipeline variable used by the CSDP/SDM Azure DevOps extension — 
+set to the legacy `https://<org>.visualstudio.com/` format. This format will clash with the CI server validation logic 
+added to CSDP/SDM starting with version 26.2, that expects the URL format to follow the newer URL structure `dev.azure.com`,
+resulting in an apparent incorrect setup. Since this is a read-only system variable that cannot be overridden at the pipeline level,
+the only current workaround would be to use this endpoint:
+```
+PUT {{url}}/api/shared_spaces/{{shared_space}}/workspaces/{{workspace}}/ci_servers
+
+ {
+  "data": [{
+    "id": "<ci_server_entity_id>",
+    "url": "https://dev.azure.com/<organization>/<project_name>"
+  }]
+}
+```
+to update your CI server URL to the new format. 
+
 ## 16. Change logs
 ## 26.1.0 version Release notes
 * Added new Get Parameters Task
