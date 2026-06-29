@@ -1441,7 +1441,7 @@ Publish the JUnit test results to Azure DevOps:
 set to the legacy `https://<org>.visualstudio.com/` format. This format will clash with the CI server validation logic 
 added to CSDP/SDM starting with version 26.2, that expects the URL format to follow the newer URL structure `dev.azure.com`,
 resulting in an apparent incorrect setup. Since this is a read-only system variable that cannot be overridden at the pipeline level,
-the only current workaround would be to use this endpoint:
+the only existing fix is to send a request to the following endpoint to update your CI server URL to the new format:
 ```
 PUT {{url}}/api/shared_spaces/{{shared_space}}/workspaces/{{workspace}}/ci_servers
 
@@ -1452,8 +1452,6 @@ PUT {{url}}/api/shared_spaces/{{shared_space}}/workspaces/{{workspace}}/ci_serve
   }]
 }
 ```
-to update your CI server URL to the new format. 
-
 ## 16. Change logs
 ## 26.1.0 version Release notes
 * Added new Get Parameters Task
