@@ -1457,7 +1457,7 @@ PUT {{url}}/api/shared_spaces/{{shared_space}}/workspaces/{{workspace}}/ci_serve
 * Added new Get Parameters Task
 * Added support for running OpenText Functional Testing tests from Azure DevOps pipelines and displaying the results into the product
 * Added support for JaCoCo, LCOV and SonarQube code coverage report file injection into the product
-* Fixed the issue with the extension not being to process global patterns or directory files for cucumber report paths.
+* Fixed the issue with the extension not being able to process global patterns or directory files for cucumber report paths.
 * Fixed minor other defects
 ## 25.4.3 version Release notes
 * Fixed pipeline displaying "**aborted**" status in the product when user only had **octanestarttask** and **octaneendtask** in the pipeline configuration file.
