@@ -41,7 +41,7 @@ import {CiParameter} from "./dto/events/CiParameter";
 import {TestResultBuildAttributes} from "./dto/test_results/TestResultBuildAttributes";
 import {convertGherkinXMLToOctaneXML, convertJUnitXMLToOctaneXML,} from "@microfocus/alm-octane-test-result-convertion";
 import * as fs from 'fs';
-import {glob} from 'glob';
+import glob = require('glob');
 import {FrameworkType, stringToFrameworkType} from "@microfocus/alm-octane-test-result-convertion/dist/model/common/FrameworkType";
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import * as path from "path";

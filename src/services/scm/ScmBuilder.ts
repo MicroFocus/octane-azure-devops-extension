@@ -41,8 +41,7 @@ import {LogUtils} from "../../LogUtils";
 import {GitHubAttributes, Utility} from "./Utils";
 import * as util from "util";
 import {BuildQueryOrder, BuildRepository, Change} from "azure-devops-node-api/interfaces/BuildInterfaces";
-
-var request = require('request');
+import * as https from "https";
 
 const defaultNumberToFetch = 1000;
 const allowChangeTypes ={
@@ -244,15 +243,38 @@ export class ScmBuilder {
     }
 
     private static async getCommit(githubEndpointToken: string, repositoryName: string, commitSha: string): Promise<any> {
-        var options = {
-            url: util.format(GitHubAttributes.getCommitUrlFormat, Utility.getGitHubApiUrl(), repositoryName, commitSha),
+        const url = util.format(GitHubAttributes.getCommitUrlFormat, Utility.getGitHubApiUrl(), repositoryName, commitSha);
+        const options = {
             headers: {
                 "Content-Type": "application/json",
                 'Authorization': 'token ' + githubEndpointToken,
                 'User-Agent': 'request'
             }
         };
-        return await util.promisify(request)(options);
+        return await this.sendGitHubGet(url, options.headers);
+    }
+
+    private static async sendGitHubGet(url: string, headers: {[name: string]: string}): Promise<{ body: string; statusCode?: number; headers?: any }> {
+        return await new Promise((resolve, reject) => {
+            const req = https.request(url, {method: "GET", headers}, (res) => {
+                let body = "";
+                res.setEncoding("utf8");
+                res.on("data", (chunk) => {
+                    body += chunk;
+                });
+                res.on("end", () => {
+                    const statusCode = res.statusCode || 0;
+                    if (statusCode >= 200 && statusCode < 300) {
+                        resolve({body, statusCode, headers: res.headers});
+                    } else {
+                        reject(new Error(`GitHub request failed with status ${statusCode}. Response: ${body}`));
+                    }
+                });
+            });
+
+            req.on("error", reject);
+            req.end();
+        });
     }
 
     private static async getChangesBetweenBuilds(projectName,fromBuild,toBuild,connection: WebApi): Promise<any>{
