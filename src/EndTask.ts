@@ -370,10 +370,14 @@ export class EndTask extends BaseTask {
         }
     }
 
+    private formatClassNameWithSpaces(className: string): string {
+        return className.replace(/%20/g, ' ');
+    }
+
     private createPackageName(className: string): string {
         let packageName: string;
         const rootDirectory = process.env.BUILD_SOURCESDIRECTORY;
-        className = className.replace("file:///", "");
+        className = this.formatClassNameWithSpaces(className.replace("file:///", ""));
         packageName = path.relative(rootDirectory, className);
         const parts = packageName.split(/[\/\\]/);
         packageName = parts.join("/");
@@ -383,7 +387,7 @@ export class EndTask extends BaseTask {
     private createClassName(className: string, testName: string): string {
         let newClassName: string;
         const rootDirectory = process.env.BUILD_SOURCESDIRECTORY;
-        className = className.replace("file:///", "");
+        className = this.formatClassNameWithSpaces(className.replace("file:///", ""));
         let firstPart = path.relative(rootDirectory, className);
         if (firstPart) {
             const parts = firstPart.split(/[\/\\]/);
