@@ -18,6 +18,9 @@
     "azure-pipelines-task-lib": "^5.278.0",
     "fast-xml-parser": "^5.3.3",
     "globby": "11.0.3",
+    "glob": "^7.2.0",
+    "fs-extra": "^10.1.0",
+    "request": "^2.88.2",
     "js-yaml": "^4.1.0",
     "xml-escape": "1.1.0",
     "xml-js": "1.6.11"
