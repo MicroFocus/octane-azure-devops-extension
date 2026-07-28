@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@microfocus/alm-octane-js-rest-sdk": "26.2.1",
-    "@microfocus/alm-octane-test-result-convertion": "^25.2.3",
+    "@microfocus/alm-octane-test-result-convertion": "^26.3.0",
     "@types/node": "12.0.12",
     "@types/q": "1.5.2",
     "adm-zip": "^0.5.16",
