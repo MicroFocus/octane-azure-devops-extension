@@ -52,7 +52,8 @@ The extension will monitor and reflect the pipeline activity into the product.
 
 ## 3. Breaking changes starting with v26.3.0
 
-Starting with version `26.3.0`, the test results injection mechanism was updated and introduces a **breaking change** for existing pipelines.
+> [!CAUTION]
+> Starting with version `26.3.0`, the test results injection mechanism was updated and introduces a **breaking change** for existing pipelines.
 
 If your pipeline uses test results injection (JUnit/UFT One/NUnit), you must update the pipeline configuration by adding the required results glob pattern parameter/variable and pass it to the CSDP/SDM End task through the `UNIT_TEST_RESULTS_GLOB_PATTERN` environment variable.
 
