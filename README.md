@@ -482,6 +482,9 @@ For the example above, only test1 from my_folder1 and all tests from my_folder2 
 
 ### 7.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor
 
+> [!CAUTION]
+> Starting with version `26.3.0`, you MUST follow the steps below to display test results in the product.
+
 > [!NOTE]
 > For running NUnit tests, the workaround presented in Chapter 15 (See [15. Known issues and limitations](#15-known-issues-and-limitations)), still needs to be applied, as the extension does not support NUnit framework natively.
 
@@ -1454,6 +1457,7 @@ PUT {{url}}/api/shared_spaces/{{shared_space}}/workspaces/{{workspace}}/ci_serve
 ```
 ## 16. Change logs
 ## 26.3.0 version Release notes
+* Updated how the CSDP/SDM Azure DevOps extension injects test results into the product.
 * Added new Get Parameters Task
 * Added support for running OpenText Functional Testing tests from Azure DevOps pipelines and displaying the results into the product
 * Added support for JaCoCo, LCOV and SonarQube code coverage report file injection into the product
