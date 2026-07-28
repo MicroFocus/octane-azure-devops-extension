@@ -207,7 +207,7 @@ export class EndTask extends BaseTask {
                     const testRuns = Array.isArray(jsonObj.test_result.test_runs.test_run) ? jsonObj.test_result.test_runs.test_run : [jsonObj.test_result.test_runs.test_run];
                     for (const run of testRuns) {
                         const classPath = run.class;
-                        const testName = run.name;
+                        const testName = this.extractTestName(run.name);
 
                         const packageName = this.createPackageName(classPath);
                         run.class = this.createClassName(classPath, testName);
@@ -368,6 +368,11 @@ export class EndTask extends BaseTask {
         } else {
             return this.jobStatus;
         }
+    }
+
+    private extractTestName(name: string): string {
+        const lastSlashIndex = name.lastIndexOf('\\');
+        return lastSlashIndex !== -1 ? name.substring(lastSlashIndex + 1) : name;
     }
 
     private formatClassNameWithSpaces(className: string): string {
