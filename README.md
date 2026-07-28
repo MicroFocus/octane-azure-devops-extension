@@ -9,56 +9,67 @@ The extension will monitor and reflect the pipeline activity into the product.
 
 - [1. Introduction](#1-introduction)
 - [2. Table of Contents](#2-table-of-contents)
-- [3. Requirements](#3-requirements)
-- [4. Extension configuration](#4-extension-configuration)
-    - [4.1. How to install the Azure DevOps CSDP/SDM extension from Marketplace](#41-how-to-install-the-azure-devops-csdpsdm-extension-from-marketplace)
-    - [4.2. How to add an API Access Key in the product for Azure Service Connection ](#42-how-to-add-an-api-access-key-in-the-product-for-azure-service-connection)
-    - [4.3. How to create a new service connection](#43-how-to-create-a-new-service-connection)
-- [5. Pipeline interaction](#5-pipeline-interaction)
-    - [5.1. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (implicit Azure job)](#51-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-yaml-editing-implicit-azure-job)
-    - [5.2. Create a new pipeline with the CSDP/SDM start and end tasks through classic editor (implicit Azure job)](#52-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-classic-editor-implicit-azure-job)
-    - [5.3. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (explicit Azure jobs)](#53-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-yaml-editing-explicit-azure-jobs)
-- [6. Pipeline configuration for executing UFT One Tests](#6-pipeline-configuration-for-executing-uft-one-tests)
-- [7. Displaying JUnit/UFT One/NUnit test results into the product](#7-displaying-junituft-onenunit-test-results-into-the-product)
-    - [7.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor](#71-displaying-junituft-onenunit-test-results-into-the-product-using-yml-editor)
-    - [7.2 Displaying JUnit/UFT One/NUnit test results into the product using classic editor](#72-displaying-junituft-onenunit-test-results-into-the-product-using-classic-editor)
-- [8. Displaying Cucumber Gherkin test results into the product](#8-displaying-cucumber-gherkin-test-results-into-the-product)
-    - [8.1. Displaying Cucumber Gherkin test results into the product using yml editor](#81-displaying-cucumber-gherkin-test-results-into-the-product-using-yml-editor)
-    - [8.2. Displaying Cucumber Gherkin test results into the product using classic editor](#82-displaying-cucumber-gherkin-test-results-into-the-product-using-classic-editor)
-- [9. Configuring test runner pipeline](#9-configuring-test-runner-pipeline)
-    - [9.1 Test Runner for UFT One Tests](#91-test-runner-for-uft-one-tests)
-    - [9.2. Configure pipeline variables](#92-configure-pipeline-variables)
-- [10. Extracting parameters from CSDP/SDM service connection](#10-extracting-parameters-from-csdpsdm-service-connection)
-- [11. Discovery flow for UFT One tests](#11-discovery-flow-for-uft-one-tests)
-    - [11.1 Storing some steps in a separate powershell file for better readability](#111-storing-some-steps-in-a-separate-powershell-file-for-better-readability)
-    - [11.2 Keeping all the steps in the pipeline](#112-keeping-all-the-steps-in-the-pipeline)
-- [12. Code coverage injection](#12-code-coverage-injection)
-    - [12.1. Overview](#121-overview)
-    - [12.2. JaCoCo and LCOV code coverage injection](#122-jacoco-and-lcov-code-coverage-injection)
-    - [12.3. SonarQube code coverage injection](#123-sonarqube-code-coverage-injection)
-        - [12.3.1. Prerequisites](#1231-prerequisites)
-        - [12.3.2. Configuration steps](#1232-configuration-steps)
-- [13. Configuring Auto Action flow](#13-configuring-auto-action-flow)
-- [14. Useful Configurations](#14-useful-configurations)
-    - [14.1. Running pipelines from the product](#141-running-pipelines-from-the-product)
-    - [14.2. Running pipelines with variables or parameters](#142-running-pipelines-with-variables-or-parameters)
-        - [14.2.1. Running pipelines with variables](#1421-running-pipelines-with-variables)
-        - [14.2.2. Running pipelines with parameters](#1422-running-pipelines-with-parameters)
-    - [14.3. Activating debug messages](#143-activating-debug-messages) 
-- [15. Known issues and limitations](#15-known-issues-and-limitations)
-- [16. Change logs](#16-change-logs)
+- [3. Breaking changes starting with v26.3.0](#3-breaking-changes-starting-with-v2630)
+- [4. Requirements](#4-requirements)
+- [5. Extension configuration](#5-extension-configuration)
+    - [5.1. How to install the Azure DevOps CSDP/SDM extension from Marketplace](#51-how-to-install-the-azure-devops-csdpsdm-extension-from-marketplace)
+    - [5.2. How to add an API Access Key in the product for Azure Service Connection ](#52-how-to-add-an-api-access-key-in-the-product-for-azure-service-connection)
+    - [5.3. How to create a new service connection](#53-how-to-create-a-new-service-connection)
+- [6. Pipeline interaction](#6-pipeline-interaction)
+    - [6.1. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (implicit Azure job)](#61-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-yaml-editing-implicit-azure-job)
+    - [6.2. Create a new pipeline with the CSDP/SDM start and end tasks through classic editor (implicit Azure job)](#62-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-classic-editor-implicit-azure-job)
+    - [6.3. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (explicit Azure jobs)](#63-create-a-new-pipeline-with-the-csdpsdm-start-and-end-tasks-through-yaml-editing-explicit-azure-jobs)
+- [7. Pipeline configuration for executing UFT One Tests](#7-pipeline-configuration-for-executing-uft-one-tests)
+- [8. Displaying JUnit/UFT One/NUnit test results into the product](#8-displaying-junituft-onenunit-test-results-into-the-product)
+    - [8.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor](#81-displaying-junituft-onenunit-test-results-into-the-product-using-yml-editor)
+    - [8.2 Displaying JUnit/UFT One/NUnit test results into the product using classic editor](#82-displaying-junituft-onenunit-test-results-into-the-product-using-classic-editor)
+- [9. Displaying Cucumber Gherkin test results into the product](#9-displaying-cucumber-gherkin-test-results-into-the-product)
+    - [9.1. Displaying Cucumber Gherkin test results into the product using yml editor](#91-displaying-cucumber-gherkin-test-results-into-the-product-using-yml-editor)
+    - [9.2. Displaying Cucumber Gherkin test results into the product using classic editor](#92-displaying-cucumber-gherkin-test-results-into-the-product-using-classic-editor)
+- [10. Configuring test runner pipeline](#10-configuring-test-runner-pipeline)
+    - [10.1 Test Runner for UFT One Tests](#101-test-runner-for-uft-one-tests)
+    - [10.2. Configure pipeline variables](#102-configure-pipeline-variables)
+- [11. Extracting parameters from CSDP/SDM service connection](#11-extracting-parameters-from-csdpsdm-service-connection)
+- [12. Discovery flow for UFT One tests](#12-discovery-flow-for-uft-one-tests)
+    - [12.1 Storing some steps in a separate powershell file for better readability](#121-storing-some-steps-in-a-separate-powershell-file-for-better-readability)
+    - [12.2 Keeping all the steps in the pipeline](#122-keeping-all-the-steps-in-the-pipeline)
+- [13. Code coverage injection](#13-code-coverage-injection)
+    - [13.1. Overview](#131-overview)
+    - [13.2. JaCoCo and LCOV code coverage injection](#132-jacoco-and-lcov-code-coverage-injection)
+    - [13.3. SonarQube code coverage injection](#133-sonarqube-code-coverage-injection)
+        - [13.3.1. Prerequisites](#1331-prerequisites)
+        - [13.3.2. Configuration steps](#1332-configuration-steps)
+- [14. Configuring Auto Action flow](#14-configuring-auto-action-flow)
+- [15. Useful Configurations](#15-useful-configurations)
+    - [15.1. Running pipelines from the product](#151-running-pipelines-from-the-product)
+    - [15.2. Running pipelines with variables or parameters](#152-running-pipelines-with-variables-or-parameters)
+        - [15.2.1. Running pipelines with variables](#1521-running-pipelines-with-variables)
+        - [15.2.2. Running pipelines with parameters](#1522-running-pipelines-with-parameters)
+    - [15.3. Activating debug messages](#153-activating-debug-messages) 
+- [16. Known issues and limitations](#16-known-issues-and-limitations)
+- [17. Change logs](#17-change-logs)
 
 
-## 3. Requirements
+## 3. Breaking changes starting with v26.3.0
+
+Starting with version `26.3.0`, the test results injection mechanism was updated and introduces a **breaking change** for existing pipelines.
+
+If your pipeline uses test results injection (JUnit/UFT One/NUnit), you must update the pipeline configuration by adding the required results glob pattern parameter/variable and pass it to the CSDP/SDM End task through the `UNIT_TEST_RESULTS_GLOB_PATTERN` environment variable.
+
+Please follow the exact steps described in [Chapter 8.1](#81-displaying-junituft-onenunit-test-results-into-the-product-using-yml-editor).
+
+Pipelines that are not updated as described in Chapter 8.1 may no longer display test results in the product.
+
+## 4. Requirements
 
 - At least one Azure Devops agent allocated for running the pipeline
 - The Azure DevOps extension version should be **1.0.0.8** or **higher** (certain features require a newer version - see documentation)
 - The product version should be **16.1.200** or **higher**
 - API access to the product with **CI/CD Integration** or **DevOps Admin** roles
 
-## 4. Extension configuration
+## 5. Extension configuration
 
-### 4.1. How to install the Azure DevOps CSDP/SDM extension from Marketplace
+### 5.1. How to install the Azure DevOps CSDP/SDM extension from Marketplace
 
 1. In Azure DevOps, click on "Manage extensions":
 
@@ -84,7 +95,7 @@ The extension will monitor and reflect the pipeline activity into the product.
 
 ![image](https://github.com/user-attachments/assets/63b31041-ec89-4d55-b0a0-1e7d8972c961)
 
-### 4.2. How to add an API Access Key in the product for Azure Service Connection
+### 5.2. How to add an API Access Key in the product for Azure Service Connection
 
 Before you can add a new service connection, please make sure you have a valid API ACCESS key and secret set in the product. You can follow the steps below to create one:
 
@@ -100,7 +111,7 @@ Before you can add a new service connection, please make sure you have a valid A
 
 ![image](assets/img37.png)
 
-### 4.3. How to create a new service connection
+### 5.3. How to create a new service connection
 
 1. Firstly, go back in Azure DevOps, and go to "Project settings" in the bottom left corner:
 
@@ -134,9 +145,9 @@ Before you can add a new service connection, please make sure you have a valid A
 
 **Grant access permission to all pipelines** - Selecting this checkbox will make this service connection available for all pipelines for usage.
 
-## 5. Pipeline interaction
+## 6. Pipeline interaction
 
-### 5.1. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (implicit Azure job)
+### 6.1. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (implicit Azure job)
 
 1. Go to Pipelines and press Create Pipeline:
 
@@ -186,7 +197,7 @@ Before you can add a new service connection, please make sure you have a valid A
 ![image](assets/img3.png)
 
 > [!CAUTION]
-> For successful test and test results injections an additional parameter/variable must be set in the End task. Please refer to Chapter 7 in case of Junit, UFT One or NUnit tests ([Chapter 7.](#7-displaying-junituft-onenunit-test-results-into-the-product)) or Chapter 8 for BDD, Cucumber tests ([Chapter 8.](#8-displaying-cucumber-gherkin-test-results-into-the-product)) for more details.
+> For successful test and test results injections an additional parameter/variable must be set in the End task. Please refer to Chapter 8 in case of Junit, UFT One or NUnit tests ([Chapter 8.](#8-displaying-junituft-onenunit-test-results-into-the-product)) or Chapter 9 for BDD, Cucumber tests ([Chapter 9.](#9-displaying-cucumber-gherkin-test-results-into-the-product)) for more details.
 
 > [!NOTE]
 > Make sure to add the following condition inside both the start task and the end task: **condition:always()**. This will make sure that if you cancel a pipeline run, the respective run will still be replicated into the product and will appear with the status set to "Aborted". After adding this condition, the tasks should look like this:
@@ -233,7 +244,7 @@ and
 
 ![image](assets/img42.png)
 
-### 5.2. Create a new pipeline with the CSDP/SDM start and end tasks through classic editor (implicit Azure job)
+### 6.2. Create a new pipeline with the CSDP/SDM start and end tasks through classic editor (implicit Azure job)
 
 1. Go to the Pipelines and find the hyperlink as below:
 
@@ -317,7 +328,7 @@ and
 
 ![image](assets/img43.png)
 
-### 5.3. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (explicit Azure jobs)
+### 6.3. Create a new pipeline with the CSDP/SDM start and end tasks through YAML editing (explicit Azure jobs)
 
 Previous chapters focused on the demonstration of how to create pipelines with CSDP/SDM tasks inside them. This is ok if you do not need complex pipelines with multiple jobs inside them, or you are just testing how the extension might fit your needs. For more complex scenarios where multiple jobs are used and the pipelines already exist, tasks under existing jobs might not be a solution. Suppose you have the following YAML, which contains a simple task of building a maven project specified under an unnamed job (in theory you might have many jobs here, but for the sake of simplicity, we will work with only one):
 
@@ -434,7 +445,7 @@ jobs:
 
 Now you can create complex scenarios with different jobs. Make sure you understand the dependencies and current limitations of the Azure DevOps pipeline and the extension.
 
-## 6. Pipeline configuration for executing UFT One Tests
+## 7. Pipeline configuration for executing UFT One Tests
 For executing UFT One tests from Azure DevOps pipelines and displaying the results into the product, the following prerequisites must be met:
 
 > [!NOTE]
@@ -478,15 +489,15 @@ Add-Content -Path ./build/Props.txt -Value "Test2=$ESCAPED_DIR\my_folder2"
 ```
 For the example above, only test1 from my_folder1 and all tests from my_folder2 will be executed.
 
-## 7. Displaying JUnit/UFT One/NUnit test results into the product
+## 8. Displaying JUnit/UFT One/NUnit test results into the product
 
-### 7.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor
+### 8.1 Displaying JUnit/UFT One/NUnit test results into the product using yml editor
 
 > [!CAUTION]
 > Starting with version `26.3.0`, you MUST follow the steps below to display test results in the product.
 
 > [!NOTE]
-> For running NUnit tests, the workaround presented in Chapter 15 (See [15. Known issues and limitations](#15-known-issues-and-limitations)), still needs to be applied, as the extension does not support NUnit framework natively.
+> For running NUnit tests, the workaround presented in Chapter 16 (See [16. Known issues and limitations](#16-known-issues-and-limitations)), still needs to be applied, as the extension does not support NUnit framework natively.
 
 1. Create a pipeline job for running tests.
 2. Add the parameter/variable with the value of the path where the test results are stored. 
@@ -570,7 +581,7 @@ In case you wish to use variables, instead of parameters, you can do it as follo
 
 ![image](assets/img12.png)
 
-### 7.2 Displaying JUnit/UFT One/NUnit test results into the product using classic editor
+### 8.2 Displaying JUnit/UFT One/NUnit test results into the product using classic editor
 
 1. Create the CSDP/SDM Start and End tasks as explained in the previous chapters.
 2. Click on the Variables tab and add new variable "unitTestResultsGlobPattern" and set its value to the path where the test results are stored, for example: '**/surefire-reports/TEST-*.xml'.
@@ -595,9 +606,9 @@ In case you wish to use variables, instead of parameters, you can do it as follo
 
 ![image](assets/img34.png)
 
-## 8. Displaying Cucumber Gherkin test results into the product
+## 9. Displaying Cucumber Gherkin test results into the product
 
-### 8.1. Displaying Cucumber Gherkin test results into the product using yml editor
+### 9.1. Displaying Cucumber Gherkin test results into the product using yml editor
 
 1. Create a pipeline job for running the tests.
 
@@ -665,7 +676,7 @@ Fill in the Cucumber report destination path field when configuring the CSDP/SDM
 
 ![image](assets/img45.png)
 
-### 8.2. Displaying Cucumber Gherkin test results into the product using classic editor
+### 9.2. Displaying Cucumber Gherkin test results into the product using classic editor
 
 1.	Create a pipeline job for running the tests.
 2. Needed steps based of the Cucumber version you are using:
@@ -704,7 +715,7 @@ Fill in the Cucumber report destination path field when configuring the CSDP/SDM
 
 ![image](assets/img45.png)
 
-## 9. Configuring test runner pipeline
+## 10. Configuring test runner pipeline
 
 Besides pipeline runs, you can also configure test runners using this extension, by making use of the **octane-test-runner-start-task@1**. Naturally you will not be creating another pipeline in the product, but rather a test runner that you can assign test suites to and run them from the product and see the results in both Azure DevOps and the product. To do that you need to follow the next steps:
 
@@ -754,7 +765,7 @@ Normally you should end up with something like this. The end task remains the sa
 
 9. Make sure to save the modifications.
 
-### 9.1 Test Runner for UFT One Tests
+### 10.1 Test Runner for UFT One Tests
 
 In case you are configuring the CSDP/SDM Test Runner Job Start task for UFT One tests, you need to do two additional steps:
 
@@ -788,12 +799,12 @@ In case you are configuring the CSDP/SDM Test Runner Job Start task for UFT One 
       Get-Content -Path ./build/Props.txt
 ```
 
-### 9.2 Configure Pipeline Variables
+### 10.2 Configure Pipeline Variables
 
 1. Ensure the following variables are defined in your Azure DevOps pipeline for automated test execution:
 
 > [!NOTE]
-> If you are having trouble configuring variables, please refer to [14.2.1 Running pipelines with variables](#1421-running-pipelines-with-variables)
+> If you are having trouble configuring variables, please refer to [15.2.1 Running pipelines with variables](#1521-running-pipelines-with-variables)
 
  - `testsToRun` (type: string)
  - `suiteId` (type: number)
@@ -823,7 +834,7 @@ If any of the previous steps failed, and you aren't able to run the test runner 
 
 ![image](https://github.com/user-attachments/assets/dc3234a5-d722-4795-95e4-65b26a9e0d04)
 
-## 10. Extracting parameters from CSDP/SDM service connection
+## 11. Extracting parameters from CSDP/SDM service connection
 
 In some cases, you might want to extract parameters from the service connection in order to use them in your pipeline. To do that, you can use the CSDP/SDM Get Parameters task.
 
@@ -845,19 +856,19 @@ This will extract the following parameters: URL, Client ID, Client Secret and Sh
 > ![NOTE]
 > The values for the Client ID and Client Secret will be masked in the logs for security reasons.
 
-## 11. Discovery flow for UFT One tests
+## 12. Discovery flow for UFT One tests
 
 The discovery of UFT One tests means scanning the given repository for UFT One tests and data tables and then creating them in the product. 
 This can be done by using the "@opentext/sdp-sdm-test-runner-utilities" tool, which provides a function for the discovery of UFT One tests. For more details refer the documentation [here](https://github.com/MicroFocus/sdp-sdm-test-runner-utilities).
 
 > [!CAUTION]
-> When the first scan is performed for a repository, before running the tool, you need to run the CSDP/SDM Test Runner Job Start task (See [here](#9-configuring-test-runner-pipeline)) for a successful discovery of OpenText Functional Testing tests and data tables.
+> When the first scan is performed for a repository, before running the tool, you need to run the CSDP/SDM Test Runner Job Start task (See [here](#10-configuring-test-runner-pipeline)) for a successful discovery of OpenText Functional Testing tests and data tables.
 
 In order to be able to get the changes between commits, you need to track the changed files between commits, publish an artifact at the end of the pipeline with the last successful commit and download it at the beginning of the file.
 The steps to achieve this behavior are presented below, and you can choose to implement them in the same pipeline file or store some of the steps in a separate powershell file for better readability.
 The two options for pipeline configuration are presented in the sections below:
 
-### 11.1 Storing some steps in a separate powershell file for better readability
+### 12.1 Storing some steps in a separate powershell file for better readability
 
 1. You need to create a new folder in your repository and add a new powershell file, for example: `eng/detect-changed-files.ps1`.
 2. The content of the file should be the following:
@@ -1014,7 +1025,7 @@ $currentCommit | Out-File "last_successful_commit.txt" -Encoding ascii
     displayName: "Publish last successful commit SHA"
 ```
 
-### 11.2 Keeping all the steps in the pipeline
+### 12.2 Keeping all the steps in the pipeline
 
 For keeping all the steps in the pipeline, you can follow the same steps as in the previous section, but instead of storing some of the steps in a separate powershell file, you can keep them all in the pipeline, like in the example below:
 
@@ -1113,14 +1124,14 @@ steps:
     artifact: last-successful
     displayName: "Publish last successful commit SHA"
 ```
-## 12. Code coverage injection
+## 13. Code coverage injection
 
-## 12.1. Overview
+## 13.1. Overview
 
 Starting with version 26.2 of both the product and the extension, you can also inject code coverage results from your Azure DevOps pipelines to the product. We currently support code coverage results generated by
 JaCoCo, LCOV and SonarQube. To use this capability, coverage must be generated within the pipeline before the `octane-end-task` executes.
 
-### 12.2. JaCoCo and LCOV code coverage injection
+### 13.2. JaCoCo and LCOV code coverage injection
 
 The extension supports importing coverage results from XML or LCOV report files generated during the pipeline execution.
 
@@ -1162,9 +1173,9 @@ You should end up with a configuration similar to the one below:
     UNIT_TEST_RESULTS_GLOB_PATTERN: ${{ parameters.unitTestResultsGlobPattern }}
 ```
 
-### 12.3. SonarQube code coverage injection
+### 13.3. SonarQube code coverage injection
 
-#### 12.3.1. Prerequisites
+#### 13.3.1. Prerequisites
 
 To enable SonarQube-based coverage injection, your pipeline must already be configured to perform a full SonarQube analysis using the official SonarQube Azure DevOps extension.
 
@@ -1186,7 +1197,7 @@ The coverage injection feature relies on an already completed and published Sona
 > The exact combination of SonarQube tasks depends on the selected scanner mode (Maven, .NET, CLI, etc.). The analysis must successfully complete before the
 `octane-end-task` is executed.
 
-#### 12.3.2. Configuration steps
+#### 13.3.2. Configuration steps
 
 To enable SonarQube-based coverage injection, configure:
 - the `octane-end-task` to use the `SONAR_REPORT` coverage type
@@ -1245,7 +1256,7 @@ The already configured sonar service connection provides the authentication toke
 The configured `projectKey` is used to identify the specific SonarQube project from which coverage metrics should be fetched.
 Without a valid project key and service connection, the task cannot retrieve coverage data.
 
-## 13. Configuring Auto Action flow
+## 14. Configuring Auto Action flow
 
 In the product, you can add automatic actions to your release process that trigger common tasks, such as running your Azure DevOps pipeline from the product. For more details on how to configure such an auto action flow, please refer to https://admhelp.microfocus.com/valueedge/en/latest/Online/Content/UserGuide/release-process-autoactions.htm?
 
@@ -1263,9 +1274,9 @@ This parameter is used in the background by the product for the pipeline results
 
 ![image](https://github.com/user-attachments/assets/cedbb44c-54ad-4cda-965f-ce17c00e7b0c)
 
-## 14. Useful configurations
+## 15. Useful configurations
 
-### 14.1 Running pipelines from the product
+### 15.1 Running pipelines from the product
 
 1. In order to start runs from the product, you need to do some additional configuration steps. First of all, in Azure DevOps you need to go to: User settings -> Personal access tokens:
 
@@ -1304,7 +1315,7 @@ The **User Name** field does not have any correlation with any usernames that yo
 
 9. Now you can go back in the **Pipelines** in the product, select the **3 points icon** from the pipeline you want to run and then press **Run**. You should then be able to see your run in Azure DevOps.
 
-### 14.2. Running pipelines with variables or parameters
+### 15.2. Running pipelines with variables or parameters
 
 Azure DevOps pipelines support both parameters and variables to make your workflows more dynamic, reusable, and configurable: 
 
@@ -1320,7 +1331,7 @@ This section walks through how to:
 > [!CAUTION]
 > When running a pipeline, you can define both variables and parameters. However, only one set will be sent to the product, depending on the value of the `USE_AZURE_DEVOPS_PARAMETERS` parameter value from the product. The value of this parameter can be changed only from the product. If the value is set to `true` the integration will send only the parameters, else it will send only the variables.
 
-#### 14.2.1 Running pipelines with variables
+#### 15.2.1 Running pipelines with variables
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `false` in the product in order to see the variables reflected in it.
@@ -1345,7 +1356,7 @@ This section walks through how to:
 
 ![image](https://github.com/user-attachments/assets/7676332a-60bf-442a-80d6-4b154b6a36a3)
 
-#### 14.2.2 Running pipelines with parameters
+#### 15.2.2 Running pipelines with parameters
 
 > [!NOTE]
 > You must set the value of the `USE_AZURE_DEVOPS_PARAMETERS` to `true` in the product in order to see the parameters reflected in it.
@@ -1378,12 +1389,12 @@ For more information on parameters, Azure DevOps provides thorough documentation
 
 ![image](https://github.com/user-attachments/assets/3d1a4911-2296-4e59-8bac-a9e67ea942a3)
 
-### 14.3. Activating debug messages
+### 15.3. Activating debug messages
 A very useful feature is enabling debug messages, which not only gives you more insight into what happens behind the scenes, but it can also help you in figuring out what went wrong with a run. To enable this kind of messages, you need to create pipeline variable with the following values: 
 - `name = ALMOctaneLogLevel`
 - `value = DEBUG`
 
-If you're not sure how to create such variables please refer to [14.2.1 Running pipelines with variables](#1421-running-pipelines-with-variables)
+If you're not sure how to create such variables please refer to [15.2.1 Running pipelines with variables](#1521-running-pipelines-with-variables)
 
 ![image](https://github.com/user-attachments/assets/40c43390-3d70-4fff-ba89-69c2f4273b2e)
 
@@ -1391,7 +1402,7 @@ Now whenever you run any pipeline and check the logs, you will notice that there
 
 ![image](https://github.com/user-attachments/assets/822e181a-ced5-44bb-93b7-11a22071e8c8)
 
-## 15. Known issues and limitations
+## 16. Known issues and limitations
 
 1.	CSDP/SDM Connection Verifier is non-functional. This will be removed in a future version.
 2.	When creating the pipeline with YAML and adding the CSDP/SDM tasks, the label is not displayed properly (octanestarttask)
@@ -1455,7 +1466,7 @@ PUT {{url}}/api/shared_spaces/{{shared_space}}/workspaces/{{workspace}}/ci_serve
   }]
 }
 ```
-## 16. Change logs
+## 17. Change logs
 ## 26.3.0 version Release notes
 * Updated how the CSDP/SDM Azure DevOps extension injects test results into the product.
 * Added new Get Parameters Task
