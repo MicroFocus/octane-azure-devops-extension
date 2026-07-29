@@ -236,25 +236,13 @@ export class TestResultsBuilder {
         let unitTestResults: Array<UnitResultElement> = [];
         testResults.forEach(element => {
             logger.debug("Azure test input - automatedTestStorage: " + element.automatedTestStorage + " , automatedTestName: " + element.automatedTestName);
-            let packageName =
-                element.automatedTestStorage && element.automatedTestStorage.indexOf('.') > 0 ?
-                    element.automatedTestStorage.substring(0,element.automatedTestStorage.lastIndexOf('.')) :
-                    element.automatedTestStorage;
-            packageName = xmlescape(packageName || "");
-            if (packageName.length > 255) {
-                logger.error('Package name is longer than 255 chars: ' + packageName);
-                return;
-            }
+            let packageName = xmlescape("");
             let name = xmlescape(element.automatedTestName || "");
             if (name.length > 255) {
                 logger.error('Test name is longer than 255 chars: ' + name);
                 return;
             }
-            let classname =
-                element.automatedTestStorage && element.automatedTestStorage.indexOf('.') > 0 ?
-                    element.automatedTestStorage.substring(element.automatedTestStorage.lastIndexOf('.') + 1) :
-                    element.automatedTestStorage;
-            classname = xmlescape(classname || "");
+            let classname = xmlescape(element.automatedTestStorage || "");
             if (classname.length > 255) {
                 logger.error('Classname name is longer than 255 chars: ' + classname);
                 return;
