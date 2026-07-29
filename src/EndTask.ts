@@ -50,6 +50,7 @@ import {CoverageProviderFactory} from "./services/code_coverage/factory/Coverage
 import {OctaneCoverageClient} from "./services/code_coverage/clients/OctaneCoverageClient";
 import {CodeCoverageOrchestrator} from "./services/code_coverage/orchestrator/CodeCoverageOrchestrator";
 import {ICoverageProvider} from "./services/code_coverage/providers/ICoverageProvider";
+import {TestResultsBuilder} from "./services/test_results/TestResultsBuilder";
 
 const parser = new XMLParser({
     ignoreAttributes: false,
@@ -108,20 +109,40 @@ export class EndTask extends BaseTask {
                     const frameworkType = stringToFrameworkType(framework)
                     this.logger.info(`The framework type is: ${frameworkType}`);
 
-                    const globPattern = process.env.UNIT_TEST_RESULTS_GLOB_PATTERN || '**/*.xml';
-                    this.logger.info("global pattern ", globPattern);
+                    const explicitGlobPattern: string = process.env.UNIT_TEST_RESULTS_GLOB_PATTERN?.trim();
+                    const hasExplicitGlobPattern: boolean = !!explicitGlobPattern;
 
-                    const files = glob.sync(globPattern);
-                    this.logger.info("The test result files are: " + files + " with length: " + files.length);
+                    if (hasExplicitGlobPattern) {
+                        this.logger.info("Using UNIT_TEST_RESULTS_GLOB_PATTERN: " + explicitGlobPattern);
 
-                    if (files.length === 0 && !cucumberReportsPath) {
-                        this.logger.warn("No test results");
-                        await this.buildCIAndSendCIEvent(api, ws, testResultExpected);
-                        return;
+                        const files: string[] = glob.sync(explicitGlobPattern);
+                        this.logger.info("The test result files are: " + files + " with length: " + files.length);
+
+                        if (files.length === 0 && !cucumberReportsPath) {
+                            this.logger.warn("No test results");
+                            await this.buildCIAndSendCIEvent(api, ws, testResultExpected);
+                            return;
+                        }
+
+                        testResults = await this.handleTestResultInjection(cucumberReportsPath, files, buildConfig, framework, frameworkType);
+                        this.logger.info("The converted test results to Octane XML are: " + testResults);
+                    } else {
+                        // Backward compatibility path for older pipelines that relied on ADO Test API collection.
+                        this.logger.warn("UNIT_TEST_RESULTS_GLOB_PATTERN is not set. Falling back to legacy Azure DevOps Test API collection.");
+
+                        testResults = await TestResultsBuilder.getTestsResultsByBuildId(
+                            api,
+                            this.projectName,
+                            parseInt(this.buildId),
+                            this.instanceId,
+                            this.jobFullName,
+                            cucumberReportsPath,
+                            this.logger
+                        );
+
+                        this.logger.debug("Returned test results: " + testResults);
+                        this.logger.info("Legacy flow produced " + testResults.length + " test result payload(s).");
                     }
-
-                    testResults = await this.handleTestResultInjection(cucumberReportsPath, files, buildConfig, framework, frameworkType);
-                    this.logger.info("The converted test results to Octane XML are: " + testResults);
 
                     for (const testResult of testResults) {
                         if (testResult && testResult.length > 0) {

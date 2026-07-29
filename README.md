@@ -59,7 +59,8 @@ If your pipeline uses test results injection (JUnit/UFT One/NUnit), you must upd
 
 Please follow the exact steps described in [Chapter 8.1](#81-displaying-junituft-onenunit-test-results-into-the-product-using-yml-editor).
 
-Pipelines that are not updated as described in Chapter 8.1 may no longer display test results in the product.
+Pipelines that are not updated as described in Chapter 8.1 should still display test results in the product, since a fallback mechanism is in place,
+but we highly recommend updating your pipelines to use the new test results injection mechanism.
 
 ## 4. Requirements
 
